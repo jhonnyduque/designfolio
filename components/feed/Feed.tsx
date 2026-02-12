@@ -1,6 +1,7 @@
 // components/feed/Feed.tsx
 "use client"
 
+import { useEffect, useRef } from "react"
 import { useFeed } from "@/hooks/useFeed"
 import { SortSelector } from "./SortSelector"
 import { FeedCard } from "./FeedCard"
@@ -38,6 +39,30 @@ export function Feed() {
     refresh,
   } = useFeed()
 
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+
+  // 🔥 Infinite Scroll
+  useEffect(() => {
+    if (!hasMore || loadingMore) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore()
+        }
+      },
+      {
+        rootMargin: "200px", // pre-load antes de llegar al final
+      }
+    )
+
+    if (sentinelRef.current) {
+      observer.observe(sentinelRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [hasMore, loadingMore, loadMore])
+
   return (
     <section>
       {/* Header */}
@@ -64,9 +89,9 @@ export function Feed() {
         </div>
       )}
 
-      {/* Skeleton loading (initial) */}
+      {/* Skeleton inicial */}
       {loading && items.length === 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} />
           ))}
@@ -75,7 +100,10 @@ export function Feed() {
 
       {/* Grid */}
       {items.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div
+          id="feed-grid"
+          className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"
+        >
           {items.map((item) => (
             <FeedCard key={item.id} item={item} />
           ))}
@@ -85,42 +113,25 @@ export function Feed() {
       {/* Empty */}
       {!loading && items.length === 0 && !error && (
         <div className="text-center py-20">
-          <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-            </svg>
-          </div>
-          <p className="text-gray-500 font-medium">Aún no hay obras publicadas</p>
-          <p className="text-gray-400 text-sm mt-1">
-            Sé el primero en compartir tu trabajo con la comunidad.
+          <p className="text-gray-500 font-medium">
+            Aún no hay obras publicadas
           </p>
         </div>
       )}
 
-      {/* Load more */}
-      {hasMore && items.length > 0 && (
-        <div className="mt-10 flex justify-center">
-          <button
-            onClick={loadMore}
-            disabled={loadingMore}
-            className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {loadingMore ? (
-              <span className="flex items-center gap-2">
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Cargando...
-              </span>
-            ) : (
-              "Cargar más obras"
-            )}
-          </button>
+      {/* Loading más contenido */}
+      {loadingMore && (
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={`more-${i}`} />
+          ))}
         </div>
       )}
 
-      {/* End of feed */}
+      {/* Sentinel invisible */}
+      {hasMore && <div ref={sentinelRef} className="h-10" />}
+
+      {/* End */}
       {!hasMore && items.length > 0 && (
         <p className="mt-10 text-center text-sm text-gray-400">
           Has llegado al final del feed.

@@ -13,12 +13,18 @@ const sortKeys = Object.keys(SORT_OPTIONS) as SortOption[]
 
 export function SortSelector({ current, onChange }: SortSelectorProps) {
   return (
-    <div className="flex gap-1.5 flex-wrap" role="tablist" aria-label="Ordenar feed">
+    <div
+      className="flex gap-1.5 flex-wrap"
+      role="tablist"
+      aria-label="Ordenar feed"
+      aria-controls="feed-grid"
+    >
       {sortKeys.map((key) => {
         const active = key === current
         return (
           <button
             key={key}
+            type="button"
             role="tab"
             aria-selected={active}
             onClick={() => onChange(key)}
