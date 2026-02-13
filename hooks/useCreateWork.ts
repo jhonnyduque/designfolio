@@ -93,11 +93,7 @@ export function useCreateWork(): UseCreateWorkReturn {
         if (insertError) throw insertError
 
         setStep("done")
-        setProgress(
-          moderationStatus === "approved"
-            ? "¡Publicado!"
-            : "Enviado a revisión"
-        )
+        setProgress("Enviado a revisión")
 
         // Redirect after brief delay
         setTimeout(() => {
