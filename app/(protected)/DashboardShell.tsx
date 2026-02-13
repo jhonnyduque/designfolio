@@ -8,14 +8,17 @@ import { useAuth } from "@/hooks/useAuth"
 
 export function DashboardShell({
   email,
+  isFounder = false,
   children,
 }: {
   email: string
+  isFounder?: boolean
   children: ReactNode
 }) {
   const { signOut } = useAuth()
   const pathname = usePathname()
   const isNewWork = pathname === "/dashboard/new"
+  const isModeration = pathname === "/dashboard/moderation"
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -35,8 +38,18 @@ export function DashboardShell({
             </div>
 
             <div className="flex items-center gap-3">
+              {/* Moderation link — only for founders */}
+              {isFounder && !isModeration && (
+                <Link
+                  href="/dashboard/moderation"
+                  className="px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors hidden sm:block"
+                >
+                  Moderación
+                </Link>
+              )}
+
               {/* New Work button — hidden when already on /new */}
-              {!isNewWork && (
+              {!isNewWork && !isModeration && (
                 <Link
                   href="/dashboard/new"
                   className="px-3.5 py-1.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-1.5"
