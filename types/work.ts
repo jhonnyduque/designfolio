@@ -16,6 +16,8 @@ export interface CreateWorkPayload {
   images: WorkImage[]
 }
 
+export type ModerationStatus = "pending_review" | "approved" | "rejected"
+
 /** Categorías disponibles en beta */
 export const WORK_CATEGORIES = [
   "Branding",
