@@ -47,17 +47,14 @@ export function FeedCard({ item }: FeedCardProps) {
               </span>
             </div>
           )}
-          <span className="text-sm font-medium text-gray-700 truncate">
+          <span className="text-[15px] font-bold text-gray-900 truncate">
             {item.author_full_name}
           </span>
         </div>
 
-        {/* Category + Title */}
-        <div className="mt-2.5">
-          <span className="inline-block text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-            {item.category}
-          </span>
-          <h3 className="mt-0.5 text-[15px] font-semibold text-gray-900 leading-snug line-clamp-2">
+        {/* Title */}
+        <div className="mt-1">
+          <h3 className="text-[13px] text-gray-500 leading-snug line-clamp-2">
             {item.title}
           </h3>
         </div>

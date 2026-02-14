@@ -4,8 +4,9 @@
 import { useState, useCallback } from "react"
 import { useModeration } from "@/hooks/useModeration"
 import { WorkPreview } from "./WorkPreview"
+import { InviteCodesManager } from "./InviteCodesManager"
 
-type Tab = "queue" | "history"
+type Tab = "queue" | "history" | "invites"
 
 export function ModerationPanel() {
   const { queue, history, loading, error, stats, approve, reject, refresh } =
@@ -109,6 +110,16 @@ export function ModerationPanel() {
           }`}
         >
           Historial
+        </button>
+        <button
+          onClick={() => setTab("invites")}
+          className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+            tab === "invites"
+              ? "bg-gray-900 text-white"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
+        >
+          Invitaciones
         </button>
         <button
           onClick={refresh}
@@ -251,6 +262,9 @@ export function ModerationPanel() {
           )}
         </>
       )}
+
+      {/* Invites tab */}
+      {tab === "invites" && <InviteCodesManager />}
     </div>
   )
 }
