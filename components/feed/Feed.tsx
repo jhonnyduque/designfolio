@@ -70,14 +70,16 @@ export function Feed() {
   return (
     <section>
       {/* Header */}
-      <div className="flex flex-col gap-4 mb-8">
-        <div className="flex items-center justify-between">
-          <div>
+      <div className="mb-8 space-y-4">
+        {/* Row 1: Title + Search + Sort */}
+        <div className="flex items-start sm:items-center justify-between gap-3">
+          <div className="flex-shrink-0">
             <h1 className="text-2xl font-bold text-gray-900">Feed</h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-gray-500 mt-0.5 hidden sm:block">
               Descubre obras de la comunidad
             </p>
           </div>
+
           <div className="flex items-center gap-2">
             {/* Search toggle (mobile) */}
             <button
@@ -94,7 +96,7 @@ export function Feed() {
               </svg>
             </button>
 
-            {/* Search bar (desktop - always visible) */}
+            {/* Search bar (desktop) */}
             <div className="hidden sm:flex items-center relative">
               <svg className="w-4 h-4 text-gray-400 absolute left-3 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -104,7 +106,7 @@ export function Feed() {
                 value={searchInput}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="Buscar obras, categorías, autores..."
-                className="w-56 lg:w-72 pl-9 pr-8 py-1.5 text-sm bg-gray-100 border border-transparent rounded-lg text-gray-900 placeholder-gray-400 focus:bg-white focus:border-gray-300 focus:ring-1 focus:ring-gray-300 outline-none transition-all"
+                className="w-48 lg:w-64 pl-9 pr-8 py-1.5 text-sm bg-gray-100 border border-transparent rounded-lg text-gray-900 placeholder-gray-400 focus:bg-white focus:border-gray-300 focus:ring-1 focus:ring-gray-300 outline-none transition-all"
               />
               {searchInput && (
                 <button
@@ -117,6 +119,9 @@ export function Feed() {
                 </button>
               )}
             </div>
+
+            {/* Sort dropdown */}
+            <SortSelector current={sortBy} onChange={setSortBy} />
           </div>
         </div>
 
@@ -147,21 +152,18 @@ export function Feed() {
           </div>
         )}
 
-        {/* Sort + active search indicator */}
-        <div className="flex items-center justify-between">
-          <SortSelector current={sortBy} onChange={setSortBy} />
-          {search && (
-            <button
-              onClick={handleClearSearch}
-              className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
-            >
-              Resultados para &ldquo;{search}&rdquo;
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
+        {/* Active search indicator */}
+        {search && (
+          <button
+            onClick={handleClearSearch}
+            className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
+          >
+            Resultados para &ldquo;{search}&rdquo;
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Error */}

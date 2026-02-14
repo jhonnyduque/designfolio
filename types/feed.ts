@@ -28,25 +28,18 @@ export interface WorkImage {
   order: number
 }
 
-export type SortOption = "popular" | "most_voted" | "most_commented" | "recent"
-
-export type SortColumn =
-  | "trending_score"
-  | "likes_count"
-  | "comments_count"
-  | "published_at"
+export type SortOption = "recent" | "most_voted" | "most_commented"
 
 export interface SortConfig {
-  column: SortColumn
+  column: string
   ascending: boolean
   label: string
 }
 
 export const SORT_OPTIONS: Record<SortOption, SortConfig> = {
-  popular: { column: "trending_score", ascending: false, label: "Popular" },
-  most_voted: { column: "likes_count", ascending: false, label: "Más votados" },
+  recent:         { column: "published_at",   ascending: false, label: "Más nuevos" },
+  most_voted:     { column: "likes_count",    ascending: false, label: "Más votados" },
   most_commented: { column: "comments_count", ascending: false, label: "Más comentados" },
-  recent: { column: "published_at", ascending: false, label: "Más nuevos" },
 }
 
 export const FEED_PAGE_SIZE = 10
