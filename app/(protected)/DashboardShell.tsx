@@ -1,10 +1,11 @@
 // app/(protected)/DashboardShell.tsx
 "use client"
 
-import { type ReactNode } from "react"
+import { type ReactNode, useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
+import { NotificationBell } from "@/components/notifications/NotificationBell"
 
 export function DashboardShell({
   email,
@@ -19,6 +20,24 @@ export function DashboardShell({
   const pathname = usePathname()
   const isNewWork = pathname === "/dashboard/new"
   const isModeration = pathname === "/dashboard/moderation"
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Close menu on click outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [])
+
+  // Close menu on navigation
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [pathname])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -61,15 +80,53 @@ export function DashboardShell({
                 </Link>
               )}
 
-              <span className="text-sm text-gray-500 hidden md:block truncate max-w-[200px]">
-                {email}
-              </span>
-              <button
-                onClick={signOut}
-                className="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors"
-              >
-                Salir
-              </button>
+              {/* Notifications */}
+              <NotificationBell />
+
+              {/* User menu */}
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors px-2 py-1 rounded-lg hover:bg-gray-100"
+                >
+                  <span className="hidden sm:block truncate max-w-[160px]">
+                    {email}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {menuOpen && (
+                  <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-30">
+                    <Link
+                      href="/dashboard/my-works"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Mis obras
+                    </Link>
+                    <Link
+                      href="/dashboard/settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Editar perfil
+                    </Link>
+                    <div className="h-px bg-gray-100 my-1" />
+                    <button
+                      onClick={signOut}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

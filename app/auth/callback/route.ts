@@ -1,44 +1,39 @@
 // app/auth/callback/route.ts
-
+import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
-import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
 
-export async function GET(request: Request) {
-  const requestUrl = new URL(request.url)
-  const code = requestUrl.searchParams.get("code")
+export async function GET(request: NextRequest) {
+  const { searchParams, origin } = request.nextUrl
+  const code = searchParams.get("code")
 
-  if (!code) {
-    return NextResponse.redirect(new URL("/", request.url))
-  }
-
-  try {
-    // ✅ Correcto en Next 16
-    const cookieStore = await cookies()
-
+  if (code) {
+    const response = NextResponse.redirect(`${origin}/dashboard`)
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           getAll() {
-            return cookieStore.getAll()
+            return request.cookies.getAll()
           },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
-            })
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options)
+            )
           },
         },
       }
     )
 
-    await supabase.auth.exchangeCodeForSession(code)
-
-    return NextResponse.redirect(new URL("/dashboard", request.url))
-
-  } catch (error) {
-    console.error("Auth callback error:", error)
-    return NextResponse.redirect(new URL("/?error=auth", request.url))
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error) {
+      // Note: For Google OAuth users, the invite code is stored in localStorage
+      // on the client side. It will be claimed on the client after redirect
+      // via the ClaimInviteCode component in the protected layout.
+      return response
+    }
   }
+
+  // If error, redirect to login with error
+  return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`)
 }

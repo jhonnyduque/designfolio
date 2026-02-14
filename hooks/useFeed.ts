@@ -14,6 +14,8 @@ interface UseFeedReturn {
   hasMore: boolean
   sortBy: SortOption
   setSortBy: (sort: SortOption) => void
+  search: string
+  setSearch: (q: string) => void
   loadMore: () => void
   refresh: () => void
 }
@@ -25,12 +27,13 @@ export function useFeed(): UseFeedReturn {
   const [error, setError] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
   const [sortBy, setSortByState] = useState<SortOption>("popular")
+  const [search, setSearchState] = useState("")
   const [page, setPage] = useState(0)
 
   const supabase = createClient()
 
   const fetchFeed = useCallback(
-    async (pageNum: number, sort: SortOption, append: boolean) => {
+    async (pageNum: number, sort: SortOption, q: string, append: boolean) => {
       if (append) setLoadingMore(true)
       else setLoading(true)
       setError(null)
@@ -40,12 +43,23 @@ export function useFeed(): UseFeedReturn {
       const to = from + FEED_PAGE_SIZE - 1
 
       try {
-        const { data, error: dbError } = await supabase
+        let query = supabase
           .from("v_feed_scores")
           .select("*")
           .order(config.column, { ascending: config.ascending })
           .order("created_at", { ascending: false })
-          .range(from, to)
+
+        // Server-side search: filter by title, category, tags, or author
+        if (q.trim()) {
+          const term = `%${q.trim()}%`
+          query = query.or(
+            `title.ilike.${term},category.ilike.${term},author_full_name.ilike.${term}`
+          )
+        }
+
+        query = query.range(from, to)
+
+        const { data, error: dbError } = await query
 
         if (dbError) throw dbError
 
@@ -66,24 +80,28 @@ export function useFeed(): UseFeedReturn {
 
   useEffect(() => {
     setPage(0)
-    fetchFeed(0, sortBy, false)
-  }, [sortBy, fetchFeed])
+    fetchFeed(0, sortBy, search, false)
+  }, [sortBy, search, fetchFeed])
 
   const setSortBy = useCallback((sort: SortOption) => {
     setSortByState(sort)
+  }, [])
+
+  const setSearch = useCallback((q: string) => {
+    setSearchState(q)
   }, [])
 
   const loadMore = useCallback(() => {
     if (loading || loadingMore || !hasMore) return
     const next = page + 1
     setPage(next)
-    fetchFeed(next, sortBy, true)
-  }, [loading, loadingMore, hasMore, page, sortBy, fetchFeed])
+    fetchFeed(next, sortBy, search, true)
+  }, [loading, loadingMore, hasMore, page, sortBy, search, fetchFeed])
 
   const refresh = useCallback(() => {
     setPage(0)
-    fetchFeed(0, sortBy, false)
-  }, [sortBy, fetchFeed])
+    fetchFeed(0, sortBy, search, false)
+  }, [sortBy, search, fetchFeed])
 
   return {
     items,
@@ -93,6 +111,8 @@ export function useFeed(): UseFeedReturn {
     hasMore,
     sortBy,
     setSortBy,
+    search,
+    setSearch,
     loadMore,
     refresh,
   }

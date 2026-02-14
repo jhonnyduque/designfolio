@@ -3,6 +3,7 @@
 
 import { useState, useCallback, useRef, useMemo } from "react"
 import { useOnboarding } from "@/hooks/useOnboarding"
+import { useAuth } from "@/hooks/useAuth"
 import {
   PROFILE_CATEGORIES,
   CAREER_YEARS,
@@ -36,6 +37,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
   const usernameTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { save, checkUsername, step: saveStep, progress, error } = useOnboarding()
+  const { signOut } = useAuth()
 
   const bioLen = bio.length
   const isSaving = saveStep !== "idle" && saveStep !== "error"
@@ -147,6 +149,16 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
 
   return (
     <div>
+      {/* Sign out option */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={signOut}
+          className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          Cerrar sesión
+        </button>
+      </div>
+
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold text-gray-900">

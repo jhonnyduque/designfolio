@@ -7,14 +7,6 @@ interface FeedCardProps {
   item: FeedItem
 }
 
-const LEVEL_LABELS = ["Novato", "Activo", "Reconocido", "Referencia"] as const
-const LEVEL_STYLES = [
-  "bg-gray-100 text-gray-600",
-  "bg-sky-50 text-sky-700",
-  "bg-violet-50 text-violet-700",
-  "bg-amber-50 text-amber-700",
-] as const
-
 export function FeedCard({ item }: FeedCardProps) {
   const thumbnail = item.images?.[0]?.url ?? null
 
@@ -22,7 +14,7 @@ export function FeedCard({ item }: FeedCardProps) {
     <Link href={`/dashboard/work/${item.id}`} className="block">
       <article className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md hover:border-gray-300 transition-all duration-200">
       {/* Image */}
-      <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
+      <div className="aspect-[4/5] bg-gray-100 overflow-hidden">
         {thumbnail ? (
           <img
             src={thumbnail}
@@ -40,18 +32,8 @@ export function FeedCard({ item }: FeedCardProps) {
       </div>
 
       <div className="p-4">
-        {/* Category pill */}
-        <span className="inline-block text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-          {item.category}
-        </span>
-
-        {/* Title */}
-        <h3 className="mt-1 text-[15px] font-semibold text-gray-900 leading-snug line-clamp-2">
-          {item.title}
-        </h3>
-
         {/* Author */}
-        <div className="mt-3 flex items-center gap-2">
+        <div className="flex items-center gap-2">
           {item.author_avatar_url ? (
             <img
               src={item.author_avatar_url}
@@ -65,18 +47,19 @@ export function FeedCard({ item }: FeedCardProps) {
               </span>
             </div>
           )}
-          <span className="text-sm text-gray-600 truncate">
+          <span className="text-sm font-medium text-gray-700 truncate">
             {item.author_full_name}
           </span>
-          {item.author_reputation_level > 0 && (
-            <span
-              className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                LEVEL_STYLES[item.author_reputation_level] ?? LEVEL_STYLES[0]
-              }`}
-            >
-              {LEVEL_LABELS[item.author_reputation_level] ?? ""}
-            </span>
-          )}
+        </div>
+
+        {/* Category + Title */}
+        <div className="mt-2.5">
+          <span className="inline-block text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+            {item.category}
+          </span>
+          <h3 className="mt-0.5 text-[15px] font-semibold text-gray-900 leading-snug line-clamp-2">
+            {item.title}
+          </h3>
         </div>
 
         {/* Stats */}

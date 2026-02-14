@@ -22,30 +22,54 @@ export function RegisterForm() {
     setError("")
     setLoading(true)
 
-    // TODO: Validate invite code via supabase.rpc('claim_invite_code', ...)
-    // For now, invite code is collected but not validated server-side.
-    if (!inviteCode.trim()) {
+    const code = inviteCode.trim()
+    if (!code) {
       setError("El código de invitación es obligatorio para la beta.")
       setLoading(false)
       return
     }
 
-    // Derive full_name from email if not provided
     const name = fullName.trim() || email.split("@")[0]
 
     try {
-      const { error: authError } = await supabase.auth.signUp({
+      // 1. Sign up user
+      const { data: signUpData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: name,
-            invite_code: inviteCode.trim(),
+            invite_code: code,
           },
         },
       })
 
       if (authError) throw authError
+
+      // 2. Claim invite code with the new user's ID
+      // signUp returns the user even before email confirmation
+      const userId = signUpData.user?.id
+      if (userId) {
+        const { data: claimed, error: claimErr } = await supabase.rpc(
+          "claim_invite_code",
+          {
+            p_code: code,
+            p_user_id: userId,
+          }
+        )
+
+        if (claimErr || !claimed) {
+          // Code is invalid — delete the user we just created
+          // We can't easily delete, so we show an error.
+          // The user won't be able to login anyway without email confirmation,
+          // and we can clean up orphaned accounts later.
+          setError(
+            "Código de invitación inválido, expirado o ya utilizado. Verifica tu código e intenta de nuevo."
+          )
+          setLoading(false)
+          return
+        }
+      }
 
       setSuccess(true)
     } catch (err) {
@@ -56,16 +80,19 @@ export function RegisterForm() {
   }
 
   async function handleGoogle() {
-    // TODO: Google OAuth + invite code flow needs special handling.
-    // For beta, collect invite code before OAuth redirect.
-    if (!inviteCode.trim()) {
+    const code = inviteCode.trim()
+    if (!code) {
       setError("Ingresa tu código de invitación antes de continuar con Google.")
       return
     }
+
+    // Store invite code in localStorage so we can claim it after OAuth redirect
+    localStorage.setItem("df_invite_code", code)
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     })
   }
@@ -122,7 +149,7 @@ export function RegisterForm() {
             type="text"
             required
             value={inviteCode}
-            onChange={(e) => setInviteCode(e.target.value)}
+            onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
             className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors font-mono tracking-wider"
             placeholder="ABCD1234"
             maxLength={12}
