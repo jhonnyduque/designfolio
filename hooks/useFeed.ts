@@ -26,7 +26,7 @@ export function useFeed(): UseFeedReturn {
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
-  const [sortBy, setSortByState] = useState<SortOption>("popular")
+  const [sortBy, setSortByState] = useState<SortOption>("recent")
   const [search, setSearchState] = useState("")
   const [page, setPage] = useState(0)
 
