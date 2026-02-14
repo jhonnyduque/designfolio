@@ -14,7 +14,7 @@ export default async function MyWorksPage() {
   const { data: works } = await supabase
     .from("works")
     .select(
-      "id, title, category, images, moderation_status, likes_count, comments_count, created_at, published_at"
+      "id, title, category, images, moderation_status, archived, likes_count, comments_count, created_at, published_at"
     )
     .eq("author_id", user.id)
     .order("created_at", { ascending: false })

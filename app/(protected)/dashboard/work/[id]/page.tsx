@@ -34,6 +34,11 @@ export default async function WorkPage({ params }: PageProps) {
     notFound()
   }
 
+  // Get current user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   return (
     <WorkDetail
       work={{
@@ -49,6 +54,7 @@ export default async function WorkPage({ params }: PageProps) {
         published_at: work.published_at,
       }}
       author={author}
+      currentUserId={user?.id ?? null}
     />
   )
 }

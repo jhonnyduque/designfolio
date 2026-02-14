@@ -1,7 +1,9 @@
 // components/works/MyWorks.tsx
 "use client"
 
+import { useState, useCallback } from "react"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
 
 interface MyWork {
   id: string
@@ -9,6 +11,7 @@ interface MyWork {
   category: string
   images: { url: string }[]
   moderation_status: string
+  archived: boolean
   likes_count: number
   comments_count: number
   created_at: string
@@ -25,10 +28,66 @@ const STATUS_STYLES: Record<string, { label: string; style: string }> = {
   rejected: { label: "Rechazada", style: "bg-red-50 text-red-600" },
 }
 
-export function MyWorks({ works }: { works: MyWork[] }) {
-  const pending = works.filter((w) => w.moderation_status === "pending_review")
-  const approved = works.filter((w) => w.moderation_status === "approved")
-  const rejected = works.filter((w) => w.moderation_status === "rejected")
+export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
+  const [works, setWorks] = useState(initialWorks)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<{
+    id: string
+    title: string
+  } | null>(null)
+  const [showArchived, setShowArchived] = useState(false)
+  const supabase = createClient()
+
+  const pending = works.filter((w) => w.moderation_status === "pending_review" && !w.archived)
+  const approved = works.filter((w) => w.moderation_status === "approved" && !w.archived)
+  const rejected = works.filter((w) => w.moderation_status === "rejected" && !w.archived)
+  const archived = works.filter((w) => w.archived)
+
+  const visibleWorks = showArchived
+    ? archived
+    : works.filter((w) => !w.archived)
+
+  const handleArchive = useCallback(
+    async (workId: string, archive: boolean) => {
+      setActionLoading(workId)
+      try {
+        const { error } = await supabase.rpc("user_archive_work", {
+          p_work_id: workId,
+          p_archived: archive,
+        })
+        if (error) throw error
+        setWorks((prev) =>
+          prev.map((w) =>
+            w.id === workId ? { ...w, archived: archive } : w
+          )
+        )
+      } catch {
+        // Silently fail
+      } finally {
+        setActionLoading(null)
+      }
+    },
+    [supabase]
+  )
+
+  const handleDelete = useCallback(
+    async (workId: string) => {
+      setActionLoading(workId)
+      try {
+        const { error } = await supabase.rpc("user_delete_work", {
+          p_work_id: workId,
+        })
+        if (error) throw error
+        setWorks((prev) => prev.filter((w) => w.id !== workId))
+      } catch {
+        // Silently fail
+      } finally {
+        setActionLoading(null)
+        setConfirmDelete(null)
+      }
+    },
+    [supabase]
+  )
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -36,7 +95,7 @@ export function MyWorks({ works }: { works: MyWork[] }) {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Mis obras</h1>
           <p className="mt-1 text-sm text-gray-500">
-            {works.length} {works.length === 1 ? "obra" : "obras"} en total
+            {works.filter((w) => !w.archived).length} obras · {archived.length} archivadas
           </p>
         </div>
         <Link
@@ -48,7 +107,7 @@ export function MyWorks({ works }: { works: MyWork[] }) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-4 gap-3 mb-6">
         <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
           <p className="text-xl font-bold text-green-600">{approved.length}</p>
           <p className="text-xs text-gray-500">Publicadas</p>
@@ -61,6 +120,34 @@ export function MyWorks({ works }: { works: MyWork[] }) {
           <p className="text-xl font-bold text-red-500">{rejected.length}</p>
           <p className="text-xs text-gray-500">Rechazadas</p>
         </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
+          <p className="text-xl font-bold text-gray-400">{archived.length}</p>
+          <p className="text-xs text-gray-500">Archivadas</p>
+        </div>
+      </div>
+
+      {/* Filter tabs - always visible */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setShowArchived(false)}
+          className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+            !showArchived
+              ? "border-gray-900 bg-gray-900 text-white"
+              : "border-gray-300 text-gray-600 hover:border-gray-400"
+          }`}
+        >
+          Activas ({works.filter((w) => !w.archived).length})
+        </button>
+        <button
+          onClick={() => setShowArchived(true)}
+          className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+            showArchived
+              ? "border-gray-900 bg-gray-900 text-white"
+              : "border-gray-300 text-gray-600 hover:border-gray-400"
+          }`}
+        >
+          Archivadas ({archived.length})
+        </button>
       </div>
 
       {works.length === 0 && (
@@ -79,87 +166,162 @@ export function MyWorks({ works }: { works: MyWork[] }) {
 
       {/* Works grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {works.map((work) => {
+        {visibleWorks.map((work) => {
           const thumb = work.images?.[0]?.url ?? null
-          const status = STATUS_STYLES[work.moderation_status] ?? STATUS_STYLES.draft
+          const status =
+            STATUS_STYLES[work.moderation_status] ?? STATUS_STYLES.draft
           const isApproved = work.moderation_status === "approved"
           const date = new Date(work.created_at).toLocaleDateString("es-ES", {
             day: "numeric",
             month: "short",
           })
 
-          const Wrapper = isApproved ? Link : "div"
-          const wrapperProps = isApproved
-            ? { href: `/dashboard/work/${work.id}`, className: "block" }
-            : { className: "block" }
-
           return (
-            <Wrapper key={work.id} {...(wrapperProps as any)}>
-              <article className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200">
+            <article
+              key={work.id}
+              className={`group bg-white rounded-xl border border-gray-200 overflow-hidden transition-all duration-200 ${
+                work.archived ? "opacity-60" : "hover:shadow-md"
+              }`}
+            >
+              {/* Image - clickable if approved */}
+              {isApproved && !work.archived ? (
+                <Link href={`/dashboard/work/${work.id}`}>
+                  <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
+                    {thumb ? (
+                      <img
+                        src={thumb}
+                        alt={work.title}
+                        className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-gray-300">—</span>
+                      </div>
+                    )}
+                    <span
+                      className={`absolute top-2 right-2 text-[11px] font-medium px-2 py-0.5 rounded-full ${status.style}`}
+                    >
+                      {status.label}
+                    </span>
+                  </div>
+                </Link>
+              ) : (
                 <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
                   {thumb ? (
                     <img
                       src={thumb}
                       alt={work.title}
-                      className={`w-full h-full object-cover ${
-                        isApproved
-                          ? "group-hover:scale-[1.02] transition-transform duration-300"
-                          : "opacity-75"
-                      }`}
+                      className="w-full h-full object-cover opacity-75"
                       loading="lazy"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <svg
-                        className="w-10 h-10 text-gray-300"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
+                      <span className="text-gray-300">—</span>
                     </div>
                   )}
-
-                  {/* Status badge */}
                   <span
-                    className={`absolute top-2 right-2 text-[11px] font-medium px-2 py-0.5 rounded-full ${status.style}`}
+                    className={`absolute top-2 right-2 text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                      work.archived
+                        ? "bg-gray-100 text-gray-500"
+                        : status.style
+                    }`}
                   >
-                    {status.label}
+                    {work.archived ? "Archivada" : status.label}
                   </span>
+                </div>
+              )}
+
+              <div className="p-4">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                  {work.category}
+                </span>
+                <h3 className="mt-1 text-[15px] font-semibold text-gray-900 leading-snug line-clamp-2">
+                  {work.title}
+                </h3>
+                <div className="mt-2 flex items-center justify-between text-xs text-gray-400">
+                  <span>{date}</span>
+                  {isApproved && !work.archived && (
+                    <span className="flex items-center gap-2">
+                      <span>♥ {work.likes_count}</span>
+                      <span>💬 {work.comments_count}</span>
+                    </span>
+                  )}
                 </div>
 
-                <div className="p-4">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                    {work.category}
-                  </span>
-                  <h3 className="mt-1 text-[15px] font-semibold text-gray-900 leading-snug line-clamp-2">
-                    {work.title}
-                  </h3>
-                  <div className="mt-2 flex items-center justify-between text-xs text-gray-400">
-                    <span>{date}</span>
-                    {isApproved && (
-                      <span className="flex items-center gap-2">
-                        <span className="flex items-center gap-0.5">
-                          ♥ {work.likes_count}
-                        </span>
-                        <span className="flex items-center gap-0.5">
-                          💬 {work.comments_count}
-                        </span>
-                      </span>
-                    )}
-                  </div>
+                {/* Actions */}
+                <div className="mt-3 pt-3 border-t border-gray-100 flex gap-2">
+                  {work.archived ? (
+                    <button
+                      onClick={() => handleArchive(work.id, false)}
+                      disabled={actionLoading === work.id}
+                      className="text-xs text-green-600 hover:text-green-700 px-2 py-1 rounded hover:bg-green-50 transition-colors"
+                    >
+                      Restaurar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleArchive(work.id, true)}
+                      disabled={actionLoading === work.id}
+                      className="text-xs text-amber-600 hover:text-amber-700 px-2 py-1 rounded hover:bg-amber-50 transition-colors"
+                    >
+                      Archivar
+                    </button>
+                  )}
+                  <button
+                    onClick={() =>
+                      setConfirmDelete({ id: work.id, title: work.title })
+                    }
+                    disabled={actionLoading === work.id}
+                    className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                  >
+                    Eliminar
+                  </button>
                 </div>
-              </article>
-            </Wrapper>
+              </div>
+            </article>
           )
         })}
       </div>
+
+      {visibleWorks.length === 0 && works.length > 0 && (
+        <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+          <p className="text-sm text-gray-400">
+            {showArchived
+              ? "No tienes obras archivadas"
+              : "Todas tus obras están archivadas"}
+          </p>
+        </div>
+      )}
+
+      {/* Confirm delete dialog */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
+            <h3 className="text-lg font-bold text-gray-900">
+              ¿Eliminar &ldquo;{confirmDelete.title}&rdquo;?
+            </h3>
+            <p className="mt-2 text-sm text-gray-500">
+              Esta acción no se puede deshacer. Se eliminarán también sus likes y
+              comentarios.
+            </p>
+            <div className="mt-4 flex gap-2 justify-end">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleDelete(confirmDelete.id)}
+                className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

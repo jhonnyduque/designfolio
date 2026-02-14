@@ -5,8 +5,10 @@ import { useState, useCallback } from "react"
 import { useModeration } from "@/hooks/useModeration"
 import { WorkPreview } from "./WorkPreview"
 import { InviteCodesManager } from "./InviteCodesManager"
+import { UsersManager } from "./UsersManager"
+import { WorksManager } from "./WorksManager"
 
-type Tab = "queue" | "history" | "invites"
+type Tab = "queue" | "history" | "invites" | "users" | "works"
 
 export function ModerationPanel() {
   const { queue, history, loading, error, stats, approve, reject, refresh } =
@@ -90,43 +92,34 @@ export function ModerationPanel() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6">
-        <button
-          onClick={() => setTab("queue")}
-          className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-            tab === "queue"
-              ? "bg-gray-900 text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          Cola ({stats.pending})
-        </button>
-        <button
-          onClick={() => setTab("history")}
-          className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-            tab === "history"
-              ? "bg-gray-900 text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          Historial
-        </button>
-        <button
-          onClick={() => setTab("invites")}
-          className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-            tab === "invites"
-              ? "bg-gray-900 text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          Invitaciones
-        </button>
+      <div className="flex gap-1 mb-6 overflow-x-auto pb-1 -mx-1 px-1">
+        {(
+          [
+            ["queue", `Cola (${stats.pending})`],
+            ["history", "Historial"],
+            ["works", "Publicaciones"],
+            ["users", "Usuarios"],
+            ["invites", "Invitaciones"],
+          ] as [Tab, string][]
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`px-3 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap flex-shrink-0 ${
+              tab === key
+                ? "bg-gray-900 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
         <button
           onClick={refresh}
           disabled={loading}
-          className="ml-auto px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          className="ml-auto px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors flex-shrink-0"
         >
-          ↻ Refrescar
+          ↻
         </button>
       </div>
 
@@ -265,6 +258,12 @@ export function ModerationPanel() {
 
       {/* Invites tab */}
       {tab === "invites" && <InviteCodesManager />}
+
+      {/* Users tab */}
+      {tab === "users" && <UsersManager />}
+
+      {/* Works tab */}
+      {tab === "works" && <WorksManager />}
     </div>
   )
 }

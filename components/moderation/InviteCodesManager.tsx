@@ -127,41 +127,61 @@ export function InviteCodesManager() {
     <div>
       {/* Generator */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-        <h3 className="text-sm font-semibold text-gray-900 mb-4">
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">
           Generar códigos de invitación
         </h3>
-        <div className="flex flex-wrap items-end gap-3">
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Cantidad</label>
-            <select
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Quantity */}
+          {[1, 3, 5, 10].map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setQuantity(n)}
+              className={`w-9 h-9 text-sm rounded-lg border transition-colors ${
+                quantity === n
+                  ? "border-gray-900 bg-gray-900 text-white"
+                  : "border-gray-300 text-gray-600 hover:border-gray-400"
+              }`}
             >
-              {[1, 3, 5, 10].map((n) => (
-                <option key={n} value={n}>
-                  {n} {n === 1 ? "código" : "códigos"}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Tipo</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as any)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
-            >
-              <option value="early">Early access</option>
-              <option value="mentor_invite">Mentor invite</option>
-            </select>
-          </div>
+              {n}
+            </button>
+          ))}
+
+          <span className="text-gray-300 mx-1 hidden sm:block">|</span>
+
+          {/* Role */}
+          <button
+            type="button"
+            onClick={() => setRole("early")}
+            className={`px-3 h-9 text-xs rounded-lg border transition-colors ${
+              role === "early"
+                ? "border-gray-900 bg-gray-900 text-white"
+                : "border-gray-300 text-gray-600 hover:border-gray-400"
+            }`}
+          >
+            Early
+          </button>
+          <button
+            type="button"
+            onClick={() => setRole("mentor_invite")}
+            className={`px-3 h-9 text-xs rounded-lg border transition-colors ${
+              role === "mentor_invite"
+                ? "border-gray-900 bg-gray-900 text-white"
+                : "border-gray-300 text-gray-600 hover:border-gray-400"
+            }`}
+          >
+            Mentor
+          </button>
+
+          <span className="text-gray-300 mx-1 hidden sm:block">|</span>
+
+          {/* Generate button */}
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
+            className="px-4 h-9 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
           >
-            {generating ? "Generando..." : "Generar"}
+            {generating ? "..." : "Generar"}
           </button>
         </div>
       </div>
@@ -178,74 +198,70 @@ export function InviteCodesManager() {
         </div>
       </div>
 
-      {/* Available codes */}
-      {available.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
-          <div className="px-5 py-3 border-b border-gray-100">
+      {/* All codes - single unified list */}
+      {!loading && codes.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-900">
-              Códigos disponibles
+              Todos los códigos
             </h3>
+            <span className="text-xs text-gray-400">
+              {available.length} disponibles · {claimed.length} usados
+            </span>
           </div>
           <div className="divide-y divide-gray-100">
-            {available.map((c) => (
-              <div
-                key={c.id}
-                className="flex items-center justify-between px-5 py-3"
-              >
-                <div className="flex items-center gap-3">
-                  <code className="text-sm font-mono font-bold text-gray-900 bg-gray-50 px-2.5 py-1 rounded-lg tracking-wider">
-                    {c.code}
-                  </code>
-                  <span className="text-[11px] text-gray-400 hidden sm:block">
-                    {c.role === "mentor_invite" ? "Mentor" : "Early"}
-                  </span>
-                </div>
-                <button
-                  onClick={() => handleCopy(c.code)}
-                  className={`text-xs font-medium px-3 py-1 rounded-lg transition-colors ${
-                    copied === c.code
-                      ? "bg-green-50 text-green-600"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+            {codes.map((c) => {
+              const isUsed = !!c.claimed_by
+              return (
+                <div
+                  key={c.id}
+                  className={`flex items-center justify-between px-5 py-3 ${
+                    isUsed ? "bg-gray-50" : ""
                   }`}
                 >
-                  {copied === c.code ? "✓ Copiado" : "Copiar"}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+                  <div className="flex items-center gap-3">
+                    <code
+                      className={`text-sm font-mono px-2.5 py-1 rounded-lg tracking-wider ${
+                        isUsed
+                          ? "text-gray-300 line-through bg-transparent"
+                          : "font-bold text-gray-900 bg-gray-50"
+                      }`}
+                    >
+                      {c.code}
+                    </code>
+                    <span className="text-[11px] text-gray-400 hidden sm:block">
+                      {c.role === "mentor_invite" ? "Mentor" : "Early"}
+                    </span>
+                    {isUsed && (
+                      <span className="text-xs text-gray-400">
+                        → {c.claimer_name} ·{" "}
+                        {new Date(c.claimed_at!).toLocaleDateString("es-ES", {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                      </span>
+                    )}
+                  </div>
 
-      {/* Claimed codes */}
-      {claimed.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="px-5 py-3 border-b border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-900">
-              Códigos reclamados
-            </h3>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {claimed.map((c) => (
-              <div
-                key={c.id}
-                className="flex items-center justify-between px-5 py-3"
-              >
-                <div className="flex items-center gap-3">
-                  <code className="text-sm font-mono text-gray-400 line-through">
-                    {c.code}
-                  </code>
-                  <span className="text-xs text-gray-500">
-                    → {c.claimer_name}
-                  </span>
+                  {isUsed ? (
+                    <span className="text-[11px] text-gray-300 font-medium">
+                      Utilizado
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleCopy(c.code)}
+                      className={`text-xs font-semibold px-3 py-1 rounded-lg transition-colors ${
+                        copied === c.code
+                          ? "bg-green-50 text-green-600"
+                          : "bg-gray-900 text-white hover:bg-gray-800"
+                      }`}
+                    >
+                      {copied === c.code ? "✓ Copiado" : "Copiar"}
+                    </button>
+                  )}
                 </div>
-                <span className="text-[11px] text-gray-400">
-                  {new Date(c.claimed_at!).toLocaleDateString("es-ES", {
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}

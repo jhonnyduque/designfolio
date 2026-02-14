@@ -104,6 +104,12 @@ export function DashboardShell({
                 {menuOpen && (
                   <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-30">
                     <Link
+                      href="/dashboard/stats"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Mi dashboard
+                    </Link>
+                    <Link
                       href="/dashboard/my-works"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
@@ -115,6 +121,17 @@ export function DashboardShell({
                     >
                       Editar perfil
                     </Link>
+                    {isFounder && (
+                      <>
+                        <div className="h-px bg-gray-100 my-1" />
+                        <Link
+                          href="/dashboard/moderation"
+                          className="block px-4 py-2 text-sm text-amber-700 font-medium hover:bg-amber-50 transition-colors"
+                        >
+                          Moderación
+                        </Link>
+                      </>
+                    )}
                     <div className="h-px bg-gray-100 my-1" />
                     <button
                       onClick={signOut}
