@@ -1,4 +1,3 @@
-// components/moderation/ModerationPanel.tsx
 "use client"
 
 import { useState, useCallback } from "react"
@@ -7,12 +6,20 @@ import { WorkPreview } from "./WorkPreview"
 import { InviteCodesManager } from "./InviteCodesManager"
 import { UsersManager } from "./UsersManager"
 import { WorksManager } from "./WorksManager"
+import { TaxonomyPanel } from "./TaxonomyPanel"
 
-type Tab = "queue" | "history" | "invites" | "users" | "works"
+type Tab =
+  | "queue"
+  | "history"
+  | "works"
+  | "users"
+  | "invites"
+  | "taxonomy"
 
 export function ModerationPanel() {
   const { queue, history, loading, error, stats, approve, reject, refresh } =
     useModeration()
+
   const [tab, setTab] = useState<Tab>("queue")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<{
@@ -26,11 +33,19 @@ export function ModerationPanel() {
       setFeedback(null)
       const result = await approve(workId)
       setActionLoading(null)
+
       if (result.success) {
-        setFeedback({ type: "success", message: "Obra aprobada. Aparecerá en el feed tras el próximo refresh." })
+        setFeedback({
+          type: "success",
+          message:
+            "Obra aprobada. Aparecerá en el feed tras el próximo refresh.",
+        })
         setTimeout(() => setFeedback(null), 4000)
       } else {
-        setFeedback({ type: "error", message: result.error ?? "Error al aprobar" })
+        setFeedback({
+          type: "error",
+          message: result.error ?? "Error al aprobar",
+        })
       }
     },
     [approve]
@@ -42,11 +57,18 @@ export function ModerationPanel() {
       setFeedback(null)
       const result = await reject(workId, note)
       setActionLoading(null)
+
       if (result.success) {
-        setFeedback({ type: "success", message: "Obra rechazada. El autor fue notificado." })
+        setFeedback({
+          type: "success",
+          message: "Obra rechazada. El autor fue notificado.",
+        })
         setTimeout(() => setFeedback(null), 4000)
       } else {
-        setFeedback({ type: "error", message: result.error ?? "Error al rechazar" })
+        setFeedback({
+          type: "error",
+          message: result.error ?? "Error al rechazar",
+        })
       }
     },
     [reject]
@@ -58,7 +80,7 @@ export function ModerationPanel() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Moderación</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Revisa y aprueba las obras enviadas por la comunidad.
+          Gestiona contenido, usuarios y taxonomía del sistema.
         </p>
       </div>
 
@@ -78,7 +100,7 @@ export function ModerationPanel() {
         </div>
       </div>
 
-      {/* Feedback toast */}
+      {/* Feedback */}
       {feedback && (
         <div
           className={`mb-6 p-3 rounded-lg text-sm font-medium ${
@@ -100,12 +122,13 @@ export function ModerationPanel() {
             ["works", "Publicaciones"],
             ["users", "Usuarios"],
             ["invites", "Invitaciones"],
+            ["taxonomy", "Taxonomía"],
           ] as [Tab, string][]
         ).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`px-3 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap flex-shrink-0 ${
+            className={`px-3 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap ${
               tab === key
                 ? "bg-gray-900 text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -114,156 +137,42 @@ export function ModerationPanel() {
             {label}
           </button>
         ))}
-        <button
-          onClick={refresh}
-          disabled={loading}
-          className="ml-auto px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors flex-shrink-0"
-        >
-          ↻
-        </button>
       </div>
 
-      {/* Error */}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-          <p className="text-sm text-red-700">{error}</p>
-          <button
-            onClick={refresh}
-            className="mt-1 text-sm font-medium text-red-600 underline"
-          >
-            Reintentar
-          </button>
+      {/* Tabs content */}
+
+      {tab === "queue" && (
+        <div className="space-y-6">
+          {queue.map((work) => (
+            <WorkPreview
+              key={work.id}
+              work={work}
+              onApprove={() => handleApprove(work.id)}
+              onReject={(note) => handleReject(work.id, note)}
+              loading={actionLoading === work.id}
+            />
+          ))}
         </div>
       )}
 
-      {/* Queue tab */}
-      {tab === "queue" && (
-        <>
-          {loading && queue.length === 0 && (
-            <div className="space-y-4">
-              {[1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-xl border border-gray-200 animate-pulse"
-                >
-                  <div className="aspect-video bg-gray-100" />
-                  <div className="p-5 space-y-3">
-                    <div className="h-3 w-20 bg-gray-100 rounded" />
-                    <div className="h-5 w-2/3 bg-gray-100 rounded" />
-                    <div className="h-3 w-full bg-gray-100 rounded" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {!loading && queue.length === 0 && (
-            <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-              <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-7 h-7 text-green-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <p className="text-gray-500 font-medium">
-                No hay obras pendientes
-              </p>
-              <p className="text-gray-400 text-sm mt-1">
-                Todas las obras han sido revisadas.
-              </p>
-            </div>
-          )}
-
-          <div className="space-y-6">
-            {queue.map((work) => (
-              <WorkPreview
-                key={work.id}
-                work={work}
-                onApprove={() => handleApprove(work.id)}
-                onReject={(note) => handleReject(work.id, note)}
-                loading={actionLoading === work.id}
-              />
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* History tab */}
       {tab === "history" && (
-        <>
-          {history.length === 0 && (
-            <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-              <p className="text-gray-400 text-sm">
-                No hay acciones de moderación registradas.
+        <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+          {history.map((entry) => (
+            <div key={entry.id} className="p-4">
+              <p className="text-sm text-gray-900">
+                {entry.type === "work_approved"
+                  ? "Obra aprobada"
+                  : "Obra rechazada"}
               </p>
             </div>
-          )}
-
-          {history.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
-              {history.map((entry) => {
-                const isApprove = entry.type === "work_approved"
-                return (
-                  <div key={entry.id} className="p-4 flex items-start gap-3">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        isApprove
-                          ? "bg-green-100 text-green-600"
-                          : "bg-red-100 text-red-500"
-                      }`}
-                    >
-                      {isApprove ? "✓" : "✗"}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">
-                        Obra{" "}
-                        <span
-                          className={`font-medium ${
-                            isApprove ? "text-green-700" : "text-red-600"
-                          }`}
-                        >
-                          {isApprove ? "aprobada" : "rechazada"}
-                        </span>
-                      </p>
-                      {entry.payload?.note && (
-                        <p className="mt-0.5 text-xs text-gray-500 italic">
-                          &ldquo;{entry.payload.note}&rdquo;
-                        </p>
-                      )}
-                      <p className="mt-1 text-xs text-gray-400">
-                        {new Date(entry.created_at).toLocaleString("es-ES", {
-                          day: "numeric",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </>
+          ))}
+        </div>
       )}
 
-      {/* Invites tab */}
-      {tab === "invites" && <InviteCodesManager />}
-
-      {/* Users tab */}
-      {tab === "users" && <UsersManager />}
-
-      {/* Works tab */}
       {tab === "works" && <WorksManager />}
+      {tab === "users" && <UsersManager />}
+      {tab === "invites" && <InviteCodesManager />}
+      {tab === "taxonomy" && <TaxonomyPanel />}
     </div>
   )
 }
