@@ -14,7 +14,7 @@ interface UseCreateWorkReturn {
   publish: (
     files: File[],
     payload: Omit<CreateWorkPayload, "images">
-  ) => Promise<void>
+  ) => Promise<string | null>   // 🔥 CAMBIADO
   step: PublishStep
   progress: string
   error: string | null
@@ -39,7 +39,7 @@ export function useCreateWork(): UseCreateWorkReturn {
     async (
       files: File[],
       payload: Omit<CreateWorkPayload, "images">
-    ) => {
+    ): Promise<string | null> => {  // 🔥 CAMBIADO
       setError(null)
 
       try {
@@ -74,7 +74,6 @@ export function useCreateWork(): UseCreateWorkReturn {
         setStep("saving")
         setProgress("Guardando obra...")
 
-        // 🔥 IMPORTANTE: ahora el tipo está correctamente definido
         const moderationStatus: ModerationStatus = "pending_review"
 
         const { error: insertError } = await supabase
@@ -95,16 +94,18 @@ export function useCreateWork(): UseCreateWorkReturn {
         setStep("done")
         setProgress("Enviado a revisión")
 
-        // Redirect after brief delay
         setTimeout(() => {
           router.push("/dashboard")
           router.refresh()
         }, 1500)
+
+        return workId   // 🔥 AHORA SÍ DEVUELVE EL ID
       } catch (err) {
         setStep("error")
         setError(
           err instanceof Error ? err.message : "Error al publicar"
         )
+        return null    // 🔥 IMPORTANTE
       }
     },
     [supabase, router]
