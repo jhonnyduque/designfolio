@@ -1,6 +1,6 @@
 // app/(protected)/dashboard/work/[id]/page.tsx
 import { notFound } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { WorkDetail } from "@/components/works/WorkDetail"
 
 interface PageProps {
@@ -9,7 +9,7 @@ interface PageProps {
 
 export default async function WorkPage({ params }: PageProps) {
   const { id } = await params
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   // Fetch work
   const { data: work, error } = await supabase

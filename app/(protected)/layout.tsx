@@ -1,6 +1,6 @@
 // app/(protected)/layout.tsx
 import { redirect } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { DashboardShell } from "./DashboardShell"
 
 export default async function ProtectedLayout({
@@ -8,7 +8,7 @@ export default async function ProtectedLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()

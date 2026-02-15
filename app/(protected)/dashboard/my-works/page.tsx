@@ -1,10 +1,10 @@
 // app/(protected)/dashboard/my-works/page.tsx
 import { redirect } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { MyWorks } from "@/components/works/MyWorks"
 
 export default async function MyWorksPage() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()

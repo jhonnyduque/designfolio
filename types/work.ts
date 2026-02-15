@@ -35,7 +35,7 @@ export type WorkCategory = (typeof WORK_CATEGORIES)[number]
 export const WORK_LIMITS = {
   TITLE_MIN: 1,
   TITLE_MAX: 150,
-  DESCRIPTION_MIN: 120,
+  DESCRIPTION_MIN: 25,
   TAGS_MAX: 8,
   IMAGES_MIN: 1,
   IMAGES_MAX: 6,

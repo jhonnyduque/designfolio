@@ -1,6 +1,6 @@
 // app/(protected)/dashboard/moderation/tags/page.tsx
 import { redirect } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { TagsModerationPanel } from "@/components/moderation/TagsModerationPanel"
 
 export const metadata = {
@@ -8,7 +8,7 @@ export const metadata = {
 }
 
 export default async function TagsModerationPage() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const {
     data: { user },

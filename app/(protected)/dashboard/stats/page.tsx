@@ -1,10 +1,10 @@
 // app/(protected)/dashboard/stats/page.tsx
 import { redirect } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { AuthorDashboard } from "@/components/profile/AuthorDashboard"
 
 export default async function StatsPage() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()

@@ -1,6 +1,6 @@
 // app/(protected)/dashboard/profile/[username]/page.tsx
 import { notFound } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { UserProfile } from "@/components/profile/UserProfile"
 
 interface PageProps {
@@ -9,7 +9,7 @@ interface PageProps {
 
 export default async function ProfilePage({ params }: PageProps) {
   const { username } = await params
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   // Fetch profile
   const { data: profile, error } = await supabase

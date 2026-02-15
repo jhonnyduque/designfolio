@@ -1,11 +1,11 @@
 // app/(auth)/onboarding/page.tsx
 import { redirect } from "next/navigation"
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { AuthLayout } from "@/components/auth/AuthLayout"
 import { OnboardingForm } from "@/components/onboarding/OnboardingForm"
 
 export default async function OnboardingPage() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
