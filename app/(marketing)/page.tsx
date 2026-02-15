@@ -97,8 +97,7 @@ export default function Page() {
           </h1>
 
           <p className="mt-8 text-white/50 text-lg max-w-2xl mx-auto">
-            Una red curada para diseñadores que valoran el criterio,
-            no el algoritmo.
+            Un espacio donde el criterio importa más que el algoritmo.
           </p>
 
         </section>

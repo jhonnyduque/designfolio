@@ -2,7 +2,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
-export async function createServerSupabaseClient() {
+export function createClient() {
   const cookieStore = cookies() as any
 
   return createServerClient(
@@ -19,7 +19,7 @@ export async function createServerSupabaseClient() {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // Called from Server Component — ignore
+            // ignore in Server Components
           }
         },
       },
