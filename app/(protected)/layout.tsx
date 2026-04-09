@@ -14,7 +14,8 @@ export default async function ProtectedLayout({
     data: { user },
   } = await supabase.auth.getUser()
 
-  const previewAccess = cookies().get("preview_access")?.value === "true"
+  const cookieStore = await cookies()
+  const previewAccess = cookieStore.get("preview_access")?.value === "true"
 
   if (!user) {
     if (!previewAccess) {
