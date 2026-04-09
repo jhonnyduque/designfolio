@@ -1,10 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [
-      'jhonnyduque.com',
-      'images.unsplash.com',
-      'oeuvimrjpftqphkhuqyg.supabase.co', // 👈 AGREGA ESTO
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'jhonnyduque.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'oeuvimrjpftqphkhuqyg.supabase.co',
+      },
     ],
   },
 };

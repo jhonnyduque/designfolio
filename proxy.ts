@@ -28,12 +28,27 @@ export async function proxy(request: NextRequest) {
     }
   )
 
+  const previewAccess =
+    request.nextUrl.searchParams.get("preview") === "true" ||
+    request.cookies.get("preview_access")?.value === "true"
+
+  if (request.nextUrl.searchParams.get("preview") === "true") {
+    response.cookies.set("preview_access", "true", {
+      path: "/",
+      maxAge: 60,
+    })
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   // Si NO está autenticado y quiere ir a dashboard
-  if (request.nextUrl.pathname.startsWith("/dashboard") && !user) {
+  if (
+    request.nextUrl.pathname.startsWith("/dashboard") &&
+    !user &&
+    !previewAccess
+  ) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)

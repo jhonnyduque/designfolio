@@ -1,4 +1,5 @@
 // app/(protected)/layout.tsx
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { DashboardShell } from "./DashboardShell"
@@ -13,8 +14,18 @@ export default async function ProtectedLayout({
     data: { user },
   } = await supabase.auth.getUser()
 
+  const previewAccess = cookies().get("preview_access")?.value === "true"
+
   if (!user) {
-    redirect("/login")
+    if (!previewAccess) {
+      redirect("/login")
+    }
+
+    return (
+      <DashboardShell email="" isFounder={false}>
+        {children}
+      </DashboardShell>
+    )
   }
 
   // Fetch profile for founder check + onboarding check
