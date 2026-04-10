@@ -1,7 +1,7 @@
 // components/works/ImageUploader.tsx
 "use client"
 
-import { useCallback, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { WORK_LIMITS } from "@/types/work"
 
 interface ImageUploaderProps {
@@ -54,6 +54,16 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
   )
 
   const canAdd = files.length < WORK_LIMITS.IMAGES_MAX
+  const previewUrls = useMemo(
+    () => files.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    [files]
+  )
+
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach((item) => URL.revokeObjectURL(item.url))
+    }
+  }, [previewUrls])
 
   return (
     <div className="space-y-4">
@@ -102,13 +112,13 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
       {/* Preview grid */}
       {files.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {files.map((file, i) => (
+          {previewUrls.map((item, i) => (
             <div
-              key={`${file.name}-${file.size}-${i}`}
+              key={`${item.file.name}-${item.file.size}-${i}`}
               className="relative group aspect-[4/3] rounded-lg overflow-hidden bg-gray-100"
             >
               <img
-                src={URL.createObjectURL(file)}
+                src={item.url}
                 alt={`Preview ${i + 1}`}
                 className="w-full h-full object-cover"
               />

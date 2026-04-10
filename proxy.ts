@@ -3,6 +3,36 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 export async function proxy(request: NextRequest) {
+  // Remove tracking params to keep clean, trust-building URLs.
+  const trackingParams = [
+    "_gl",
+    "_ga",
+    "_ga_4TXL2R7VB0",
+    "gclid",
+    "fbclid",
+    "mc_cid",
+    "mc_eid",
+  ]
+  const cleanedUrl = request.nextUrl.clone()
+  let hasTracking = false
+
+  trackingParams.forEach((key) => {
+    if (cleanedUrl.searchParams.has(key)) {
+      cleanedUrl.searchParams.delete(key)
+      hasTracking = true
+    }
+  })
+  Array.from(cleanedUrl.searchParams.keys()).forEach((key) => {
+    if (key.toLowerCase().startsWith("utm_")) {
+      cleanedUrl.searchParams.delete(key)
+      hasTracking = true
+    }
+  })
+
+  if (hasTracking) {
+    return NextResponse.redirect(cleanedUrl)
+  }
+
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -68,5 +98,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/register", "/forgot"],
+  matcher: ["/", "/proyectos/:path*", "/dashboard/:path*", "/login", "/register", "/forgot"],
 }

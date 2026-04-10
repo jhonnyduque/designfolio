@@ -2,7 +2,6 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { uploadWorkImages } from "@/lib/supabase/storage"
 import type { CreateWorkPayload } from "@/types/work"
@@ -26,7 +25,6 @@ export function useCreateWork(): UseCreateWorkReturn {
   const [progress, setProgress] = useState("")
   const [error, setError] = useState<string | null>(null)
 
-  const router = useRouter()
   const supabase = createClient()
 
   const reset = useCallback(() => {
@@ -91,13 +89,39 @@ export function useCreateWork(): UseCreateWorkReturn {
 
         if (insertError) throw insertError
 
+        // 5️⃣ Assign taxonomy (category + tags) before finishing
+        if (payload.category) {
+          const { data: categoryRes, error: categoryErr } = await supabase.rpc(
+            "assign_category_to_work",
+            {
+              p_work_id: workId,
+              p_category_name: payload.category,
+            }
+          )
+
+          if (categoryErr) throw categoryErr
+          if (categoryRes && categoryRes.success === false) {
+            throw new Error(categoryRes.error ?? "No se pudo asignar categoría")
+          }
+        }
+
+        if (payload.tags.length > 0) {
+          const { data: tagsRes, error: tagsErr } = await supabase.rpc(
+            "assign_tags_to_work",
+            {
+              p_work_id: workId,
+              p_tag_names: payload.tags,
+            }
+          )
+
+          if (tagsErr) throw tagsErr
+          if (tagsRes && tagsRes.success === false) {
+            throw new Error(tagsRes.error ?? "No se pudieron asignar tags")
+          }
+        }
+
         setStep("done")
         setProgress("Enviado a revisión")
-
-        setTimeout(() => {
-          router.push("/dashboard")
-          router.refresh()
-        }, 1500)
 
         return workId   // 🔥 AHORA SÍ DEVUELVE EL ID
       } catch (err) {
@@ -108,7 +132,7 @@ export function useCreateWork(): UseCreateWorkReturn {
         return null    // 🔥 IMPORTANTE
       }
     },
-    [supabase, router]
+    [supabase]
   )
 
   return { publish, step, progress, error, reset }

@@ -1,7 +1,7 @@
 // components/works/CreateWorkForm.tsx
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { ImageUploader } from "./ImageUploader"
 import { TaxonomySelector } from "./TaxonomySelector"
@@ -23,11 +23,9 @@ export function CreateWorkForm() {
     selectedCategory,
     selectedTags,
     loading: taxonomyLoading,
-    isMaxTagsReached,
+    error: taxonomyError,
     selectCategory,
     toggleTag,
-    assignCategoryToWork,
-    assignTagsToWork,
   } = useTaxonomy()
 
   const { publish, step: publishStep, progress, error, reset } = useCreateWork()
@@ -44,20 +42,24 @@ export function CreateWorkForm() {
   async function handlePublish() {
     if (!canGoToPreview || isPublishing) return
 
-    const workId = await publish(files, {
+    await publish(files, {
       title: title.trim(),
       description: description.trim(),
       category: selectedCategory,
       tags: selectedTags,
     })
-
-    if (workId) {
-      await assignCategoryToWork(workId)
-      if (selectedTags.length > 0) {
-        await assignTagsToWork(workId)
-      }
-    }
   }
+
+  const previewUrls = useMemo(
+    () => files.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    [files]
+  )
+
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach((item) => URL.revokeObjectURL(item.url))
+    }
+  }, [previewUrls])
 
   if (publishStep === "done") {
     return (
@@ -143,7 +145,7 @@ export function CreateWorkForm() {
             <label className="block text-sm font-medium text-gray-700">Descripción</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={5}
               className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors resize-none"
-              placeholder="Describe tu proceso, concepto y decisiones de diseño. Mínimo 120 caracteres." />
+              placeholder={`Describe tu proceso, concepto y decisiones de diseño. Mínimo ${WORK_LIMITS.DESCRIPTION_MIN} caracteres.`} />
             <p className={`mt-1 text-xs text-right ${descriptionLen >= WORK_LIMITS.DESCRIPTION_MIN ? "text-green-600" : descriptionLen > 80 ? "text-amber-500" : "text-gray-400"}`}>
               {descriptionLen}/{WORK_LIMITS.DESCRIPTION_MIN} caracteres mínimos
             </p>
@@ -169,6 +171,11 @@ export function CreateWorkForm() {
             loading={taxonomyLoading}
             onSelect={toggleTag}
           />
+          {taxonomyError && (
+            <p className="text-sm text-red-600">
+              Error cargando categorías/tags: {taxonomyError}
+            </p>
+          )}
 
           {/* Nav */}
           <div className="flex justify-between pt-4">
@@ -187,16 +194,16 @@ export function CreateWorkForm() {
       {step === "preview" && (
         <div>
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            {files[0] && (
+            {previewUrls[0] && (
               <div className="aspect-video bg-gray-100 overflow-hidden">
-                <img src={URL.createObjectURL(files[0])} alt="Preview" className="w-full h-full object-cover" />
+                <img src={previewUrls[0].url} alt="Preview" className="w-full h-full object-cover" />
               </div>
             )}
-            {files.length > 1 && (
+            {previewUrls.length > 1 && (
               <div className="flex gap-1 p-1">
-                {files.slice(1).map((f, i) => (
+                {previewUrls.slice(1).map((item, i) => (
                   <div key={i} className="w-20 h-20 rounded overflow-hidden bg-gray-100 flex-shrink-0">
-                    <img src={URL.createObjectURL(f)} alt={`Extra ${i + 2}`} className="w-full h-full object-cover" />
+                    <img src={item.url} alt={`Extra ${i + 2}`} className="w-full h-full object-cover" />
                   </div>
                 ))}
               </div>

@@ -75,23 +75,26 @@ export function useFeed(): UseFeedReturn {
               supabase.from("public_comments").select("work_id").in("work_id", workIds),
             ])
 
-          if (!likesErr || !commentsErr) {
-            const likesMap: Record<string, number> = {}
-            const commentsMap: Record<string, number> = {}
+          const likesMap: Record<string, number> = {}
+          const commentsMap: Record<string, number> = {}
 
+          if (!likesErr) {
             ;(likesRows ?? []).forEach((row: any) => {
               likesMap[row.work_id] = (likesMap[row.work_id] ?? 0) + 1
             })
+          }
+
+          if (!commentsErr) {
             ;(commentsRows ?? []).forEach((row: any) => {
               commentsMap[row.work_id] = (commentsMap[row.work_id] ?? 0) + 1
             })
-
-            results = baseResults.map((item) => ({
-              ...item,
-              likes_count: item.likes_count + (likesMap[item.id] ?? 0),
-              comments_count: item.comments_count + (commentsMap[item.id] ?? 0),
-            }))
           }
+
+          results = baseResults.map((item) => ({
+            ...item,
+            likes_count: item.likes_count + (likesMap[item.id] ?? 0),
+            comments_count: item.comments_count + (commentsMap[item.id] ?? 0),
+          }))
         }
 
         setItems((prev) => (append ? [...prev, ...results] : results))
