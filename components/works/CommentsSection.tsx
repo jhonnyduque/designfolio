@@ -165,6 +165,23 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
             </div>
           )}
 
+          {!isValid && (
+            <p className="text-xs text-amber-600">
+              Para publicar:{" "}
+              {contentLen < COMMENT_MIN_LENGTH
+                ? `escribe al menos ${COMMENT_MIN_LENGTH} caracteres`
+                : ""}
+              {contentLen < COMMENT_MIN_LENGTH && categories.length < 1 ? ", " : ""}
+              {categories.length < 1 ? "elige mínimo 1 categoría" : ""}
+              {!isAuthenticated &&
+              (contentLen >= COMMENT_MIN_LENGTH && categories.length >= 1) &&
+              !isCaptchaValid
+                ? "resuelve el captcha"
+                : ""}
+              .
+            </p>
+          )}
+
           {error && <p className="text-xs text-red-600">{error}</p>}
 
           <div className="flex gap-2 justify-end">
