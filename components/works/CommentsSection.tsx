@@ -1,7 +1,7 @@
 // components/works/CommentsSection.tsx
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useComments } from "@/hooks/useComments"
 import { COMMENT_CATEGORIES, COMMENT_MIN_LENGTH } from "@/types/comment"
 
@@ -11,13 +11,35 @@ interface CommentsSectionProps {
 }
 
 export function CommentsSection({ workId, initialCount }: CommentsSectionProps) {
-  const { comments, loading, posting, error, post } = useComments(workId)
+  const { comments, loading, posting, error, post, isAuthenticated } =
+    useComments(workId)
   const [content, setContent] = useState("")
   const [categories, setCategories] = useState<string[]>([])
   const [showForm, setShowForm] = useState(false)
+  const [captchaA, setCaptchaA] = useState(0)
+  const [captchaB, setCaptchaB] = useState(0)
+  const [captchaInput, setCaptchaInput] = useState("")
 
   const contentLen = content.length
-  const isValid = contentLen >= COMMENT_MIN_LENGTH && categories.length >= 1
+  const isCaptchaValid =
+    isAuthenticated || Number(captchaInput.trim()) === captchaA + captchaB
+  const isValid =
+    contentLen >= COMMENT_MIN_LENGTH &&
+    categories.length >= 1 &&
+    isCaptchaValid
+
+  const refreshCaptcha = useCallback(() => {
+    const a = Math.floor(Math.random() * 9) + 1
+    const b = Math.floor(Math.random() * 9) + 1
+    setCaptchaA(a)
+    setCaptchaB(b)
+  }, [])
+
+  useEffect(() => {
+    if (showForm && !isAuthenticated) {
+      refreshCaptcha()
+    }
+  }, [showForm, isAuthenticated, refreshCaptcha])
 
   const toggleCategory = useCallback((cat: string) => {
     setCategories((prev) =>
@@ -31,7 +53,9 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
     if (success) {
       setContent("")
       setCategories([])
+      setCaptchaInput("")
       setShowForm(false)
+      if (!isAuthenticated) refreshCaptcha()
     }
   }
 
@@ -110,6 +134,37 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
             </div>
           </div>
 
+          {!isAuthenticated && (
+            <div className="space-y-2">
+              <p className="text-xs text-gray-500">
+                Verificación anti-spam: resuelve la suma para publicar.
+              </p>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">
+                  ¿{captchaA} + {captchaB}?
+                </label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={captchaInput}
+                  onChange={(e) => setCaptchaInput(e.target.value)}
+                  className="w-24 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
+                  placeholder="Respuesta"
+                />
+                <button
+                  type="button"
+                  onClick={refreshCaptcha}
+                  className="text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Cambiar
+                </button>
+              </div>
+              {captchaInput && !isCaptchaValid && (
+                <p className="text-xs text-red-600">Respuesta incorrecta.</p>
+              )}
+            </div>
+          )}
+
           {error && <p className="text-xs text-red-600">{error}</p>}
 
           <div className="flex gap-2 justify-end">
@@ -118,6 +173,7 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
                 setShowForm(false)
                 setContent("")
                 setCategories([])
+                setCaptchaInput("")
               }}
               className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
             >
