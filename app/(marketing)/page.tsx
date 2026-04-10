@@ -81,7 +81,7 @@ export default function MarketingPage() {
             DISENO WEB / POSICIONAMIENTO ORGANICO / SOCIAL ADS / BRANDING
           </p>
           <div className="mt-10 flex justify-center">
-            <Link href="#proyectos" className="group inline-flex items-center gap-4 rounded-full bg-[#1d1d21] px-11 py-5 text-2xl font-semibold text-white">
+            <Link href="/proyectos" className="group inline-flex items-center gap-4 rounded-full bg-[#1d1d21] px-11 py-5 text-2xl font-semibold text-white">
               Ver proyectos
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-black transition group-hover:scale-105">
                 ✦
