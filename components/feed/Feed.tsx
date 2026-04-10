@@ -70,16 +70,13 @@ export function Feed() {
   return (
     <section>
       {/* Header */}
-      <div className="mb-6 space-y-3">
+      <div className="mb-4 space-y-2">
         {/* Row 1: Title + Search + Sort */}
         <div className="flex items-start sm:items-center justify-between gap-3">
           <div className="flex-shrink-0">
-            <h2 className="font-marcellus text-4xl leading-none text-[#1e1e1e] md:text-5xl">
-              Proyectos destacados
+            <h2 className="font-marcellus text-3xl leading-none text-[#1e1e1e] md:text-4xl">
+              Proyectos
             </h2>
-            <p className="mt-1 text-sm text-gray-500 hidden sm:block">
-              Descubre obras de la comunidad
-            </p>
           </div>
 
           <div className="flex items-center gap-2">
