@@ -70,12 +70,14 @@ export function Feed() {
   return (
     <section>
       {/* Header */}
-      <div className="mb-8 space-y-4">
+      <div className="mb-6 space-y-3">
         {/* Row 1: Title + Search + Sort */}
         <div className="flex items-start sm:items-center justify-between gap-3">
           <div className="flex-shrink-0">
-            <h1 className="text-2xl font-bold text-gray-900">Feed</h1>
-            <p className="text-sm text-gray-500 mt-0.5 hidden sm:block">
+            <h2 className="font-marcellus text-4xl leading-none text-[#1e1e1e] md:text-5xl">
+              Proyectos destacados
+            </h2>
+            <p className="mt-1 text-sm text-gray-500 hidden sm:block">
               Descubre obras de la comunidad
             </p>
           </div>
@@ -106,7 +108,7 @@ export function Feed() {
                 value={searchInput}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="Buscar obras, categorías, autores..."
-                className="w-48 lg:w-64 pl-9 pr-8 py-1.5 text-sm bg-gray-100 border border-transparent rounded-lg text-gray-900 placeholder-gray-400 focus:bg-white focus:border-gray-300 focus:ring-1 focus:ring-gray-300 outline-none transition-all"
+                className="w-52 lg:w-72 pl-9 pr-8 py-2 text-sm font-medium bg-white border border-black/10 rounded-full text-[#2a2a30] placeholder:text-[#8c8c95] focus:border-black/25 focus:ring-0 outline-none transition-all"
               />
               {searchInput && (
                 <button
@@ -137,7 +139,7 @@ export function Feed() {
               value={searchInput}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Buscar obras, categorías, autores..."
-              className="w-full pl-9 pr-8 py-2.5 text-sm bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-all"
+              className="w-full pl-9 pr-8 py-2.5 text-sm font-medium bg-white border border-black/10 rounded-full text-[#2a2a30] placeholder:text-[#8c8c95] focus:border-black/25 focus:ring-0 outline-none transition-all"
             />
             {searchInput && (
               <button

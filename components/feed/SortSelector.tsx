@@ -30,7 +30,7 @@ export function SortSelector({ current, onChange }: SortSelectorProps) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap"
+        className="flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-[#2a2a30] transition-colors hover:bg-black/5 whitespace-nowrap"
       >
         {SORT_OPTIONS[current].label}
         <svg
@@ -45,7 +45,7 @@ export function SortSelector({ current, onChange }: SortSelectorProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-20">
+        <div className="absolute right-0 z-20 mt-2 w-48 rounded-2xl border border-black/10 bg-white py-1 shadow-lg">
           {sortKeys.map((key) => (
             <button
               key={key}
@@ -53,10 +53,10 @@ export function SortSelector({ current, onChange }: SortSelectorProps) {
                 onChange(key)
                 setOpen(false)
               }}
-              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
+              className={`block w-full px-4 py-2 text-left text-sm transition-colors ${
                 key === current
-                  ? "text-gray-900 font-medium bg-gray-50"
-                  : "text-gray-600 hover:bg-gray-50"
+                  ? "bg-black/5 font-semibold text-[#1e1e1e]"
+                  : "text-[#4f4f57] hover:bg-black/5"
               }`}
             >
               {SORT_OPTIONS[key].label}
