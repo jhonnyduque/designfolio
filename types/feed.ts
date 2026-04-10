@@ -3,6 +3,7 @@
 /** Matches v_feed_scores materialized view columns exactly */
 export interface FeedItem {
   id: string
+  slug?: string | null
   author_id: string
   title: string
   category: string

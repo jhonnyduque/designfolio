@@ -20,6 +20,7 @@ interface WorkImage {
 interface WorkDetailProps {
   work: {
     id: string
+    slug?: string | null
     title: string
     description: string
     category: string
@@ -345,7 +346,11 @@ export function WorkDetail({
                   {work.views_count} vistas
                 </span>
               )}
-              <ShareButton workId={work.id} size="md" />
+              <ShareButton
+                workId={work.id}
+                pathOverride={`/proyectos/${work.slug ?? work.id}`}
+                size="md"
+              />
             </div>
 
             {/* Owner actions */}
@@ -501,7 +506,11 @@ export function WorkDetail({
             </svg>
             <span>{work.comments_count}</span>
           </button>
-          <ShareButton workId={work.id} size="sm" />
+          <ShareButton
+            workId={work.id}
+            pathOverride={`/proyectos/${work.slug ?? work.id}`}
+            size="sm"
+          />
         </div>
       </div>
 

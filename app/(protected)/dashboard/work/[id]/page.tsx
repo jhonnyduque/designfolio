@@ -62,6 +62,7 @@ export default async function WorkPage({ params }: PageProps) {
     <WorkDetail
       work={{
         id: work.id,
+        slug: work.slug ?? null,
         title: work.title,
         description: work.description,
         category: work.category,

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { WorkDetail } from "@/components/works/WorkDetail"
 
@@ -7,18 +7,43 @@ interface PageProps {
 }
 
 export default async function PublicWorkPage({ params }: PageProps) {
-  const { id } = await params
+  const { id: slugOrId } = await params
   const supabase = await createClient()
 
-  const { data: work, error } = await supabase
-    .from("works")
-    .select("*")
-    .eq("id", id)
-    .eq("moderation_status", "approved")
-    .single()
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      slugOrId
+    )
 
-  if (error || !work) {
+  let work: any = null
+  let workError: any = null
+
+  if (isUuid) {
+    const { data, error } = await supabase
+      .from("works")
+      .select("*")
+      .eq("id", slugOrId)
+      .eq("moderation_status", "approved")
+      .single()
+    work = data
+    workError = error
+  } else {
+    const { data, error } = await supabase
+      .from("works")
+      .select("*")
+      .eq("slug", slugOrId)
+      .eq("moderation_status", "approved")
+      .single()
+    work = data
+    workError = error
+  }
+
+  if (workError || !work) {
     notFound()
+  }
+
+  if (work.slug && slugOrId !== work.slug) {
+    redirect(`/proyectos/${work.slug}`)
   }
 
   const { data: author } = await supabase
@@ -39,17 +64,17 @@ export default async function PublicWorkPage({ params }: PageProps) {
     supabase
       .from("public_likes")
       .select("*", { count: "exact", head: true })
-      .eq("work_id", id),
+      .eq("work_id", work.id),
     supabase
       .from("public_comments")
       .select("*", { count: "exact", head: true })
-      .eq("work_id", id),
+      .eq("work_id", work.id),
   ])
 
   const [{ data: prevWork }, { data: nextWork }] = await Promise.all([
     supabase
       .from("works")
-      .select("id")
+      .select("id, slug")
       .eq("moderation_status", "approved")
       .gt("published_at", work.published_at)
       .order("published_at", { ascending: true })
@@ -57,7 +82,7 @@ export default async function PublicWorkPage({ params }: PageProps) {
       .maybeSingle(),
     supabase
       .from("works")
-      .select("id")
+      .select("id, slug")
       .eq("moderation_status", "approved")
       .lt("published_at", work.published_at)
       .order("published_at", { ascending: false })
@@ -69,6 +94,7 @@ export default async function PublicWorkPage({ params }: PageProps) {
     <WorkDetail
       work={{
         id: work.id,
+        slug: work.slug ?? null,
         title: work.title,
         description: work.description,
         category: work.category,
@@ -83,8 +109,8 @@ export default async function PublicWorkPage({ params }: PageProps) {
       currentUserId={user?.id ?? null}
       backHref="/proyectos"
       profileHref={null}
-      prevHref={prevWork ? `/proyectos/${prevWork.id}` : null}
-      nextHref={nextWork ? `/proyectos/${nextWork.id}` : null}
+      prevHref={prevWork ? `/proyectos/${prevWork.slug ?? prevWork.id}` : null}
+      nextHref={nextWork ? `/proyectos/${nextWork.slug ?? nextWork.id}` : null}
     />
   )
 }

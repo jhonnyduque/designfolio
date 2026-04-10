@@ -5,10 +5,15 @@ import { useState, useCallback } from "react"
 
 interface ShareButtonProps {
   workId: string
+  pathOverride?: string
   size?: "sm" | "md"
 }
 
-export function ShareButton({ workId, size = "md" }: ShareButtonProps) {
+export function ShareButton({
+  workId,
+  pathOverride,
+  size = "md",
+}: ShareButtonProps) {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = useCallback(
@@ -16,13 +21,14 @@ export function ShareButton({ workId, size = "md" }: ShareButtonProps) {
       e.preventDefault()
       e.stopPropagation()
 
-      const url = `${window.location.origin}/proyectos/${workId}`
+      const path = pathOverride ?? `/proyectos/${workId}`
+      const url = `${window.location.origin}${path}`
       navigator.clipboard.writeText(url).then(() => {
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
       })
     },
-    [workId]
+    [workId, pathOverride]
   )
 
   const isMd = size === "md"

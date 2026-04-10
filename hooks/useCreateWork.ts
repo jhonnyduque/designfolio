@@ -5,6 +5,7 @@ import { useState, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { uploadWorkImages } from "@/lib/supabase/storage"
 import type { CreateWorkPayload } from "@/types/work"
+import { slugifyProjectTitle } from "@/lib/slug"
 
 type PublishStep = "idle" | "uploading" | "saving" | "done" | "error"
 type ModerationStatus = "pending_review" | "approved"
@@ -73,11 +74,13 @@ export function useCreateWork(): UseCreateWorkReturn {
         setProgress("Guardando obra...")
 
         const moderationStatus: ModerationStatus = "pending_review"
+        const slug = slugifyProjectTitle(payload.title)
 
         const { error: insertError } = await supabase
           .from("works")
           .insert({
             id: workId,
+            slug,
             author_id: user.id,
             title: payload.title,
             description: payload.description,
@@ -126,8 +129,18 @@ export function useCreateWork(): UseCreateWorkReturn {
         return workId   // 🔥 AHORA SÍ DEVUELVE EL ID
       } catch (err) {
         setStep("error")
+        const anyErr = err as { code?: string; message?: string } | null
+        const duplicateSlug =
+          anyErr?.code === "23505" &&
+          (anyErr.message?.includes("works_slug_key") ||
+            anyErr.message?.toLowerCase().includes("slug"))
+
         setError(
-          err instanceof Error ? err.message : "Error al publicar"
+          duplicateSlug
+            ? "Ese nombre de proyecto ya existe. Usa un título diferente."
+            : err instanceof Error
+              ? err.message
+              : "Error al publicar"
         )
         return null    // 🔥 IMPORTANTE
       }

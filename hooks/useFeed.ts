@@ -66,8 +66,26 @@ export function useFeed(): UseFeedReturn {
         const baseResults = (data ?? []) as FeedItem[]
         let results = baseResults
 
-        // Merge anonymous engagement counters if public tables exist
+        // Resolve public slugs from works table.
         const workIds = baseResults.map((w) => w.id)
+        if (workIds.length > 0) {
+          const { data: slugRows } = await supabase
+            .from("works")
+            .select("id, slug")
+            .in("id", workIds)
+
+          const slugMap: Record<string, string | null> = {}
+          ;(slugRows ?? []).forEach((row: any) => {
+            slugMap[row.id] = row.slug ?? null
+          })
+
+          results = baseResults.map((item) => ({
+            ...item,
+            slug: slugMap[item.id] ?? null,
+          }))
+        }
+
+        // Merge anonymous engagement counters if public tables exist
         if (workIds.length > 0) {
           const [{ data: likesRows, error: likesErr }, { data: commentsRows, error: commentsErr }] =
             await Promise.all([
@@ -90,7 +108,7 @@ export function useFeed(): UseFeedReturn {
             })
           }
 
-          results = baseResults.map((item) => ({
+          results = results.map((item) => ({
             ...item,
             likes_count: item.likes_count + (likesMap[item.id] ?? 0),
             comments_count: item.comments_count + (commentsMap[item.id] ?? 0),
