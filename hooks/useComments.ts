@@ -81,7 +81,7 @@ export function useComments(workId: string): UseCommentsReturn {
       // Public anonymous comments (if table exists)
       const { data: publicData, error: publicErr } = await supabase
         .from("public_comments")
-        .select("id, work_id, content, categories, is_valid, created_at, visitor_name")
+        .select("id, visitor_id, work_id, content, categories, is_valid, created_at, visitor_name")
         .eq("work_id", workId)
         .order("created_at", { ascending: false })
 
@@ -89,7 +89,7 @@ export function useComments(workId: string): UseCommentsReturn {
         ? []
         : (publicData ?? []).map((c: any) => ({
             id: c.id,
-            user_id: null,
+            user_id: c.visitor_id ?? "public",
             work_id: c.work_id,
             content: c.content,
             categories: c.categories ?? [],
