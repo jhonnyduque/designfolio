@@ -5,12 +5,15 @@ import { useCallback, useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { Comment } from "@/types/comment"
 
+const ANON_COMMENT_COOLDOWN_SECONDS = 60
+
 interface UseCommentsReturn {
   comments: Comment[]
   loading: boolean
   posting: boolean
   error: string | null
   isAuthenticated: boolean
+  cooldownSeconds: number
   post: (content: string, categories: string[]) => Promise<boolean>
   refresh: () => void
 }
@@ -21,6 +24,7 @@ export function useComments(workId: string): UseCommentsReturn {
   const [posting, setPosting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [cooldownSeconds, setCooldownSeconds] = useState(0)
   const supabase = createClient()
 
   function getOrCreateVisitorId() {
@@ -36,6 +40,28 @@ export function useComments(workId: string): UseCommentsReturn {
       window.localStorage.setItem(key, created)
     }
     return created
+  }
+
+  function getCooldownKey(workIdParam: string, visitorId: string) {
+    return `df_comment_cooldown_${workIdParam}_${visitorId}`
+  }
+
+  function startCooldown(workIdParam: string, visitorId: string) {
+    const expiresAt = Date.now() + ANON_COMMENT_COOLDOWN_SECONDS * 1000
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(getCooldownKey(workIdParam, visitorId), String(expiresAt))
+    }
+    setCooldownSeconds(ANON_COMMENT_COOLDOWN_SECONDS)
+  }
+
+  function getRemainingCooldown(workIdParam: string, visitorId: string) {
+    if (typeof window === "undefined") return 0
+    const raw = window.localStorage.getItem(getCooldownKey(workIdParam, visitorId))
+    if (!raw) return 0
+    const expiresAt = Number(raw)
+    if (!Number.isFinite(expiresAt)) return 0
+    const remaining = Math.ceil((expiresAt - Date.now()) / 1000)
+    return remaining > 0 ? remaining : 0
   }
 
   const fetchComments = useCallback(async () => {
@@ -116,9 +142,23 @@ export function useComments(workId: string): UseCommentsReturn {
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setIsAuthenticated(!!user)
+      if (!user) {
+        const visitorId = getOrCreateVisitorId()
+        setCooldownSeconds(getRemainingCooldown(workId, visitorId))
+      } else {
+        setCooldownSeconds(0)
+      }
     })
     fetchComments()
   }, [fetchComments, supabase])
+
+  useEffect(() => {
+    if (cooldownSeconds <= 0) return
+    const timer = setInterval(() => {
+      setCooldownSeconds((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [cooldownSeconds])
 
   const post = useCallback(
     async (content: string, categories: string[]): Promise<boolean> => {
@@ -141,6 +181,11 @@ export function useComments(workId: string): UseCommentsReturn {
           insertErr = error
         } else {
           const visitorId = getOrCreateVisitorId()
+          const remaining = getRemainingCooldown(workId, visitorId)
+          if (remaining > 0) {
+            setCooldownSeconds(remaining)
+            throw new Error(`Espera ${remaining}s antes de comentar de nuevo.`)
+          }
           const { error } = await supabase.from("public_comments").insert({
             visitor_id: visitorId,
             visitor_name: "Visitante",
@@ -149,6 +194,9 @@ export function useComments(workId: string): UseCommentsReturn {
             categories,
           })
           insertErr = error
+          if (!error) {
+            startCooldown(workId, visitorId)
+          }
         }
 
         if (insertErr) throw insertErr
@@ -172,6 +220,7 @@ export function useComments(workId: string): UseCommentsReturn {
     posting,
     error,
     isAuthenticated,
+    cooldownSeconds,
     post,
     refresh: fetchComments,
   }

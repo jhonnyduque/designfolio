@@ -11,7 +11,7 @@ interface CommentsSectionProps {
 }
 
 export function CommentsSection({ workId, initialCount }: CommentsSectionProps) {
-  const { comments, loading, posting, error, post, isAuthenticated } =
+  const { comments, loading, posting, error, post, isAuthenticated, cooldownSeconds } =
     useComments(workId)
   const [content, setContent] = useState("")
   const [categories, setCategories] = useState<string[]>([])
@@ -27,6 +27,7 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
     contentLen >= COMMENT_MIN_LENGTH &&
     categories.length >= 1 &&
     isCaptchaValid
+  const isDisabled = posting || !isValid || cooldownSeconds > 0
 
   const refreshCaptcha = useCallback(() => {
     const a = Math.floor(Math.random() * 9) + 1
@@ -181,6 +182,11 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
               .
             </p>
           )}
+          {cooldownSeconds > 0 && (
+            <p className="text-xs text-amber-600">
+              Espera {cooldownSeconds}s antes de publicar otro comentario.
+            </p>
+          )}
 
           {error && <p className="text-xs text-red-600">{error}</p>}
 
@@ -198,10 +204,14 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!isValid || posting}
+              disabled={isDisabled}
               className="px-4 py-1.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              {posting ? "Publicando..." : "Publicar"}
+              {posting
+                ? "Publicando..."
+                : cooldownSeconds > 0
+                  ? `Espera ${cooldownSeconds}s`
+                  : "Publicar"}
             </button>
           </div>
         </div>
