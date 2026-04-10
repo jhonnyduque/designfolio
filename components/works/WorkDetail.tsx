@@ -40,6 +40,8 @@ interface WorkDetailProps {
     school: string | null
   }
   currentUserId?: string | null
+  backHref?: string
+  profileHref?: string | null
 }
 
 const LEVEL_LABELS = ["Novato", "Activo", "Reconocido", "Referencia"]
@@ -50,7 +52,13 @@ const LEVEL_STYLES = [
   "bg-amber-50 text-amber-700",
 ]
 
-export function WorkDetail({ work, author, currentUserId }: WorkDetailProps) {
+export function WorkDetail({
+  work,
+  author,
+  currentUserId,
+  backHref = "/dashboard",
+  profileHref = `/dashboard/profile/${author.username}`,
+}: WorkDetailProps) {
   const [selectedImage, setSelectedImage] = useState(0)
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(work.title)
@@ -130,7 +138,7 @@ export function WorkDetail({ work, author, currentUserId }: WorkDetailProps) {
     <div className="max-w-4xl mx-auto">
       {/* Back link */}
       <Link
-        href="/dashboard"
+        href={backHref}
         className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors mb-6"
       >
         ← Volver al feed
@@ -386,12 +394,14 @@ export function WorkDetail({ work, author, currentUserId }: WorkDetailProps) {
               </p>
             )}
 
-            <Link
-              href={`/dashboard/profile/${author.username}`}
-              className="block mt-4 text-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              Ver perfil completo →
-            </Link>
+            {profileHref && (
+              <Link
+                href={profileHref}
+                className="block mt-4 text-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                Ver perfil completo →
+              </Link>
+            )}
           </div>
         </aside>
       </div>

@@ -11,7 +11,7 @@ export function FeedCard({ item }: FeedCardProps) {
   const thumbnail = item.images?.[0]?.url ?? null
 
   return (
-    <Link href={`/dashboard/work/${item.id}`} className="block">
+    <Link href={`/proyectos/${item.id}`} className="block">
       <article className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md hover:border-gray-300 transition-all duration-200">
       {/* Image */}
       <div className="aspect-[4/5] bg-gray-100 overflow-hidden">
