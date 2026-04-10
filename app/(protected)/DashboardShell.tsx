@@ -76,7 +76,7 @@ export function DashboardShell({
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                   </svg>
-                  <span className="hidden sm:inline">Nueva Obra</span>
+                  <span className="hidden sm:inline">Nuevo proyecto</span>
                 </Link>
               )}
 
@@ -113,7 +113,7 @@ export function DashboardShell({
                       href="/dashboard/my-works"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
-                      Mis obras
+                      Mis proyectos
                     </Link>
                     <Link
                       href="/dashboard/settings"

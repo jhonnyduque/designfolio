@@ -1,0 +1,17 @@
+-- Habilita soporte de video en el bucket "works" de Supabase Storage
+-- Ejecutar una vez en SQL Editor
+
+update storage.buckets
+set
+  file_size_limit = 52428800, -- 50MB
+  allowed_mime_types = array[
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'video/mp4',
+    'video/webm',
+    'video/quicktime'
+  ]
+where id = 'works';
+

@@ -104,7 +104,7 @@ export function Feed() {
                 type="text"
                 value={searchInput}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Buscar obras, categorías, autores..."
+                placeholder="Buscar proyectos, categorías, autores..."
                 className="w-52 lg:w-72 pl-9 pr-8 py-2 text-sm font-medium bg-white border border-black/10 rounded-full text-[#2a2a30] placeholder:text-[#8c8c95] focus:border-black/25 focus:ring-0 outline-none transition-all"
               />
               {searchInput && (
@@ -135,7 +135,7 @@ export function Feed() {
               type="text"
               value={searchInput}
               onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Buscar obras, categorías, autores..."
+              placeholder="Buscar proyectos, categorías, autores..."
               className="w-full pl-9 pr-8 py-2.5 text-sm font-medium bg-white border border-black/10 rounded-full text-[#2a2a30] placeholder:text-[#8c8c95] focus:border-black/25 focus:ring-0 outline-none transition-all"
             />
             {searchInput && (
@@ -204,7 +204,7 @@ export function Feed() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
             </svg>
           </div>
-          <p className="text-gray-500 font-medium">Aún no hay obras publicadas</p>
+          <p className="text-gray-500 font-medium">Aún no hay proyectos publicados</p>
           <p className="text-gray-400 text-sm mt-1">
             Sé el primero en compartir tu trabajo con la comunidad.
           </p>
@@ -228,7 +228,7 @@ export function Feed() {
                 Cargando...
               </span>
             ) : (
-              "Cargar más obras"
+              "Cargar más proyectos"
             )}
           </button>
         </div>

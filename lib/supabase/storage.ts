@@ -14,12 +14,28 @@ interface UploadError {
 }
 
 /**
- * Extrae dimensiones de un archivo de imagen antes de subir.
+ * Extrae dimensiones de un archivo de imagen/video antes de subir.
  * Necesario para el campo images JSONB en works.
  */
-function getImageDimensions(
+function getMediaDimensions(
   file: File
 ): Promise<{ width: number; height: number }> {
+  if (file.type.startsWith("video/")) {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement("video")
+      video.preload = "metadata"
+      video.onloadedmetadata = () => {
+        resolve({ width: video.videoWidth, height: video.videoHeight })
+        URL.revokeObjectURL(video.src)
+      }
+      video.onerror = () => {
+        URL.revokeObjectURL(video.src)
+        reject(new Error("No se pudo leer el video"))
+      }
+      video.src = URL.createObjectURL(file)
+    })
+  }
+
   return new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = () => {
@@ -45,23 +61,42 @@ export async function uploadWorkImage(
   workId: string,
   order: number
 ): Promise<UploadResult | UploadError> {
+  const isVideo = file.type.startsWith("video/")
+  const maxSize = isVideo
+    ? WORK_LIMITS.VIDEO_MAX_SIZE_BYTES
+    : WORK_LIMITS.IMAGE_MAX_SIZE_BYTES
+  const maxSizeMb = isVideo
+    ? WORK_LIMITS.VIDEO_MAX_SIZE_MB
+    : WORK_LIMITS.IMAGE_MAX_SIZE_MB
+
   // Validar tamaño
-  if (file.size > WORK_LIMITS.IMAGE_MAX_SIZE_BYTES) {
+  if (file.size > maxSize) {
     return {
       image: null,
-      error: `La imagen supera ${WORK_LIMITS.IMAGE_MAX_SIZE_MB}MB`,
+      error: `${isVideo ? "El video" : "La imagen"} supera ${maxSizeMb}MB`,
     }
   }
 
   // Validar tipo
-  const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+  const validTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+    "video/mp4",
+    "video/webm",
+    "video/quicktime",
+  ]
   if (!validTypes.includes(file.type)) {
-    return { image: null, error: "Formato no soportado. Usa JPG, PNG, WebP o GIF" }
+    return {
+      image: null,
+      error: "Formato no soportado. Usa JPG, PNG, WebP, GIF, MP4, WebM o MOV",
+    }
   }
 
   try {
     // Obtener dimensiones
-    const { width, height } = await getImageDimensions(file)
+    const { width, height } = await getMediaDimensions(file)
 
     // Generar nombre único
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg"

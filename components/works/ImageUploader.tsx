@@ -15,11 +15,23 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
   const handleFiles = useCallback(
     (newFiles: FileList | null) => {
       if (!newFiles) return
-      const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+      const validTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "video/mp4",
+        "video/webm",
+        "video/quicktime",
+      ]
       const accepted = Array.from(newFiles).filter(
-        (f) =>
-          validTypes.includes(f.type) &&
-          f.size <= WORK_LIMITS.IMAGE_MAX_SIZE_BYTES
+        (f) => {
+          if (!validTypes.includes(f.type)) return false
+          const maxSize = f.type.startsWith("video/")
+            ? WORK_LIMITS.VIDEO_MAX_SIZE_BYTES
+            : WORK_LIMITS.IMAGE_MAX_SIZE_BYTES
+          return f.size <= maxSize
+        }
       )
       const combined = [...files, ...accepted].slice(0, WORK_LIMITS.IMAGES_MAX)
       onChange(combined)
@@ -90,18 +102,18 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
           </svg>
           <p className="text-sm text-gray-500">
             <span className="font-medium text-gray-700">
-              Arrastra imágenes aquí
+              Arrastra imágenes o videos aquí
             </span>{" "}
             o haz click para seleccionar
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            JPG, PNG, WebP o GIF · Máximo {WORK_LIMITS.IMAGE_MAX_SIZE_MB}MB ·
-            Hasta {WORK_LIMITS.IMAGES_MAX} imágenes
+            JPG, PNG, WebP, GIF, MP4, WebM, MOV · Imágenes máx {WORK_LIMITS.IMAGE_MAX_SIZE_MB}MB · Videos máx {WORK_LIMITS.VIDEO_MAX_SIZE_MB}MB ·
+            Hasta {WORK_LIMITS.IMAGES_MAX} archivos
           </p>
           <input
             ref={inputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
             multiple
             onChange={(e) => handleFiles(e.target.files)}
             className="hidden"
@@ -120,8 +132,17 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
               <img
                 src={item.url}
                 alt={`Preview ${i + 1}`}
-                className="w-full h-full object-cover"
+                className={`w-full h-full ${item.file.type.startsWith("video/") ? "hidden" : "object-cover"}`}
               />
+              {item.file.type.startsWith("video/") && (
+                <video
+                  src={item.url}
+                  className="w-full h-full object-cover"
+                  muted
+                  playsInline
+                  preload="metadata"
+                />
+              )}
 
               {/* Overlay con controles */}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
@@ -164,6 +185,11 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
                   Portada
                 </span>
               )}
+              {item.file.type.startsWith("video/") && (
+                <span className="absolute bottom-2 left-2 text-[10px] font-semibold bg-black/70 text-white px-1.5 py-0.5 rounded">
+                  Video
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -172,7 +198,7 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
       {/* Counter */}
       {files.length > 0 && (
         <p className="text-xs text-gray-400">
-          {files.length} de {WORK_LIMITS.IMAGES_MAX} imágenes
+          {files.length} de {WORK_LIMITS.IMAGES_MAX} archivos
           {files.length < WORK_LIMITS.IMAGES_MIN &&
             ` · Mínimo ${WORK_LIMITS.IMAGES_MIN}`}
         </p>

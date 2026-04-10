@@ -18,6 +18,7 @@ interface UseCreateWorkReturn {
   step: PublishStep
   progress: string
   error: string | null
+  wasAutoApproved: boolean
   reset: () => void
 }
 
@@ -25,6 +26,7 @@ export function useCreateWork(): UseCreateWorkReturn {
   const [step, setStep] = useState<PublishStep>("idle")
   const [progress, setProgress] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [wasAutoApproved, setWasAutoApproved] = useState(false)
 
   const supabase = createClient()
 
@@ -32,6 +34,7 @@ export function useCreateWork(): UseCreateWorkReturn {
     setStep("idle")
     setProgress("")
     setError(null)
+    setWasAutoApproved(false)
   }, [])
 
   const publish = useCallback(
@@ -49,13 +52,21 @@ export function useCreateWork(): UseCreateWorkReturn {
 
         if (!user) throw new Error("No autenticado")
 
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_founder")
+          .eq("id", user.id)
+          .maybeSingle()
+
+        const isFounder = profile?.is_founder === true
+
         // 2️⃣ Generate work ID
         const workId = crypto.randomUUID()
 
         // 3️⃣ Upload images
         setStep("uploading")
         setProgress(
-          `Subiendo ${files.length} imagen${files.length > 1 ? "es" : ""}...`
+          `Subiendo ${files.length} archivo${files.length > 1 ? "s" : ""}...`
         )
 
         const { images, errors: uploadErrors } =
@@ -71,9 +82,9 @@ export function useCreateWork(): UseCreateWorkReturn {
 
         // 4️⃣ Insert work
         setStep("saving")
-        setProgress("Guardando obra...")
+        setProgress("Guardando proyecto...")
 
-        const moderationStatus: ModerationStatus = "pending_review"
+        const moderationStatus: ModerationStatus = isFounder ? "approved" : "pending_review"
         const slug = slugifyProjectTitle(payload.title)
 
         const { error: insertError } = await supabase
@@ -88,6 +99,7 @@ export function useCreateWork(): UseCreateWorkReturn {
             tags: payload.tags.length > 0 ? payload.tags : null,
             images: images,
             moderation_status: moderationStatus,
+            published_at: moderationStatus === "approved" ? new Date().toISOString() : null,
           })
 
         if (insertError) throw insertError
@@ -124,7 +136,8 @@ export function useCreateWork(): UseCreateWorkReturn {
         }
 
         setStep("done")
-        setProgress("Enviado a revisión")
+        setWasAutoApproved(isFounder)
+        setProgress(isFounder ? "Proyecto publicado" : "Enviado a revisión")
 
         return workId   // 🔥 AHORA SÍ DEVUELVE EL ID
       } catch (err) {
@@ -148,5 +161,5 @@ export function useCreateWork(): UseCreateWorkReturn {
     [supabase]
   )
 
-  return { publish, step, progress, error, reset }
+  return { publish, step, progress, error, wasAutoApproved, reset }
 }

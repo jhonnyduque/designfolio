@@ -8,7 +8,9 @@ interface FeedCardProps {
 }
 
 export function FeedCard({ item }: FeedCardProps) {
-  const thumbnail = item.images?.[0]?.url ?? null
+  const cover = item.images?.[0] ?? null
+  const thumbnail = cover?.url ?? null
+  const isVideo = Boolean(cover?.type?.startsWith("video/"))
   const publicPath = `/proyectos/${item.slug ?? item.id}`
 
   return (
@@ -17,12 +19,22 @@ export function FeedCard({ item }: FeedCardProps) {
       {/* Image */}
       <div className="aspect-[4/5] bg-gray-100 overflow-hidden">
         {thumbnail ? (
-          <img
-            src={thumbnail}
-            alt={item.title}
-            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
-            loading="lazy"
-          />
+          isVideo ? (
+            <video
+              src={thumbnail}
+              className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+              muted
+              playsInline
+              preload="metadata"
+            />
+          ) : (
+            <img
+              src={thumbnail}
+              alt={item.title}
+              className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+              loading="lazy"
+            />
+          )
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">

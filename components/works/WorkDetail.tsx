@@ -1,7 +1,7 @@
 // components/works/WorkDetail.tsx
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
@@ -78,6 +78,7 @@ export function WorkDetail({
   const supabase = createClient()
   const isOwner = currentUserId === author.id
   const currentImage = work.images[selectedImage]
+  const videoRef = useRef<HTMLVideoElement | null>(null)
   const hasMultipleImages = work.images.length > 1
 
   const publishedDate = new Date(work.published_at).toLocaleDateString(
@@ -150,6 +151,14 @@ export function WorkDetail({
     setSelectedImage((prev) => (prev === work.images.length - 1 ? 0 : prev + 1))
   }, [hasMultipleImages, work.images.length])
 
+  const openVideoFullscreen = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+    if (video.requestFullscreen) {
+      video.requestFullscreen()
+    }
+  }, [])
+
   useEffect(() => {
     if (!hasMultipleImages) return
     function onKeyDown(e: KeyboardEvent) {
@@ -176,11 +185,31 @@ export function WorkDetail({
           {/* Main image */}
           {currentImage && (
             <div className="group relative bg-gray-100 rounded-xl overflow-hidden">
-              <img
-                src={currentImage.url}
-                alt={title}
-                className="w-full h-auto max-h-[600px] object-contain mx-auto transition-opacity duration-300"
-              />
+              {currentImage.type?.startsWith("video/") ? (
+                <>
+                  <video
+                    ref={videoRef}
+                    src={currentImage.url}
+                    className="w-full h-auto max-h-[600px] object-contain mx-auto transition-opacity duration-300 bg-black"
+                    controls
+                    playsInline
+                    preload="metadata"
+                  />
+                  <button
+                    type="button"
+                    onClick={openVideoFullscreen}
+                    className="absolute bottom-3 right-3 rounded-full border border-black/10 bg-white/80 px-3 py-1 text-xs font-medium text-gray-800 backdrop-blur hover:bg-white"
+                  >
+                    Pantalla completa
+                  </button>
+                </>
+              ) : (
+                <img
+                  src={currentImage.url}
+                  alt={title}
+                  className="w-full h-auto max-h-[600px] object-contain mx-auto transition-opacity duration-300"
+                />
+              )}
               {hasMultipleImages && (
                 <>
                   <button
@@ -220,8 +249,17 @@ export function WorkDetail({
                   <img
                     src={img.url}
                     alt={`${i + 1}`}
-                    className="w-full h-full object-cover"
+                    className={`w-full h-full ${img.type?.startsWith("video/") ? "hidden" : "object-cover"}`}
                   />
+                  {img.type?.startsWith("video/") && (
+                    <video
+                      src={img.url}
+                      className="w-full h-full object-cover"
+                      muted
+                      playsInline
+                      preload="metadata"
+                    />
+                  )}
                 </button>
               ))}
             </div>
@@ -519,7 +557,7 @@ export function WorkDetail({
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
             <h3 className="text-lg font-bold text-gray-900">
-              ¿Eliminar esta obra?
+              ¿Eliminar este proyecto?
             </h3>
             <p className="mt-2 text-sm text-gray-500">
               Se eliminarán también todos sus likes y comentarios. Esta acción no

@@ -28,7 +28,7 @@ export function CreateWorkForm() {
     toggleTag,
   } = useTaxonomy()
 
-  const { publish, step: publishStep, progress, error, reset } = useCreateWork()
+  const { publish, step: publishStep, progress, error, wasAutoApproved, reset } = useCreateWork()
 
   const descriptionLen = description.length
   const canGoToDetails = files.length >= WORK_LIMITS.IMAGES_MIN
@@ -69,8 +69,14 @@ export function CreateWorkForm() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">¡Obra enviada!</h2>
-        <p className="mt-2 text-gray-500">Tu obra fue enviada a revisión.</p>
+        <h2 className="text-2xl font-bold text-gray-900">
+          {wasAutoApproved ? "¡Proyecto publicado!" : "¡Proyecto enviado!"}
+        </h2>
+        <p className="mt-2 text-gray-500">
+          {wasAutoApproved
+            ? "Tu proyecto ya está visible en el feed."
+            : "Tu proyecto fue enviado a revisión."}
+        </p>
         <Link href="/dashboard" className="mt-6 inline-block px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
           Volver al feed
         </Link>
@@ -83,14 +89,14 @@ export function CreateWorkForm() {
       {/* Header */}
       <div className="mb-8">
         <Link href="/dashboard" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">← Volver al feed</Link>
-        <h1 className="mt-3 text-2xl font-bold text-gray-900">Nueva Obra</h1>
-        <p className="mt-1 text-sm text-gray-500">Comparte tu trabajo con la comunidad.</p>
+        <h1 className="mt-3 text-2xl font-bold text-gray-900">Nueva publicación</h1>
+        <p className="mt-1 text-sm text-gray-500">Comparte tu proyecto con la comunidad.</p>
       </div>
 
       {/* Steps */}
       <div className="flex gap-2 mb-8">
         {(["images", "details", "preview"] as Step[]).map((s, i) => {
-          const labels = ["Imágenes", "Detalles", "Vista previa"]
+          const labels = ["Medios", "Detalles", "Vista previa"]
           const isCurrent = step === s
           const isPast =
             (s === "images" && (step === "details" || step === "preview")) ||
@@ -136,7 +142,7 @@ export function CreateWorkForm() {
             <label className="block text-sm font-medium text-gray-700">Título</label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={WORK_LIMITS.TITLE_MAX}
               className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
-              placeholder="Dale un nombre a tu obra" />
+              placeholder="Dale un nombre a tu proyecto" />
             <p className="mt-1 text-xs text-gray-400 text-right">{title.length}/{WORK_LIMITS.TITLE_MAX}</p>
           </div>
 
@@ -180,7 +186,7 @@ export function CreateWorkForm() {
           {/* Nav */}
           <div className="flex justify-between pt-4">
             <button type="button" onClick={() => setStep("images")} className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-              ← Imágenes
+              ← Medios
             </button>
             <button type="button" onClick={() => setStep("preview")} disabled={!canGoToPreview}
               className="px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
@@ -196,14 +202,33 @@ export function CreateWorkForm() {
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             {previewUrls[0] && (
               <div className="aspect-video bg-gray-100 overflow-hidden">
-                <img src={previewUrls[0].url} alt="Preview" className="w-full h-full object-cover" />
+                {previewUrls[0].file.type.startsWith("video/") ? (
+                  <video
+                    src={previewUrls[0].url}
+                    className="w-full h-full object-cover"
+                    controls
+                    playsInline
+                  />
+                ) : (
+                  <img src={previewUrls[0].url} alt="Preview" className="w-full h-full object-cover" />
+                )}
               </div>
             )}
             {previewUrls.length > 1 && (
               <div className="flex gap-1 p-1">
                 {previewUrls.slice(1).map((item, i) => (
                   <div key={i} className="w-20 h-20 rounded overflow-hidden bg-gray-100 flex-shrink-0">
-                    <img src={item.url} alt={`Extra ${i + 2}`} className="w-full h-full object-cover" />
+                    {item.file.type.startsWith("video/") ? (
+                      <video
+                        src={item.url}
+                        className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                        preload="metadata"
+                      />
+                    ) : (
+                      <img src={item.url} alt={`Extra ${i + 2}`} className="w-full h-full object-cover" />
+                    )}
                   </div>
                 ))}
               </div>
@@ -223,7 +248,9 @@ export function CreateWorkForm() {
           </div>
 
           <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-sm text-amber-700">Tu obra será enviada a revisión antes de aparecer en el feed.</p>
+            <p className="text-sm text-amber-700">
+              Si tu cuenta no es administradora, la publicación pasará por revisión antes de aparecer en el feed.
+            </p>
           </div>
 
           {isPublishing && (
@@ -243,7 +270,7 @@ export function CreateWorkForm() {
             </button>
             <button type="button" onClick={handlePublish} disabled={isPublishing}
               className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-              {isPublishing ? "Publicando..." : "Publicar obra"}
+              {isPublishing ? "Publicando..." : "Publicar proyecto"}
             </button>
           </div>
         </div>

@@ -19,9 +19,9 @@ export default function WorkNotFound() {
           />
         </svg>
       </div>
-      <h2 className="text-xl font-bold text-gray-900">Obra no encontrada</h2>
+      <h2 className="text-xl font-bold text-gray-900">Proyecto no encontrado</h2>
       <p className="mt-2 text-sm text-gray-500">
-        Esta obra no existe o no está disponible.
+        Este proyecto no existe o no está disponible.
       </p>
       <Link
         href="/dashboard"

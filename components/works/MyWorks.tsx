@@ -9,7 +9,7 @@ interface MyWork {
   id: string
   title: string
   category: string
-  images: { url: string }[]
+  images: { url: string; type?: string }[]
   moderation_status: string
   archived: boolean
   likes_count: number
@@ -93,16 +93,16 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mis obras</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Mis proyectos</h1>
           <p className="mt-1 text-sm text-gray-500">
-            {works.filter((w) => !w.archived).length} obras · {archived.length} archivadas
+            {works.filter((w) => !w.archived).length} proyectos · {archived.length} archivados
           </p>
         </div>
         <Link
           href="/dashboard/new"
           className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
         >
-          + Nueva Obra
+          + Nuevo proyecto
         </Link>
       </div>
 
@@ -153,13 +153,13 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
       {works.length === 0 && (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
           <p className="text-gray-500 font-medium">
-            No has publicado ninguna obra aún.
+            No has publicado ningún proyecto aún.
           </p>
           <Link
             href="/dashboard/new"
             className="mt-4 inline-block px-5 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
           >
-            Crear tu primera obra
+            Crear tu primer proyecto
           </Link>
         </div>
       )}
@@ -167,7 +167,9 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
       {/* Works grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {visibleWorks.map((work) => {
-          const thumb = work.images?.[0]?.url ?? null
+          const cover = work.images?.[0] ?? null
+          const thumb = cover?.url ?? null
+          const isVideo = Boolean(cover?.type?.startsWith("video/"))
           const status =
             STATUS_STYLES[work.moderation_status] ?? STATUS_STYLES.draft
           const isApproved = work.moderation_status === "approved"
@@ -188,12 +190,22 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
                 <Link href={`/dashboard/work/${work.id}`}>
                   <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
                     {thumb ? (
-                      <img
-                        src={thumb}
-                        alt={work.title}
-                        className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
-                        loading="lazy"
-                      />
+                      isVideo ? (
+                        <video
+                          src={thumb}
+                          className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                          muted
+                          playsInline
+                          preload="metadata"
+                        />
+                      ) : (
+                        <img
+                          src={thumb}
+                          alt={work.title}
+                          className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      )
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <span className="text-gray-300">—</span>
@@ -209,12 +221,22 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
               ) : (
                 <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
                   {thumb ? (
-                    <img
-                      src={thumb}
-                      alt={work.title}
-                      className="w-full h-full object-cover opacity-75"
-                      loading="lazy"
-                    />
+                    isVideo ? (
+                      <video
+                        src={thumb}
+                        className="w-full h-full object-cover opacity-75"
+                        muted
+                        playsInline
+                        preload="metadata"
+                      />
+                    ) : (
+                      <img
+                        src={thumb}
+                        alt={work.title}
+                        className="w-full h-full object-cover opacity-75"
+                        loading="lazy"
+                      />
+                    )
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <span className="text-gray-300">—</span>
@@ -288,8 +310,8 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
         <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
           <p className="text-sm text-gray-400">
             {showArchived
-              ? "No tienes obras archivadas"
-              : "Todas tus obras están archivadas"}
+              ? "No tienes proyectos archivados"
+              : "Todos tus proyectos están archivados"}
           </p>
         </div>
       )}
