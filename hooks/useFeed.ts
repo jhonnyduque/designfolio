@@ -63,9 +63,39 @@ export function useFeed(): UseFeedReturn {
 
         if (dbError) throw dbError
 
-        const results = (data ?? []) as FeedItem[]
+        const baseResults = (data ?? []) as FeedItem[]
+        let results = baseResults
+
+        // Merge anonymous engagement counters if public tables exist
+        const workIds = baseResults.map((w) => w.id)
+        if (workIds.length > 0) {
+          const [{ data: likesRows, error: likesErr }, { data: commentsRows, error: commentsErr }] =
+            await Promise.all([
+              supabase.from("public_likes").select("work_id").in("work_id", workIds),
+              supabase.from("public_comments").select("work_id").in("work_id", workIds),
+            ])
+
+          if (!likesErr || !commentsErr) {
+            const likesMap: Record<string, number> = {}
+            const commentsMap: Record<string, number> = {}
+
+            ;(likesRows ?? []).forEach((row: any) => {
+              likesMap[row.work_id] = (likesMap[row.work_id] ?? 0) + 1
+            })
+            ;(commentsRows ?? []).forEach((row: any) => {
+              commentsMap[row.work_id] = (commentsMap[row.work_id] ?? 0) + 1
+            })
+
+            results = baseResults.map((item) => ({
+              ...item,
+              likes_count: item.likes_count + (likesMap[item.id] ?? 0),
+              comments_count: item.comments_count + (commentsMap[item.id] ?? 0),
+            }))
+          }
+        }
+
         setItems((prev) => (append ? [...prev, ...results] : results))
-        setHasMore(results.length === FEED_PAGE_SIZE)
+        setHasMore(baseResults.length === FEED_PAGE_SIZE)
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Error al cargar el feed"

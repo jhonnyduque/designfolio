@@ -35,6 +35,36 @@ export default async function PublicWorkPage({ params }: PageProps) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const [{ count: publicLikes }, { count: publicComments }] = await Promise.all([
+    supabase
+      .from("public_likes")
+      .select("*", { count: "exact", head: true })
+      .eq("work_id", id),
+    supabase
+      .from("public_comments")
+      .select("*", { count: "exact", head: true })
+      .eq("work_id", id),
+  ])
+
+  const [{ data: prevWork }, { data: nextWork }] = await Promise.all([
+    supabase
+      .from("works")
+      .select("id")
+      .eq("moderation_status", "approved")
+      .gt("published_at", work.published_at)
+      .order("published_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("works")
+      .select("id")
+      .eq("moderation_status", "approved")
+      .lt("published_at", work.published_at)
+      .order("published_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ])
+
   return (
     <WorkDetail
       work={{
@@ -44,8 +74,8 @@ export default async function PublicWorkPage({ params }: PageProps) {
         category: work.category,
         tags: work.tags,
         images: work.images ?? [],
-        likes_count: work.likes_count,
-        comments_count: work.comments_count,
+        likes_count: work.likes_count + (publicLikes ?? 0),
+        comments_count: work.comments_count + (publicComments ?? 0),
         views_count: work.views_count,
         published_at: work.published_at,
       }}
@@ -53,6 +83,8 @@ export default async function PublicWorkPage({ params }: PageProps) {
       currentUserId={user?.id ?? null}
       backHref="/proyectos"
       profileHref={null}
+      prevHref={prevWork ? `/proyectos/${prevWork.id}` : null}
+      nextHref={nextWork ? `/proyectos/${nextWork.id}` : null}
     />
   )
 }

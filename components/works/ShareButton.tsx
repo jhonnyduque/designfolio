@@ -16,7 +16,7 @@ export function ShareButton({ workId, size = "md" }: ShareButtonProps) {
       e.preventDefault()
       e.stopPropagation()
 
-      const url = `${window.location.origin}/dashboard/work/${workId}`
+      const url = `${window.location.origin}/proyectos/${workId}`
       navigator.clipboard.writeText(url).then(() => {
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)

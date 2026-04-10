@@ -1,7 +1,7 @@
 // components/works/WorkDetail.tsx
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
@@ -42,6 +42,8 @@ interface WorkDetailProps {
   currentUserId?: string | null
   backHref?: string
   profileHref?: string | null
+  prevHref?: string | null
+  nextHref?: string | null
 }
 
 const LEVEL_LABELS = ["Novato", "Activo", "Reconocido", "Referencia"]
@@ -58,6 +60,8 @@ export function WorkDetail({
   currentUserId,
   backHref = "/dashboard",
   profileHref = `/dashboard/profile/${author.username}`,
+  prevHref = null,
+  nextHref = null,
 }: WorkDetailProps) {
   const [selectedImage, setSelectedImage] = useState(0)
   const [editing, setEditing] = useState(false)
@@ -73,6 +77,7 @@ export function WorkDetail({
   const supabase = createClient()
   const isOwner = currentUserId === author.id
   const currentImage = work.images[selectedImage]
+  const hasMultipleImages = work.images.length > 1
 
   const publishedDate = new Date(work.published_at).toLocaleDateString(
     "es-ES",
@@ -134,8 +139,28 @@ export function WorkDetail({
     }
   }, [supabase, work.id, router])
 
+  const goPrevImage = useCallback(() => {
+    if (!hasMultipleImages) return
+    setSelectedImage((prev) => (prev === 0 ? work.images.length - 1 : prev - 1))
+  }, [hasMultipleImages, work.images.length])
+
+  const goNextImage = useCallback(() => {
+    if (!hasMultipleImages) return
+    setSelectedImage((prev) => (prev === work.images.length - 1 ? 0 : prev + 1))
+  }, [hasMultipleImages, work.images.length])
+
+  useEffect(() => {
+    if (!hasMultipleImages) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "ArrowLeft") goPrevImage()
+      if (e.key === "ArrowRight") goNextImage()
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [hasMultipleImages, goPrevImage, goNextImage])
+
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto pb-20 md:pb-0">
       {/* Back link */}
       <Link
         href={backHref}
@@ -149,17 +174,37 @@ export function WorkDetail({
         <div>
           {/* Main image */}
           {currentImage && (
-            <div className="bg-gray-100 rounded-xl overflow-hidden">
+            <div className="group relative bg-gray-100 rounded-xl overflow-hidden">
               <img
                 src={currentImage.url}
                 alt={title}
-                className="w-full h-auto max-h-[600px] object-contain mx-auto"
+                className="w-full h-auto max-h-[600px] object-contain mx-auto transition-opacity duration-300"
               />
+              {hasMultipleImages && (
+                <>
+                  <button
+                    type="button"
+                    onClick={goPrevImage}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-black/10 bg-white/70 text-black/45 opacity-0 transition-all hover:bg-white hover:text-black/70 group-hover:opacity-100 focus:opacity-100"
+                    aria-label="Imagen anterior"
+                  >
+                    ←
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goNextImage}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-black/10 bg-white/70 text-black/45 opacity-0 transition-all hover:bg-white hover:text-black/70 group-hover:opacity-100 focus:opacity-100"
+                    aria-label="Siguiente imagen"
+                  >
+                    →
+                  </button>
+                </>
+              )}
             </div>
           )}
 
           {/* Thumbnails */}
-          {work.images.length > 1 && (
+          {hasMultipleImages && (
             <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
               {work.images.map((img, i) => (
                 <button
@@ -262,7 +307,7 @@ export function WorkDetail({
             )}
 
             {/* Stats bar */}
-            <div className="mt-6 pt-6 border-t border-gray-100 flex items-center gap-5">
+            <div className="mt-6 hidden items-center gap-5 border-t border-gray-100 pt-6 md:flex">
               <LikeButton
                 workId={work.id}
                 initialCount={work.likes_count}
@@ -342,10 +387,39 @@ export function WorkDetail({
             )}
 
             {/* Comments */}
-            <CommentsSection
-              workId={work.id}
-              initialCount={work.comments_count}
-            />
+            <div id="comments-section">
+              <CommentsSection
+                workId={work.id}
+                initialCount={work.comments_count}
+              />
+            </div>
+
+            {(prevHref || nextHref) && (
+              <div className="mt-8 flex items-center justify-between border-t border-gray-100 pt-5">
+                {prevHref ? (
+                  <Link
+                    href={prevHref}
+                    className="inline-flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-gray-800"
+                  >
+                    <span className="text-black/45">←</span>
+                    <span>Anterior</span>
+                  </Link>
+                ) : (
+                  <span />
+                )}
+                {nextHref ? (
+                  <Link
+                    href={nextHref}
+                    className="inline-flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-gray-800"
+                  >
+                    <span>Siguiente</span>
+                    <span className="text-black/45">→</span>
+                  </Link>
+                ) : (
+                  <span />
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -404,6 +478,31 @@ export function WorkDetail({
             )}
           </div>
         </aside>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-[#f5f7f5]/95 p-3 backdrop-blur md:hidden">
+        <div className="mx-auto flex max-w-md items-center justify-between rounded-full border border-black/10 bg-white px-4 py-2">
+          <LikeButton
+            workId={work.id}
+            initialCount={work.likes_count}
+            size="sm"
+          />
+          <button
+            type="button"
+            onClick={() =>
+              document
+                .getElementById("comments-section")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }
+            className="inline-flex items-center gap-1.5 text-xs text-gray-500"
+          >
+            <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+            </svg>
+            <span>{work.comments_count}</span>
+          </button>
+          <ShareButton workId={work.id} size="sm" />
+        </div>
       </div>
 
       {/* Confirm delete dialog */}

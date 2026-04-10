@@ -39,6 +39,25 @@ export default async function WorkPage({ params }: PageProps) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const [{ data: prevWork }, { data: nextWork }] = await Promise.all([
+    supabase
+      .from("works")
+      .select("id")
+      .eq("moderation_status", "approved")
+      .gt("published_at", work.published_at)
+      .order("published_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("works")
+      .select("id")
+      .eq("moderation_status", "approved")
+      .lt("published_at", work.published_at)
+      .order("published_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ])
+
   return (
     <WorkDetail
       work={{
@@ -55,6 +74,8 @@ export default async function WorkPage({ params }: PageProps) {
       }}
       author={author}
       currentUserId={user?.id ?? null}
+      prevHref={prevWork ? `/dashboard/work/${prevWork.id}` : null}
+      nextHref={nextWork ? `/dashboard/work/${nextWork.id}` : null}
     />
   )
 }
