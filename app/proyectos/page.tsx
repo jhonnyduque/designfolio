@@ -7,13 +7,17 @@ export default function PublicProjectsPage() {
     <main className="min-h-screen bg-[#f5f7f5] text-[#1e1e1e]">
       <header className="sticky top-0 z-30 border-b border-black/10 bg-[#f5f7f5]/95 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-[1500px] items-center justify-between px-6 md:px-10">
-          <Link href="/" aria-label="Inicio" className="inline-flex items-center">
+          <Link
+            href="https://jhonnyduque.com"
+            aria-label="Ir a jhonnyduque.com"
+            className="inline-flex items-center"
+          >
             <Image
-              src="/brand/logo-jd.png"
+              src="/brand/simbolo-logo.webp"
               alt="Jhonny Duque"
               width={36}
               height={36}
-              className="h-9 w-9"
+              className="h-9 w-9 object-contain"
             />
           </Link>
           <Link
