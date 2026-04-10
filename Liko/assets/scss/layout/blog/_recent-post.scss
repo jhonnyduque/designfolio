@@ -1,0 +1,47 @@
+@use '../../utils' as *;
+
+/*----------------------------------------*/
+/*  5.3 Recent Post css
+/*----------------------------------------*/
+
+.rc{
+    &__post{
+        & ul{
+            & li{
+                &:not(:last-child){
+                    margin-bottom: 15px;
+                }
+            }
+        }
+        &-title{
+            font-size: 17px;
+            font-weight: 600;
+            line-height: 22px;
+            color: var(--tp-common-black);
+            & a{
+                @extend .hoverLine;
+            }
+        }
+    }
+    &__meta{
+        & span{
+            color: #414145;
+            font-size: 15px;
+            font-weight: 400;
+            line-height: 1;
+            margin-bottom: 15px;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+    }
+    &__post-thumb{
+        @include root('div'){
+            flex: 0 0 auto;
+            & img{
+                width: 100px;
+                height: 100px;
+                object-fit: cover;
+            }
+        }
+    }
+}

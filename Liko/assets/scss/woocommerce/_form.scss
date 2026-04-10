@@ -1,0 +1,268 @@
+@use '../utils' as *;
+
+.tp-product-details-action-item-wrapper {
+   
+    & .nice-select{
+        border-radius: 0;
+        min-width: 200px;
+        &::after{
+            right: 16px;
+        }
+
+        & .list{
+            padding: 16px 0;
+            & .option{
+                line-height: 1.3;
+                min-height: auto;
+                height: auto;
+                padding: 5px 20px;
+
+                &:hover{
+                    color: var(--tp-common-black);
+                }
+
+            }
+        }
+    }
+
+    & form.cart{
+
+        &.variations_form{
+            & .single_variation_wrap{
+                & .tp-product-details-action-wrapper{
+                    margin-top: 30px;
+
+                }
+            }
+
+                    
+            & table.variations{
+                margin-bottom: 20px;
+                & tbody{
+
+                    & tr{
+                        & th,
+                        & td{
+                            padding: 0 0 10px;
+                            border-bottom: 1px solid var(--tp-border-color);
+                            vertical-align: middle;
+                        
+                        }
+                    }
+
+                    & th.label{
+                        & label{
+                            margin-bottom: 0 !important;
+                            margin-right: 20px;
+                            font-size: 14px;
+                            color: var(--tp-common-black);
+                        }
+                    }
+                }
+            }
+        }
+
+        &.grouped_form {
+            & .group_table{
+                & tbody{
+                    & tr{
+                        & th,
+                        & td{
+                            padding: 10px 10px;
+                            border: 1px solid #E0E2E3;
+                        }
+
+                        & td{
+                            & label{
+                                & a{
+                                    display: inline-block;
+                                    font-size: 16px;
+                                    color: var(--tp-common-black);
+
+                                    @extend .hoverLine;
+
+                                    &:hover{
+                                        color: var(--tp-common-black);
+                                    }
+                                }
+                            }
+
+                            .tp-shop-details-quantity{
+                                margin-bottom: 0;
+                            }
+
+                            &.woocommerce-grouped-product-list-item__label{
+                                width: 44%;
+                            }
+
+                            &.woocommerce-grouped-product-list-item__price{
+                                & > span,
+                                & del,
+                                & ins{
+                                    font-size: 16px;
+                                    font-weight: 400;
+                                    line-height: 1;
+                                    color: var(--tp-common-black);
+                                    font-family: var(--tp-ff-marcellus);
+                                }
+
+                                & ins{
+                                    text-decoration: none;
+                                }
+
+                                & del{
+                                    font-size: 14px;
+                                    color: #767A7D;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            & .tp-shop-details-quantity{
+                margin-right: 0;
+                width: 110px;
+                .tp-cart-input[type="text"]{
+                    height: 44px;
+                    line-height: 44px;
+                }
+            }
+        }
+
+        & tr,
+        & th,
+        & td,
+        & label,
+        & p,
+        & a{
+            font-family: var(--tp-ff-marcellus);
+        }
+
+        & .reset_variations{
+            margin-left: 10px;
+            &:hover{
+                color: red;
+            }
+        }
+    }
+
+    & .price{
+        & > span,
+        & del,
+        & ins{
+            font-size: 22px;
+            font-weight: 400;
+            line-height: 1;
+            color: var(--tp-common-black);
+            font-family: var(--tp-ff-marcellus);
+        }
+
+        & del{
+            font-size: 16px;
+            color: #767A7D;
+        }
+
+        & ins{
+            text-decoration: none;
+        }
+    }
+
+}
+
+
+
+.flex-control-nav{
+    margin-top: 20px;
+    & li{
+        margin: 0 5px;
+        
+        & img{
+            width: 100%;
+            height: auto;
+            border: 1px solid transparent;
+
+            &.flex-active{
+                border-color: #000;
+            }
+
+            &:hover{
+                cursor: pointer;
+            }
+        }
+
+    }
+}
+
+.liko-shop-breadcrumb-title{
+    font-family: var(--tp-ff-marcellus);
+}
+
+.liko-shop-breadcrumb-list{
+    & span{
+        text-transform: capitalize;
+        font-family: var(--tp-ff-marcellus);
+    }
+
+}
+
+.liko-product-related-title{
+    font-weight: 500;
+    font-size: 55px;
+    line-height: 1;
+    margin-bottom: 6px;
+    font-family: var(--tp-ff-marcellus);
+}
+
+.tp-product-details-dsc-wrap{
+
+    table.shop_attributes{
+        border: 1px solid #E0E2E3;
+        width: 100%;
+
+        & tr,
+        & td,
+        & th{
+            font-family: var(--tp-ff-marcellus);
+        }
+        & th,
+        & td{
+            padding: 0;
+            line-height: 1.5;
+            vertical-align: middle;
+            border: 1px solid #ECEDED;
+            text-align: left;
+            background-color: transparent;
+            & p{
+                margin-bottom: 0;
+            }
+        }
+        
+        & tr{
+            &:not(:last-child){
+                border-bottom: 1px solid #ECEDED;
+            }
+            & th{
+                font-size: 16px;
+                color: var(--tp-common-black);
+                background-color: #F9F9F9 !important; 
+                width: 306px;
+                padding: 12px 34px;
+                font-weight: 400;
+            }
+            & td{
+                padding: 12px 34px;
+                &:first-child{
+                    font-size: 16px;
+                    color: var(--tp-common-black);
+                    background-color: #F9F9F9;
+                    width: 306px;
+                }
+                &:last-child{
+                    font-size: 16px;
+                    color: var(--tp-text-body);
+                }
+            }
+        }
+    }
+}

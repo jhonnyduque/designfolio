@@ -1,0 +1,141 @@
+
+/*rating icon*/
+@font-face {
+    font-family:star;
+    src:url(../fonts/woo/star.eot);
+    src:url(../fonts/woo/star.eot?#iefix) format("embedded-opentype"),
+    url(../fonts/woo/star.woff) format("woff"),
+    url(../fonts/woo/star.ttf) format("truetype"),
+    url(../fonts/woo/star.svg#star) format("svg");
+    font-weight:400;
+    font-style:normal
+   }
+   @font-face {
+    font-family:WooCommerce;
+    src:url(../fonts/woo/WooCommerce.eot);
+    src:url(../fonts/woo/WooCommerce.eot?#iefix) format("embedded-opentype"),
+    url(../fonts/woo/WooCommerce.woff) format("woff"),
+    url(../fonts/woo/WooCommerce.ttf) format("truetype"),
+    url(../fonts/woo/WooCommerce.svg#WooCommerce) format("svg");
+    font-weight:400;
+    font-style:normal
+   }
+
+   
+.woocommerce p.stars a {
+    position:relative;
+    height:1em;
+    width:1em;
+    text-indent:-999em;
+    display:inline-block;
+    text-decoration:none;
+    color: #1E1E1E;
+}
+.woocommerce p.stars a::before {
+    display:block;
+    position:absolute;
+    top:0;
+    left:0;
+    width:1em;
+    height:1em;
+    line-height:1;
+    font-family:WooCommerce;
+    content:"\e021";
+    text-indent:0;
+    color: #1E1E1E;
+}
+.woocommerce p.stars a:hover~a::before {
+    content:"\e021"
+}
+.woocommerce p.stars:hover a::before {
+    content:"\e020"
+}
+.woocommerce p.stars.selected a.active::before {
+    content:"\e020"
+}
+.woocommerce p.stars.selected a.active~a::before {
+    content:"\e021"
+}
+.woocommerce p.stars.selected a:not(.active)::before {
+    content: "\e020";
+}
+
+
+.star-rating {
+    position: relative;
+    font-size: 0;
+    width: 83px;
+    overflow: hidden;
+    line-height: 1.1;
+    display: inline-block;
+    color: #1E1E1E;
+    & span{
+        position: absolute;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+        font-size: 0;
+        color: #1E1E1E;
+    }
+}
+
+.star-rating::before,
+.star-rating span::before{
+    font-family: "Font Awesome 6 Pro";
+    content: '\f005\f005\f005\f005\f005';
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #D9D9EA;
+    font-size: 12px;
+    font-weight: 700;
+}
+.star-rating span::before{
+    color: #1E1E1E;
+}
+
+.comment-form-rating{
+    display: flex;
+    align-items: center;
+    margin-bottom: 26px;
+    &:not(.user-logged-in){
+        margin-bottom: 20px;
+    }
+
+    & label[for="rating"]{
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1;
+        color: #5D5D63;
+        margin-bottom: 25px;
+        font-family: var(--tp-ff-marcellus);
+        margin: 0;
+        margin-right: 8px;
+    }
+
+    & p{
+        margin: 0;
+        font-size: 14px;
+        line-height: 1;
+    }
+}
+
+#review_form{
+    & label:not([for="rating"]){
+        font-size: 14px;
+        color: #1E1E1E;
+        font-family: var(--tp-ff-body);
+        margin-bottom: 6px;
+        display: inline-block;
+    }
+
+    & textarea{
+        height: 140px;
+        resize: none;
+    }
+}
+
+.is-grid-view{
+    & > img{
+        margin-bottom: 5px;
+    }
+}

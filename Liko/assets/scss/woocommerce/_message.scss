@@ -1,0 +1,75 @@
+@use '../utils' as *;
+
+.woocommerce{
+    & .woocommerce-error,
+    & .woocommerce-warning,
+    & .woocommerce-info {
+        border-top: 4px solid #FD4B6B;
+        background-color: rgba($color: #FD4B6B, $alpha: .1);
+        padding: 14px 26px;
+        margin: 0;
+        margin-bottom: 14px;
+        & li{
+            list-style: none;
+            margin-bottom: 0;
+            color: var(--tp-common-black);
+            position: relative;
+            &:not(:last-child){
+                margin-bottom: 10px;
+            }
+
+            &::before{
+                content: url('../img/icons/woocommerce/error.svg');
+                position: relative;
+                top: 2px;
+                margin-right: 5px;
+            }
+        }
+    }
+    & .woocommerce-warning,
+    & .woocommerce-info{
+        border-top: 4px solid #FFB342;
+        background-color: rgba($color: #FFB342, $alpha: .1);
+        font-family: var(--tp-ff-marcellus);
+        font-size: 15px;
+
+        & li{
+            &::before{
+                content: url('../img/icons/woocommerce/warning.svg');
+                top: 4px;
+                
+            }
+        }
+
+        & a{
+            color: var(--tp-common-black);
+            font-weight: 700;
+            font-family: var(--tp-ff-marcellus);
+            @extend .hoverLine;
+            &:hover{
+                color: var(--tp-common-black);
+            }
+        }
+    }
+}
+
+.woocommerce .woocommerce-message{
+    border-top: 4px solid $succes;
+    background-color: rgba($color: $succes, $alpha: .1);
+    padding: 14px 26px;
+    margin: 0;
+    margin-bottom: 14px;
+    color: var(--tp-common-black);
+    font-family: var(--tp-ff-marcellus);
+    font-size: 15px;
+    & a{
+        font-weight: 500;
+        color: $succes;
+        margin-right: 5px;
+        text-decoration: underline;
+
+        &:hover{
+            text-decoration: underline;
+        }
+    }
+}

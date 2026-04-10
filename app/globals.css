@@ -1,36 +1,59 @@
 @import "tailwindcss";
 
-/* =========================
-   Variables base
-========================= */
-:root {
-  --background: #000000;
-  --foreground: #ffffff;
+@font-face {
+  font-family: "Gallery Modern";
+  src:
+    url("/fonts/gallerymodern-webfont.woff2") format("woff2"),
+    url("/fonts/gallerymodern-webfont.woff") format("woff");
+  font-display: swap;
 }
 
-/* =========================
-   Base Layout
-========================= */
+:root {
+  --background: #f5f7f5;
+  --foreground: #1e1e1e;
+  --surface: #ffffff;
+  --muted: #5d5d63;
+  --border: #e3e5e8;
+  --pill: #404041;
+  --pill-hover: #2f2f31;
+  --accent: #111111;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: "Syne", "Inter", "Segoe UI", system-ui, sans-serif;
 }
 
-/* =========================
-   Marcellus Utility (H1 only)
-========================= */
 .font-marcellus {
-  font-family: var(--font-marcellus), serif;
+  font-family: "Gallery Modern", "Marcellus", serif;
 }
 
-/* =========================
-   Glow ultra sutil
-========================= */
-.bg-glow {
-  background: radial-gradient(
-    circle at 50% 30%,
-    rgba(255, 255, 255, 0.04),
-    transparent 60%
-  );
+.brand-pill {
+  border-radius: 999px;
+  background: var(--pill);
+  color: #fff;
+  transition: background-color 0.25s ease;
+}
+
+.brand-pill:hover {
+  background: var(--pill-hover);
+}
+
+.brand-cta {
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.brand-cta:hover {
+  transform: translateY(-1px);
+  opacity: 0.92;
+}
+
+.brand-gradient {
+  background:
+    radial-gradient(circle at 48% 55%, rgba(242, 184, 129, 0.45), transparent 28%),
+    radial-gradient(circle at 60% 50%, rgba(181, 223, 141, 0.45), transparent 28%);
 }
