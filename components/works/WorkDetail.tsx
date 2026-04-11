@@ -65,6 +65,7 @@ export function WorkDetail({
   nextHref = null,
 }: WorkDetailProps) {
   const [selectedImage, setSelectedImage] = useState(0)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(work.title)
   const [editDescription, setEditDescription] = useState(work.description)
@@ -169,8 +170,17 @@ export function WorkDetail({
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [hasMultipleImages, goPrevImage, goNextImage])
 
+  useEffect(() => {
+    if (!lightboxOpen) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setLightboxOpen(false)
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [lightboxOpen])
+
   return (
-    <div className="max-w-4xl mx-auto pb-20 md:pb-0">
+    <div className="mx-auto max-w-[1180px] pb-20 md:pb-0">
       {/* Back link */}
       <Link
         href={backHref}
@@ -179,7 +189,7 @@ export function WorkDetail({
         ← Volver al feed
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10">
         {/* Left: Images + Description */}
         <div>
           {/* Main image */}
@@ -190,7 +200,7 @@ export function WorkDetail({
                   <video
                     ref={videoRef}
                     src={currentImage.url}
-                    className="w-full h-auto max-h-[600px] object-contain mx-auto transition-opacity duration-300 bg-black"
+                    className="w-full h-auto max-h-[820px] object-contain mx-auto transition-opacity duration-300 bg-black"
                     controls
                     playsInline
                     preload="metadata"
@@ -207,7 +217,8 @@ export function WorkDetail({
                 <img
                   src={currentImage.url}
                   alt={title}
-                  className="w-full h-auto max-h-[600px] object-contain mx-auto transition-opacity duration-300"
+                  onClick={() => setLightboxOpen(true)}
+                  className="w-full h-auto max-h-[820px] cursor-zoom-in object-contain mx-auto transition-transform duration-500 group-hover:scale-[1.03]"
                 />
               )}
               {hasMultipleImages && (
@@ -578,6 +589,29 @@ export function WorkDetail({
                 Eliminar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {lightboxOpen && currentImage && !currentImage.type?.startsWith("video/") && (
+        <div
+          className="fixed inset-0 z-[70] bg-black/80 p-4 md:p-8"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(false)}
+            className="absolute right-4 top-4 z-[71] rounded-full bg-white/90 px-3 py-1 text-sm font-semibold text-gray-900"
+          >
+            Cerrar
+          </button>
+          <div className="flex h-full w-full items-center justify-center">
+            <img
+              src={currentImage.url}
+              alt={title}
+              className="max-h-[92vh] max-w-[92vw] rounded-lg object-contain shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
         </div>
       )}

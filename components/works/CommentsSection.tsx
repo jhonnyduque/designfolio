@@ -266,11 +266,6 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
                 <span className="text-xs text-gray-400">
                   {getTimeAgo(comment.created_at)}
                 </span>
-                {!comment.is_valid && (
-                  <span className="text-[10px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-full">
-                    Breve
-                  </span>
-                )}
               </div>
 
               {/* Categories */}
