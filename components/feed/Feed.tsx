@@ -236,9 +236,26 @@ export function Feed() {
 
       {/* End of feed */}
       {!hasMore && items.length > 0 && (
-        <p className="mt-10 text-center text-sm text-gray-400">
-          Has llegado al final del feed.
-        </p>
+        <div className="mt-12 overflow-hidden rounded-3xl border border-black/10 bg-[#1f2127] px-5 py-10 text-center sm:px-8 sm:py-12">
+          <p className="font-marcellus text-4xl leading-[0.95] tracking-tight text-transparent sm:text-5xl lg:text-6xl bg-[linear-gradient(90deg,#f9c46b_0%,#ff7a8a_35%,#b042ff_70%,#6f35ff_100%)] bg-clip-text">
+            ¿Te gustó el feed?
+          </p>
+          <p className="mx-auto mt-4 max-w-2xl text-sm text-white/75 sm:text-base">
+            Si quieres una propuesta visual con este nivel de detalle para tu marca, hablemos.
+          </p>
+
+          <div className="mt-7 flex justify-center">
+            <a
+              href="https://wa.me/34604405615?text=Hola%20Jhonny%2C%20quiero%20hablar%20de%20mi%20proyecto."
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#1f2127] transition-transform hover:scale-[1.02] hover:bg-white/95"
+            >
+              Hablemos
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </div>
       )}
     </section>
   )
