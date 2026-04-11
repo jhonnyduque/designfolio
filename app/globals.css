@@ -57,3 +57,23 @@ body {
     radial-gradient(circle at 48% 55%, rgba(242, 184, 129, 0.45), transparent 28%),
     radial-gradient(circle at 60% 50%, rgba(181, 223, 141, 0.45), transparent 28%);
 }
+
+@keyframes gradient-wave {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.cta-gradient-wave {
+  background-image: linear-gradient(90deg, #f9c46b 0%, #ff7a8a 35%, #b042ff 70%, #6f35ff 100%);
+  background-size: 220% 220%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: gradient-wave 7s ease-in-out infinite;
+}

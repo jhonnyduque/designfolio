@@ -43,7 +43,9 @@ export function Feed() {
 
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchInput, setSearchInput] = useState("")
+  const [ctaVisible, setCtaVisible] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
+  const ctaRef = useRef<HTMLDivElement | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Focus input when opening search on mobile
@@ -52,6 +54,21 @@ export function Feed() {
       searchRef.current.focus()
     }
   }, [searchOpen])
+
+  useEffect(() => {
+    if (!ctaRef.current) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setCtaVisible(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.2 }
+    )
+    observer.observe(ctaRef.current)
+    return () => observer.disconnect()
+  }, [])
 
   function handleSearchChange(value: string) {
     setSearchInput(value)
@@ -236,9 +253,14 @@ export function Feed() {
 
       {/* End of feed */}
       {!hasMore && items.length > 0 && (
-        <div className="mt-12 overflow-hidden rounded-3xl border border-black/10 bg-[#1f2127] px-5 py-10 text-center sm:px-8 sm:py-12">
-          <p className="font-marcellus text-4xl leading-[0.95] tracking-tight text-transparent sm:text-5xl lg:text-6xl bg-[linear-gradient(90deg,#f9c46b_0%,#ff7a8a_35%,#b042ff_70%,#6f35ff_100%)] bg-clip-text">
-            ¿Te gustó el feed?
+        <div
+          ref={ctaRef}
+          className={`mt-12 overflow-hidden rounded-3xl border border-black/10 bg-[#1f2127] px-5 py-10 text-center transition-all duration-700 sm:px-8 sm:py-12 ${
+            ctaVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+          }`}
+        >
+          <p className="cta-gradient-wave font-marcellus text-4xl leading-[0.95] tracking-tight text-transparent sm:text-5xl lg:text-6xl">
+            ¿Tienes un proyecto en mente?
           </p>
           <p className="mx-auto mt-4 max-w-2xl text-sm text-white/75 sm:text-base">
             Si quieres una propuesta visual con este nivel de detalle para tu marca, hablemos.
