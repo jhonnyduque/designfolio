@@ -192,89 +192,91 @@ export function WorkDetail({
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10">
         {/* Left: Images + Description */}
         <div>
-          {/* Main image */}
-          {currentImage && (
-            <div className="group relative bg-gray-100 rounded-xl overflow-hidden">
-              {currentImage.type?.startsWith("video/") ? (
-                <>
-                  <video
-                    ref={videoRef}
-                    src={currentImage.url}
-                    className="w-full h-auto max-h-[820px] object-contain mx-auto transition-opacity duration-300 bg-black"
-                    controls
-                    playsInline
-                    preload="metadata"
-                  />
-                  <button
-                    type="button"
-                    onClick={openVideoFullscreen}
-                    className="absolute bottom-3 right-3 rounded-full border border-black/10 bg-white/80 px-3 py-1 text-xs font-medium text-gray-800 backdrop-blur hover:bg-white"
-                  >
-                    Pantalla completa
-                  </button>
-                </>
-              ) : (
-                <img
-                  src={currentImage.url}
-                  alt={title}
-                  onClick={() => setLightboxOpen(true)}
-                  className="w-full h-auto max-h-[820px] cursor-zoom-in object-contain mx-auto transition-transform duration-500 group-hover:scale-[1.03]"
-                />
-              )}
-              {hasMultipleImages && (
-                <>
-                  <button
-                    type="button"
-                    onClick={goPrevImage}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-black/10 bg-white/70 text-black/45 opacity-0 transition-all hover:bg-white hover:text-black/70 group-hover:opacity-100 focus:opacity-100"
-                    aria-label="Imagen anterior"
-                  >
-                    ←
-                  </button>
-                  <button
-                    type="button"
-                    onClick={goNextImage}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-black/10 bg-white/70 text-black/45 opacity-0 transition-all hover:bg-white hover:text-black/70 group-hover:opacity-100 focus:opacity-100"
-                    aria-label="Siguiente imagen"
-                  >
-                    →
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Thumbnails */}
-          {hasMultipleImages && (
-            <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
-              {work.images.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedImage(i)}
-                  className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${
-                    i === selectedImage
-                      ? "border-gray-900"
-                      : "border-transparent hover:border-gray-300"
-                  }`}
-                >
-                  <img
-                    src={img.url}
-                    alt={`${i + 1}`}
-                    className={`w-full h-full ${img.type?.startsWith("video/") ? "hidden" : "object-cover"}`}
-                  />
-                  {img.type?.startsWith("video/") && (
+          <div className="inline-block max-w-full">
+            {/* Main image */}
+            {currentImage && (
+              <div className="group relative overflow-hidden rounded-2xl border border-black/10 bg-gray-100">
+                {currentImage.type?.startsWith("video/") ? (
+                  <>
                     <video
-                      src={img.url}
-                      className="w-full h-full object-cover"
-                      muted
+                      ref={videoRef}
+                      src={currentImage.url}
+                      className="block h-auto max-h-[820px] w-auto max-w-full object-contain bg-black"
+                      controls
                       playsInline
                       preload="metadata"
                     />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
+                    <button
+                      type="button"
+                      onClick={openVideoFullscreen}
+                      className="absolute bottom-3 right-3 rounded-full border border-black/10 bg-white/80 px-3 py-1 text-xs font-medium text-gray-800 backdrop-blur hover:bg-white"
+                    >
+                      Pantalla completa
+                    </button>
+                  </>
+                ) : (
+                  <img
+                    src={currentImage.url}
+                    alt={title}
+                    onClick={() => setLightboxOpen(true)}
+                    className="block h-auto max-h-[820px] w-auto max-w-full cursor-zoom-in object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                )}
+                {hasMultipleImages && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={goPrevImage}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-black/10 bg-white/70 text-black/45 opacity-0 transition-all hover:bg-white hover:text-black/70 group-hover:opacity-100 focus:opacity-100"
+                      aria-label="Imagen anterior"
+                    >
+                      ←
+                    </button>
+                    <button
+                      type="button"
+                      onClick={goNextImage}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-black/10 bg-white/70 text-black/45 opacity-0 transition-all hover:bg-white hover:text-black/70 group-hover:opacity-100 focus:opacity-100"
+                      aria-label="Siguiente imagen"
+                    >
+                      →
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Thumbnails */}
+            {hasMultipleImages && (
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                {work.images.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedImage(i)}
+                    className={`h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
+                      i === selectedImage
+                        ? "border-gray-900"
+                        : "border-transparent hover:border-gray-300"
+                    }`}
+                  >
+                    <img
+                      src={img.url}
+                      alt={`${i + 1}`}
+                      className={`h-full w-full ${img.type?.startsWith("video/") ? "hidden" : "object-cover"}`}
+                    />
+                    {img.type?.startsWith("video/") && (
+                      <video
+                        src={img.url}
+                        className="h-full w-full object-cover"
+                        muted
+                        playsInline
+                        preload="metadata"
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Description */}
           <div className="mt-8">
