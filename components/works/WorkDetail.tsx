@@ -1,7 +1,7 @@
 // components/works/WorkDetail.tsx
 "use client"
 
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useEffect, useRef, type TouchEvent } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
@@ -72,6 +72,8 @@ export function WorkDetail({
   const isOwner = currentUserId === author.id
   const currentImage = work.images[selectedImage]
   const videoRef = useRef<HTMLVideoElement | null>(null)
+  const touchStartX = useRef<number | null>(null)
+  const touchEndX = useRef<number | null>(null)
   const hasMultipleImages = work.images.length > 1
 
   const publishedDate = new Date(work.published_at).toLocaleDateString(
@@ -152,6 +154,30 @@ export function WorkDetail({
     }
   }, [])
 
+  const handleTouchStart = useCallback((e: TouchEvent<HTMLDivElement>) => {
+    if (!hasMultipleImages) return
+    touchStartX.current = e.changedTouches[0]?.clientX ?? null
+    touchEndX.current = null
+  }, [hasMultipleImages])
+
+  const handleTouchMove = useCallback((e: TouchEvent<HTMLDivElement>) => {
+    if (!hasMultipleImages) return
+    touchEndX.current = e.changedTouches[0]?.clientX ?? null
+  }, [hasMultipleImages])
+
+  const handleTouchEnd = useCallback(() => {
+    if (!hasMultipleImages) return
+    if (touchStartX.current == null || touchEndX.current == null) return
+    const deltaX = touchStartX.current - touchEndX.current
+    const swipeThreshold = 40
+
+    if (deltaX > swipeThreshold) goNextImage()
+    if (deltaX < -swipeThreshold) goPrevImage()
+
+    touchStartX.current = null
+    touchEndX.current = null
+  }, [hasMultipleImages, goNextImage, goPrevImage])
+
   useEffect(() => {
     if (!hasMultipleImages) return
     function onKeyDown(e: KeyboardEvent) {
@@ -186,7 +212,12 @@ export function WorkDetail({
         <div>
           {/* Main image */}
           {currentImage && (
-            <div className="group relative w-full overflow-hidden rounded-2xl border border-black/10 bg-gray-100">
+            <div
+              className="group relative w-full overflow-hidden rounded-2xl border border-black/10 bg-gray-100"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               {currentImage.type?.startsWith("video/") ? (
                 <>
                   <video
@@ -238,7 +269,7 @@ export function WorkDetail({
 
           {/* Thumbnails */}
           {hasMultipleImages && (
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            <div className="mt-3 hidden gap-2 overflow-x-auto pb-1 sm:flex">
               {work.images.map((img, i) => (
                 <button
                   key={i}
@@ -264,6 +295,22 @@ export function WorkDetail({
                     />
                   )}
                 </button>
+              ))}
+            </div>
+          )}
+
+          {hasMultipleImages && (
+            <div className="mt-3 flex items-center justify-center gap-1.5 sm:hidden">
+              {work.images.map((_, i) => (
+                <button
+                  key={`dot-${i}`}
+                  type="button"
+                  onClick={() => setSelectedImage(i)}
+                  aria-label={`Ir a imagen ${i + 1}`}
+                  className={`h-1.5 rounded-full transition-all ${
+                    i === selectedImage ? "w-5 bg-gray-900" : "w-1.5 bg-gray-300"
+                  }`}
+                />
               ))}
             </div>
           )}
