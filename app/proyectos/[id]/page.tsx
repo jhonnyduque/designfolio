@@ -1,4 +1,6 @@
 import { notFound, redirect } from "next/navigation"
+import Image from "next/image"
+import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { WorkDetail } from "@/components/works/WorkDetail"
 
@@ -91,26 +93,56 @@ export default async function PublicWorkPage({ params }: PageProps) {
   ])
 
   return (
-    <WorkDetail
-      work={{
-        id: work.id,
-        slug: work.slug ?? null,
-        title: work.title,
-        description: work.description,
-        category: work.category,
-        tags: work.tags,
-        images: work.images ?? [],
-        likes_count: work.likes_count + (publicLikes ?? 0),
-        comments_count: work.comments_count + (publicComments ?? 0),
-        views_count: work.views_count,
-        published_at: work.published_at,
-      }}
-      author={author}
-      currentUserId={user?.id ?? null}
-      backHref="/proyectos"
-      profileHref={null}
-      prevHref={prevWork ? `/proyectos/${prevWork.slug ?? prevWork.id}` : null}
-      nextHref={nextWork ? `/proyectos/${nextWork.slug ?? nextWork.id}` : null}
-    />
+    <main className="min-h-screen bg-[#f5f7f5] text-[#1e1e1e]">
+      <header className="sticky top-0 z-30 border-b border-black/10 bg-[#f5f7f5]/95 backdrop-blur">
+        <div className="mx-auto flex h-14 w-full max-w-[1500px] items-center justify-between px-6 md:px-10">
+          <Link
+            href="https://jhonnyduque.com"
+            aria-label="Ir a jhonnyduque.com"
+            className="inline-flex items-center"
+          >
+            <Image
+              src="/brand/simbolo-logo.webp"
+              alt="Jhonny Duque"
+              width={36}
+              height={36}
+              className="h-9 w-9 object-contain"
+            />
+          </Link>
+          <Link
+            href="https://jhonnyduque.com/proyectos/"
+            target="_blank"
+            rel="noreferrer"
+            className="brand-pill inline-flex items-center px-4 py-1.5 text-xs font-semibold text-white hover:opacity-95"
+          >
+            Volver a jhonnyduque.com
+          </Link>
+        </div>
+      </header>
+
+      <section className="mx-auto w-full max-w-[1500px] px-6 py-6 md:px-10 md:py-8">
+        <WorkDetail
+          work={{
+            id: work.id,
+            slug: work.slug ?? null,
+            title: work.title,
+            description: work.description,
+            category: work.category,
+            tags: work.tags,
+            images: work.images ?? [],
+            likes_count: work.likes_count + (publicLikes ?? 0),
+            comments_count: work.comments_count + (publicComments ?? 0),
+            views_count: work.views_count,
+            published_at: work.published_at,
+          }}
+          author={author}
+          currentUserId={user?.id ?? null}
+          backHref="/proyectos"
+          profileHref={null}
+          prevHref={prevWork ? `/proyectos/${prevWork.slug ?? prevWork.id}` : null}
+          nextHref={nextWork ? `/proyectos/${nextWork.slug ?? nextWork.id}` : null}
+        />
+      </section>
+    </main>
   )
 }
