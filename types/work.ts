@@ -10,6 +10,7 @@ export interface WorkImage {
 
 export interface CreateWorkPayload {
   title: string
+  slug?: string
   description: string
   category: string
   tags: string[]

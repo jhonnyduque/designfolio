@@ -8,14 +8,21 @@ import { TaxonomySelector } from "./TaxonomySelector"
 import { useCreateWork } from "@/hooks/useCreateWork"
 import { useTaxonomy } from "@/hooks/useTaxonomy"
 import { WORK_LIMITS } from "@/types/work"
+import { createClient } from "@/lib/supabase/client"
+import { normalizeSlug, slugifyProjectTitle } from "@/lib/slug"
 
 type Step = "images" | "details" | "preview"
 
 export function CreateWorkForm() {
   const [files, setFiles] = useState<File[]>([])
   const [title, setTitle] = useState("")
+  const [slug, setSlug] = useState("")
+  const [slugTouched, setSlugTouched] = useState(false)
+  const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle")
+  const [slugCheckMessage, setSlugCheckMessage] = useState("")
   const [description, setDescription] = useState("")
   const [step, setStep] = useState<Step>("images")
+  const supabase = useMemo(() => createClient(), [])
 
   const {
     categories,
@@ -31,12 +38,15 @@ export function CreateWorkForm() {
   const { publish, step: publishStep, progress, error, wasAutoApproved, reset } = useCreateWork()
 
   const descriptionLen = description.length
+  const normalizedSlug = normalizeSlug(slug)
+  const finalSlugPreview = normalizedSlug || slugifyProjectTitle(title)
   const canGoToDetails = files.length >= WORK_LIMITS.IMAGES_MIN
   const canGoToPreview =
     title.trim().length >= WORK_LIMITS.TITLE_MIN &&
     title.trim().length <= WORK_LIMITS.TITLE_MAX &&
     descriptionLen >= WORK_LIMITS.DESCRIPTION_MIN &&
-    selectedCategory !== ""
+    selectedCategory !== "" &&
+    slugStatus !== "taken"
   const isPublishing = publishStep !== "idle" && publishStep !== "error"
 
   async function handlePublish() {
@@ -44,6 +54,7 @@ export function CreateWorkForm() {
 
     await publish(files, {
       title: title.trim(),
+      slug: normalizedSlug,
       description: description.trim(),
       category: selectedCategory,
       tags: selectedTags,
@@ -60,6 +71,56 @@ export function CreateWorkForm() {
       previewUrls.forEach((item) => URL.revokeObjectURL(item.url))
     }
   }, [previewUrls])
+
+  useEffect(() => {
+    if (!slugTouched) {
+      setSlug(normalizeSlug(title))
+    }
+  }, [title, slugTouched])
+
+  useEffect(() => {
+    let isCancelled = false
+    const candidate = normalizedSlug || slugifyProjectTitle(title)
+
+    if (!candidate) {
+      setSlugStatus("idle")
+      setSlugCheckMessage("")
+      return
+    }
+
+    setSlugStatus("checking")
+    setSlugCheckMessage("Comprobando disponibilidad del slug...")
+
+    const timeout = setTimeout(async () => {
+      const { data, error: checkError } = await supabase
+        .from("works")
+        .select("id")
+        .eq("slug", candidate)
+        .limit(1)
+        .maybeSingle()
+
+      if (isCancelled) return
+
+      if (checkError) {
+        setSlugStatus("idle")
+        setSlugCheckMessage("No se pudo validar el slug en este momento.")
+        return
+      }
+
+      if (data) {
+        setSlugStatus("taken")
+        setSlugCheckMessage("Este slug ya existe. Elige otro.")
+      } else {
+        setSlugStatus("available")
+        setSlugCheckMessage("Slug disponible.")
+      }
+    }, 350)
+
+    return () => {
+      isCancelled = true
+      clearTimeout(timeout)
+    }
+  }, [normalizedSlug, title, supabase])
 
   if (publishStep === "done") {
     return (
@@ -116,7 +177,7 @@ export function CreateWorkForm() {
       {/* Error */}
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-          <p className="text-sm text-red-700">{error}</p>
+          <p className="text-sm text-red-700 whitespace-pre-line">{error}</p>
           <button onClick={reset} className="mt-1 text-sm font-medium text-red-600 hover:text-red-800 underline">Reintentar</button>
         </div>
       )}
@@ -144,6 +205,50 @@ export function CreateWorkForm() {
               className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
               placeholder="Dale un nombre a tu proyecto" />
             <p className="mt-1 text-xs text-gray-400 text-right">{title.length}/{WORK_LIMITS.TITLE_MAX}</p>
+          </div>
+
+          {/* Slug */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Slug</label>
+            <input
+              type="text"
+              value={slug}
+              onChange={(e) => {
+                setSlugTouched(true)
+                setSlug(normalizeSlug(e.target.value))
+              }}
+              maxLength={120}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+              placeholder="mi-proyecto"
+            />
+            <div className="mt-1 flex items-center justify-between gap-3">
+              <p className="text-xs text-gray-500 break-all">
+                URL final: <span className="font-medium text-gray-700">designfolio.jhonnyduque.com/proyectos/{finalSlugPreview}</span>
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSlugTouched(false)
+                  setSlug(normalizeSlug(title))
+                }}
+                className="text-xs font-medium text-gray-600 hover:text-gray-900"
+              >
+                Regenerar
+              </button>
+            </div>
+            {slugCheckMessage && (
+              <p
+                className={`mt-1 text-xs ${
+                  slugStatus === "taken"
+                    ? "text-red-600"
+                    : slugStatus === "available"
+                      ? "text-green-600"
+                      : "text-gray-500"
+                }`}
+              >
+                {slugCheckMessage}
+              </p>
+            )}
           </div>
 
           {/* Description */}

@@ -1,7 +1,7 @@
 // components/works/ImageUploader.tsx
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { WORK_LIMITS } from "@/types/work"
 
 interface ImageUploaderProps {
@@ -11,6 +11,7 @@ interface ImageUploaderProps {
 
 export function ImageUploader({ files, onChange }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
 
   const handleFiles = useCallback(
     (newFiles: FileList | null) => {
@@ -24,15 +25,33 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
         "video/webm",
         "video/quicktime",
       ]
-      const accepted = Array.from(newFiles).filter(
-        (f) => {
-          if (!validTypes.includes(f.type)) return false
+      const errors: string[] = []
+      const accepted = Array.from(newFiles).filter((f) => {
+          if (!validTypes.includes(f.type)) {
+            errors.push(`"${f.name}": formato no permitido.`)
+            return false
+          }
           const maxSize = f.type.startsWith("video/")
             ? WORK_LIMITS.VIDEO_MAX_SIZE_BYTES
             : WORK_LIMITS.IMAGE_MAX_SIZE_BYTES
-          return f.size <= maxSize
-        }
-      )
+          if (f.size > maxSize) {
+            errors.push(
+              `"${f.name}": supera el límite de ${
+                f.type.startsWith("video/")
+                  ? `${WORK_LIMITS.VIDEO_MAX_SIZE_MB}MB para video`
+                  : `${WORK_LIMITS.IMAGE_MAX_SIZE_MB}MB para imagen`
+              }.`
+            )
+            return false
+          }
+          return true
+        })
+
+      if (files.length + accepted.length > WORK_LIMITS.IMAGES_MAX) {
+        errors.push(`Solo puedes subir hasta ${WORK_LIMITS.IMAGES_MAX} archivos por publicación.`)
+      }
+
+      setValidationErrors(errors)
       const combined = [...files, ...accepted].slice(0, WORK_LIMITS.IMAGES_MAX)
       onChange(combined)
     },
@@ -202,6 +221,21 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
           {files.length < WORK_LIMITS.IMAGES_MIN &&
             ` · Mínimo ${WORK_LIMITS.IMAGES_MIN}`}
         </p>
+      )}
+
+      {validationErrors.length > 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <p className="text-xs font-semibold text-amber-700">
+            Algunos archivos no se añadieron:
+          </p>
+          <ul className="mt-1 space-y-1">
+            {validationErrors.slice(0, 4).map((msg, index) => (
+              <li key={`${msg}-${index}`} className="text-xs text-amber-700">
+                - {msg}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   )

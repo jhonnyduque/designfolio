@@ -1,5 +1,5 @@
-export function slugifyProjectTitle(input: string): string {
-  const slug = input
+export function normalizeSlug(input: string): string {
+  return input
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -7,6 +7,9 @@ export function slugifyProjectTitle(input: string): string {
     .trim()
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
+}
 
+export function slugifyProjectTitle(input: string): string {
+  const slug = normalizeSlug(input)
   return slug.length > 0 ? slug : "proyecto"
 }
