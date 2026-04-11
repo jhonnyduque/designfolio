@@ -43,9 +43,8 @@ export function Feed() {
 
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchInput, setSearchInput] = useState("")
-  const [ctaVisible, setCtaVisible] = useState(false)
+  const [ctaVisible, setCtaVisible] = useState(true)
   const searchRef = useRef<HTMLInputElement>(null)
-  const ctaRef = useRef<HTMLDivElement | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Focus input when opening search on mobile
@@ -54,21 +53,6 @@ export function Feed() {
       searchRef.current.focus()
     }
   }, [searchOpen])
-
-  useEffect(() => {
-    if (!ctaRef.current) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setCtaVisible(true)
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.2 }
-    )
-    observer.observe(ctaRef.current)
-    return () => observer.disconnect()
-  }, [])
 
   function handleSearchChange(value: string) {
     setSearchInput(value)
@@ -254,7 +238,6 @@ export function Feed() {
       {/* End of feed */}
       {!hasMore && items.length > 0 && (
         <div
-          ref={ctaRef}
           className={`mt-12 overflow-hidden rounded-3xl border border-black/10 bg-[#1f2127] px-5 py-10 text-center transition-all duration-700 sm:px-8 sm:py-12 ${
             ctaVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
           }`}
