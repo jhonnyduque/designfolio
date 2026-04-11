@@ -1,4 +1,5 @@
 // components/feed/FeedCard.tsx
+import { useCallback, useRef, useState, type MouseEvent, type TouchEvent } from "react"
 import Link from "next/link"
 import type { FeedItem } from "@/types/feed"
 import { LikeButton } from "@/components/works/LikeButton"
@@ -8,16 +9,66 @@ interface FeedCardProps {
 }
 
 export function FeedCard({ item }: FeedCardProps) {
-  const cover = item.images?.[0] ?? null
+  const media = item.images ?? []
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const touchStartX = useRef<number | null>(null)
+  const touchEndX = useRef<number | null>(null)
+  const hasMultipleMedia = media.length > 1
+  const cover = media[selectedIndex] ?? null
   const thumbnail = cover?.url ?? null
   const isVideo = Boolean(cover?.type?.startsWith("video/"))
   const publicPath = `/proyectos/${item.slug ?? item.id}`
+
+  const goPrev = useCallback((e?: MouseEvent | TouchEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    if (!hasMultipleMedia) return
+    setSelectedIndex((prev) => (prev === 0 ? media.length - 1 : prev - 1))
+  }, [hasMultipleMedia, media.length])
+
+  const goNext = useCallback((e?: MouseEvent | TouchEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    if (!hasMultipleMedia) return
+    setSelectedIndex((prev) => (prev === media.length - 1 ? 0 : prev + 1))
+  }, [hasMultipleMedia, media.length])
+
+  const onTouchStart = useCallback((e: TouchEvent<HTMLDivElement>) => {
+    if (!hasMultipleMedia) return
+    touchStartX.current = e.changedTouches[0]?.clientX ?? null
+    touchEndX.current = null
+  }, [hasMultipleMedia])
+
+  const onTouchMove = useCallback((e: TouchEvent<HTMLDivElement>) => {
+    if (!hasMultipleMedia) return
+    touchEndX.current = e.changedTouches[0]?.clientX ?? null
+  }, [hasMultipleMedia])
+
+  const onTouchEnd = useCallback((e: TouchEvent<HTMLDivElement>) => {
+    if (!hasMultipleMedia) return
+    if (touchStartX.current == null || touchEndX.current == null) return
+    const deltaX = touchStartX.current - touchEndX.current
+    const swipeThreshold = 35
+    if (deltaX > swipeThreshold) goNext(e)
+    if (deltaX < -swipeThreshold) goPrev(e)
+    touchStartX.current = null
+    touchEndX.current = null
+  }, [hasMultipleMedia, goNext, goPrev])
 
   return (
     <Link href={publicPath} className="block">
       <article className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md hover:border-gray-300 transition-all duration-200">
       {/* Image */}
-      <div className="aspect-[4/5] bg-gray-100 overflow-hidden">
+      <div
+        className="relative aspect-[4/5] bg-gray-100 overflow-hidden"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         {thumbnail ? (
           isVideo ? (
             <video
@@ -41,6 +92,30 @@ export function FeedCard({ item }: FeedCardProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
+        )}
+
+        {hasMultipleMedia && (
+          <>
+            <button
+              type="button"
+              onClick={goPrev}
+              aria-label="Anterior"
+              className="absolute left-2 top-1/2 z-10 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-black/10 bg-white/75 text-black/45 transition-all hover:bg-white hover:text-black/70 group-hover:flex"
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              onClick={goNext}
+              aria-label="Siguiente"
+              className="absolute right-2 top-1/2 z-10 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-black/10 bg-white/75 text-black/45 transition-all hover:bg-white hover:text-black/70 group-hover:flex"
+            >
+              →
+            </button>
+            <span className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white">
+              {selectedIndex + 1}/{media.length}
+            </span>
+          </>
         )}
       </div>
 
