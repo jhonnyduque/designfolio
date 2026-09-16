@@ -317,7 +317,12 @@ problema era de hosting de base de datos, no de frontend.
   `BETTER_AUTH_SECRET`, SMTP y almacenamiento.
 - Aplicar migraciones MySQL y el esquema de Better Auth (`sql/auth-schema.sql`) en la nueva
   base.
-- Copias de seguridad automáticas **y una prueba de restauración real**.
+- **Copias de seguridad automáticas: primer paso después de crear la base, no el último.**
+  Este proyecto ya perdió todos los datos del curso una vez, sin dump ni export que
+  recuperar. El respaldo se configura *antes* de que entre contenido real, no en la fase
+  de endurecimiento. Concretamente: un cron job en Hostinger con `mysqldump` diario,
+  rotación de al menos 7 días, y **una restauración probada de verdad** sobre una base
+  vacía — un backup que nunca se restauró no es un backup.
 - ~~Verificar que el hosting soporte Node.js/Next.js persistente~~ — confirmado arriba.
 
 ---
@@ -445,8 +450,9 @@ Consecuencia práctica: la cautela deja de estar en «no desplegar» y pasa a es
 «desplegar en el orden correcto».
 
 - Los datos del curso —proyectos, likes y comentarios de los estudiantes— se perdieron
-  con la base. El tag `aula-v1-supabase` conserva el código, no el contenido. Si aparece
-  un dump o export, se puede importar a MySQL.
+  con la base, de forma definitiva: **no existe dump ni export** (confirmado
+  2026-09-17). El tag `aula-v1-supabase` conserva el código, no el contenido. Si el
+  aula se reactiva algún día, arranca vacía.
 - Sigue vigente B7: retirar las variables `NEXT_PUBLIC_SUPABASE_*` sin haber migrado
   `components/works/WorkDetail.tsx` rompe la página pública de cada proyecto.
 - `main` se toca solo cuando el portafolio esté verificado en el subdominio.
