@@ -26,21 +26,27 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
         "video/quicktime",
       ]
       const errors: string[] = []
+      
+      const truncate = (name: string) => {
+        if (name.length <= 25) return name
+        const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')) : ''
+        return name.slice(0, 20) + '...' + ext
+      }
+
       const accepted = Array.from(newFiles).filter((f) => {
+          const shortName = truncate(f.name)
           if (!validTypes.includes(f.type)) {
-            errors.push(`"${f.name}": formato no permitido.`)
+            errors.push(`"${shortName}" no tiene un formato válido.`)
             return false
           }
-          const maxSize = f.type.startsWith("video/")
+          const isVideo = f.type.startsWith("video/")
+          const maxSize = isVideo
             ? WORK_LIMITS.VIDEO_MAX_SIZE_BYTES
             : WORK_LIMITS.IMAGE_MAX_SIZE_BYTES
           if (f.size > maxSize) {
+            const maxMB = isVideo ? WORK_LIMITS.VIDEO_MAX_SIZE_MB : WORK_LIMITS.IMAGE_MAX_SIZE_MB
             errors.push(
-              `"${f.name}": supera el límite de ${
-                f.type.startsWith("video/")
-                  ? `${WORK_LIMITS.VIDEO_MAX_SIZE_MB}MB para video`
-                  : `${WORK_LIMITS.IMAGE_MAX_SIZE_MB}MB para imagen`
-              }.`
+              `"${shortName}" es muy pesado (máximo ${maxMB}MB).`
             )
             return false
           }
@@ -48,7 +54,7 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
         })
 
       if (files.length + accepted.length > WORK_LIMITS.IMAGES_MAX) {
-        errors.push(`Solo puedes subir hasta ${WORK_LIMITS.IMAGES_MAX} archivos por publicación.`)
+        errors.push(`Solo puedes mostrar hasta ${WORK_LIMITS.IMAGES_MAX} archivos.`)
       }
 
       setValidationErrors(errors)

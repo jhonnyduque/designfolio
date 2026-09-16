@@ -1,51 +1,26 @@
-// app/(protected)/layout.tsx
-import { cookies } from "next/headers"
+import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { eq } from "drizzle-orm"
+import { auth } from "@/lib/auth"
+import { getDb } from "@/lib/db/client"
+import { profiles } from "@/lib/db/schema"
 import { DashboardShell } from "./DashboardShell"
 
-export default async function ProtectedLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (!session?.user) redirect("/login")
 
-  const cookieStore = await cookies()
-  const previewAccess = cookieStore.get("preview_access")?.value === "true"
+  const [profile] = await getDb().select({
+    isFounder: profiles.isFounder,
+    isActive: profiles.isActive,
+    onboardingCompleted: profiles.onboardingCompleted,
+  }).from(profiles).where(eq(profiles.id, session.user.id)).limit(1)
 
-  if (!user) {
-    if (!previewAccess) {
-      redirect("/login")
-    }
-
-    return (
-      <DashboardShell email="" isFounder={false}>
-        {children}
-      </DashboardShell>
-    )
-  }
-
-  // Fetch profile for founder check + onboarding check
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_founder, onboarding_completed")
-    .eq("id", user.id)
-    .single()
-
-  // Redirect to onboarding if not completed
-  if (!profile?.onboarding_completed) {
-    redirect("/onboarding")
-  }
+  if (!profile?.isActive) redirect("/login")
+  if (!profile.onboardingCompleted) redirect("/onboarding")
 
   return (
-    <DashboardShell
-      email={user.email ?? ""}
-      isFounder={profile?.is_founder ?? false}
-    >
+    <DashboardShell email={session.user.email} isFounder={profile.isFounder}>
       {children}
     </DashboardShell>
   )

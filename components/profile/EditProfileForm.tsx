@@ -3,8 +3,6 @@
 
 import { useState, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
-import { uploadAvatar } from "@/lib/supabase/avatar"
 import {
   PROFILE_CATEGORIES,
   CAREER_YEARS,
@@ -33,7 +31,6 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
   const [success, setSuccess] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
-  const supabase = createClient()
 
   const bioLen = bio.length
 
@@ -77,24 +74,33 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
 
       // Upload new avatar if changed
       if (avatarFile) {
-        const result = await uploadAvatar(avatarFile, profile.id)
-        if (result.error) throw new Error(result.error)
-        avatarUrl = result.url
+        const formData = new FormData()
+        formData.set("avatar", avatarFile)
+        const upload = await fetch("/api/profile", { method: "POST", body: formData })
+        if (!upload.ok) {
+          const data = await upload.json().catch(() => ({})) as { error?: string }
+          throw new Error(data.error ?? "No se pudo subir el avatar.")
+        }
+        avatarUrl = (await upload.json() as { url: string }).url
       }
 
-      const { error: updateErr } = await supabase
-        .from("profiles")
-        .update({
-          full_name: fullName.trim(),
-          avatar_url: avatarUrl,
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: profile.username,
+          fullName: fullName.trim(),
+          avatarUrl,
           bio: bio.trim(),
-          school: school.trim() || null,
-          career_year: careerYear || null,
+          school: school.trim(),
+          careerYear,
           categories,
-        })
-        .eq("id", profile.id)
-
-      if (updateErr) throw updateErr
+        }),
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({})) as { error?: string }
+        throw new Error(data.error ?? "No se pudo guardar el perfil.")
+      }
 
       setSuccess(true)
       setTimeout(() => {

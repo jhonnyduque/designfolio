@@ -5,10 +5,9 @@ import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { ImageUploader } from "./ImageUploader"
 import { TaxonomySelector } from "./TaxonomySelector"
-import { useCreateWork } from "@/hooks/useCreateWork"
+import { useCreateWorkMySql } from "@/hooks/useCreateWorkMySql"
 import { useTaxonomy } from "@/hooks/useTaxonomy"
 import { WORK_LIMITS } from "@/types/work"
-import { createClient } from "@/lib/supabase/client"
 import { normalizeSlug, slugifyProjectTitle } from "@/lib/slug"
 
 type Step = "images" | "details" | "preview"
@@ -22,7 +21,6 @@ export function CreateWorkForm() {
   const [slugCheckMessage, setSlugCheckMessage] = useState("")
   const [description, setDescription] = useState("")
   const [step, setStep] = useState<Step>("images")
-  const supabase = useMemo(() => createClient(), [])
 
   const {
     categories,
@@ -35,7 +33,7 @@ export function CreateWorkForm() {
     toggleTag,
   } = useTaxonomy()
 
-  const { publish, step: publishStep, progress, error, wasAutoApproved, reset } = useCreateWork()
+  const { publish, step: publishStep, progress, error, wasAutoApproved, reset } = useCreateWorkMySql()
 
   const descriptionLen = description.length
   const normalizedSlug = normalizeSlug(slug)
@@ -92,27 +90,26 @@ export function CreateWorkForm() {
     setSlugCheckMessage("Comprobando disponibilidad del slug...")
 
     const timeout = setTimeout(async () => {
-      const { data, error: checkError } = await supabase
-        .from("works")
-        .select("id")
-        .eq("slug", candidate)
-        .limit(1)
-        .maybeSingle()
-
-      if (isCancelled) return
-
-      if (checkError) {
+      try {
+        const response = await fetch(`/api/works/slug?value=${encodeURIComponent(candidate)}`)
+        const data = await response.json() as { available?: boolean; error?: string }
+        if (isCancelled) return
+        if (!response.ok) {
+          setSlugStatus("idle")
+          setSlugCheckMessage(data.error ?? "No se pudo validar el slug en este momento.")
+          return
+        }
+        if (!data.available) {
+          setSlugStatus("taken")
+          setSlugCheckMessage("Este slug ya existe. Elige otro.")
+        } else {
+          setSlugStatus("available")
+          setSlugCheckMessage("Slug disponible.")
+        }
+      } catch {
+        if (isCancelled) return
         setSlugStatus("idle")
         setSlugCheckMessage("No se pudo validar el slug en este momento.")
-        return
-      }
-
-      if (data) {
-        setSlugStatus("taken")
-        setSlugCheckMessage("Este slug ya existe. Elige otro.")
-      } else {
-        setSlugStatus("available")
-        setSlugCheckMessage("Slug disponible.")
       }
     }, 350)
 
@@ -120,7 +117,7 @@ export function CreateWorkForm() {
       isCancelled = true
       clearTimeout(timeout)
     }
-  }, [normalizedSlug, title, supabase])
+  }, [normalizedSlug, title])
 
   if (publishStep === "done") {
     return (

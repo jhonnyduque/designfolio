@@ -1,89 +1,52 @@
-// hooks/useNotifications.ts
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import type { Notification } from "@/types/notification"
 
-interface UseNotificationsReturn {
-  notifications: Notification[]
-  unreadCount: number
-  loading: boolean
-  markAsRead: (ids: string[]) => Promise<void>
-  markAllRead: () => Promise<void>
-  refresh: () => void
-}
-
-export function useNotifications(): UseNotificationsReturn {
+export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const [error, setError] = useState<string | null>(null)
 
-  const fetchNotifications = useCallback(async () => {
+  const refresh = useCallback(async () => {
     setLoading(true)
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) return
+      const response = await fetch("/api/notifications")
+      if (response.status === 401) { setNotifications([]); return }
+      const data = await response.json() as { notifications?: Notification[]; error?: string }
+      if (!response.ok) throw new Error(data.error ?? "No se pudieron cargar las notificaciones.")
+      setNotifications(data.notifications ?? [])
+      setError(null)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Error de conexión")
+    } finally { setLoading(false) }
+  }, [])
 
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(50)
+  useEffect(() => { void refresh() }, [refresh])
 
-      if (error) throw error
-      setNotifications((data ?? []) as Notification[])
-    } catch {
-      // Silently fail
-    } finally {
-      setLoading(false)
-    }
-  }, [supabase])
-
-  useEffect(() => {
-    fetchNotifications()
-  }, [fetchNotifications])
-
-  const unreadCount = notifications.filter((n) => !n.read_at).length
-
-  const markAsRead = useCallback(
-    async (ids: string[]) => {
-      try {
-        await supabase.rpc("mark_notifications_read", { p_ids: ids })
-        setNotifications((prev) =>
-          prev.map((n) =>
-            ids.includes(n.id) ? { ...n, read_at: new Date().toISOString() } : n
-          )
-        )
-      } catch {
-        // Silently fail
-      }
-    },
-    [supabase]
-  )
+  const markAsRead = useCallback(async (ids: string[]) => {
+    const response = await fetch("/api/notifications", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    })
+    if (!response.ok) throw new Error("No se pudieron marcar las notificaciones.")
+    const now = new Date().toISOString()
+    setNotifications((previous) => previous.map((item) => ids.includes(item.id) ? { ...item, read_at: now } : item))
+  }, [])
 
   const markAllRead = useCallback(async () => {
-    try {
-      await supabase.rpc("mark_all_notifications_read")
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.read_at ? n : { ...n, read_at: new Date().toISOString() }
-        )
-      )
-    } catch {
-      // Silently fail
-    }
-  }, [supabase])
+    const response = await fetch("/api/notifications", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: "all" }),
+    })
+    if (!response.ok) throw new Error("No se pudieron marcar las notificaciones.")
+    const now = new Date().toISOString()
+    setNotifications((previous) => previous.map((item) => item.read_at ? item : { ...item, read_at: now }))
+  }, [])
 
   return {
     notifications,
-    unreadCount,
-    loading,
-    markAsRead,
-    markAllRead,
-    refresh: fetchNotifications,
+    unreadCount: notifications.filter((item) => !item.read_at).length,
+    loading, error, markAsRead, markAllRead, refresh,
   }
 }

@@ -2,12 +2,12 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { getActiveTagsAction } from "@/lib/server/actions/taxonomy"
 import type { Tag, AssignTagsResult } from "@/types/tag"
 import { TAG_LIMITS } from "@/types/tag"
 
 interface UseTagsReturn {
-  /** All active tags sorted by usage_count DESC */
+  /** All active tags */
   allTags: Tag[]
   /** Currently selected tag names */
   selectedTags: string[]
@@ -21,8 +21,6 @@ interface UseTagsReturn {
   setSelectedTags: (tags: string[]) => void
   /** Whether max tags reached */
   isMaxReached: boolean
-  /** Save tags to a work via RPC */
-  assignToWork: (workId: string) => Promise<AssignTagsResult>
 }
 
 export function useTags(initialTags?: string[]): UseTagsReturn {
@@ -31,30 +29,23 @@ export function useTags(initialTags?: string[]): UseTagsReturn {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClient()
-
   // Fetch all active tags on mount
   useEffect(() => {
     async function fetchTags() {
       setLoading(true)
       setError(null)
-
-      const { data, error: dbError } = await supabase
-        .from("v_tags_active")
-        .select("*")
-
-      if (dbError) {
-        setError(dbError.message)
+      try {
+        const data = await getActiveTagsAction()
+        setAllTags(data)
+      } catch (err: any) {
+        setError(err.message)
+      } finally {
         setLoading(false)
-        return
       }
-
-      setAllTags((data ?? []) as Tag[])
-      setLoading(false)
     }
 
     fetchTags()
-  }, [supabase])
+  }, [])
 
   const isMaxReached = selectedTags.length >= TAG_LIMITS.MAX_PER_WORK
 
@@ -78,25 +69,6 @@ export function useTags(initialTags?: string[]): UseTagsReturn {
     []
   )
 
-  const assignToWork = useCallback(
-    async (workId: string): Promise<AssignTagsResult> => {
-      const { data, error: rpcError } = await supabase.rpc(
-        "assign_tags_to_work",
-        {
-          p_work_id: workId,
-          p_tag_names: selectedTags,
-        }
-      )
-
-      if (rpcError) {
-        return { success: false, error: rpcError.message }
-      }
-
-      return data as AssignTagsResult
-    },
-    [supabase, selectedTags]
-  )
-
   return {
     allTags,
     selectedTags,
@@ -105,6 +77,5 @@ export function useTags(initialTags?: string[]): UseTagsReturn {
     toggleTag,
     setSelectedTags,
     isMaxReached,
-    assignToWork,
   }
 }

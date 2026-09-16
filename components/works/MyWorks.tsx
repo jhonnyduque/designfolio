@@ -3,7 +3,6 @@
 
 import { useState, useCallback } from "react"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
 
 interface MyWork {
   id: string
@@ -36,7 +35,6 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
     title: string
   } | null>(null)
   const [showArchived, setShowArchived] = useState(false)
-  const supabase = createClient()
 
   const pending = works.filter((w) => w.moderation_status === "pending_review" && !w.archived)
   const approved = works.filter((w) => w.moderation_status === "approved" && !w.archived)
@@ -51,11 +49,8 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
     async (workId: string, archive: boolean) => {
       setActionLoading(workId)
       try {
-        const { error } = await supabase.rpc("user_archive_work", {
-          p_work_id: workId,
-          p_archived: archive,
-        })
-        if (error) throw error
+        const response = await fetch(`/api/works/${workId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ archived: archive }) })
+        if (!response.ok) throw new Error("No se pudo actualizar el proyecto.")
         setWorks((prev) =>
           prev.map((w) =>
             w.id === workId ? { ...w, archived: archive } : w
@@ -67,17 +62,15 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
         setActionLoading(null)
       }
     },
-    [supabase]
+    []
   )
 
   const handleDelete = useCallback(
     async (workId: string) => {
       setActionLoading(workId)
       try {
-        const { error } = await supabase.rpc("user_delete_work", {
-          p_work_id: workId,
-        })
-        if (error) throw error
+        const response = await fetch(`/api/works/${workId}`, { method: "DELETE" })
+        if (!response.ok) throw new Error("No se pudo eliminar el proyecto.")
         setWorks((prev) => prev.filter((w) => w.id !== workId))
       } catch {
         // Silently fail
@@ -86,7 +79,7 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
         setConfirmDelete(null)
       }
     },
-    [supabase]
+    []
   )
 
   return (

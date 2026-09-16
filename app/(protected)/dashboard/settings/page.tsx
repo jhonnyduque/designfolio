@@ -1,25 +1,27 @@
 // app/(protected)/dashboard/settings/page.tsx
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { headers } from "next/headers"
+import { eq } from "drizzle-orm"
+import { auth } from "@/lib/auth"
+import { getDb } from "@/lib/db/client"
+import { profiles } from "@/lib/db/schema"
 import { EditProfileForm } from "@/components/profile/EditProfileForm"
 
 export default async function SettingsPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) redirect("/login")
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select(
-      "id, username, full_name, avatar_url, bio, school, career_year, categories, theme_color, onboarding_completed"
-    )
-    .eq("id", user.id)
-    .single()
-
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (!session?.user) redirect("/login")
+  const [profile] = await getDb().select({
+    id: profiles.id,
+    username: profiles.username,
+    full_name: profiles.fullName,
+    avatar_url: profiles.avatarUrl,
+    bio: profiles.bio,
+    school: profiles.school,
+    career_year: profiles.careerYear,
+    categories: profiles.categories,
+    theme_color: profiles.themeColor,
+    onboarding_completed: profiles.onboardingCompleted,
+  }).from(profiles).where(eq(profiles.id, session.user.id)).limit(1)
   if (!profile) redirect("/login")
-
   return <EditProfileForm profile={profile} />
 }

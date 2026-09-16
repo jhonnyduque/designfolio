@@ -1,6 +1,9 @@
-// app/(protected)/dashboard/moderation/tags/page.tsx
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { headers } from "next/headers"
+import { eq } from "drizzle-orm"
+import { auth } from "@/lib/auth"
+import { getDb } from "@/lib/db/client"
+import { profiles } from "@/lib/db/schema"
 import { TagsModerationPanel } from "@/components/moderation/TagsModerationPanel"
 
 export const metadata = {
@@ -8,22 +11,14 @@ export const metadata = {
 }
 
 export default async function TagsModerationPage() {
-  const supabase = await createClient()
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (!session?.user) redirect("/login")
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const [profile] = await getDb().select({
+    isFounder: profiles.isFounder,
+  }).from(profiles).where(eq(profiles.id, session.user.id)).limit(1)
 
-  if (!user) redirect("/login")
-
-  // Verify founder
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_founder")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile?.is_founder) redirect("/dashboard")
+  if (!profile?.isFounder) redirect("/dashboard")
 
   return (
     <div className="py-8 px-4">
