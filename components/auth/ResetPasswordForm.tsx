@@ -3,7 +3,6 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 
 export function ResetPasswordForm() {
   const [password, setPassword] = useState("")
@@ -11,7 +10,6 @@ export function ResetPasswordForm() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -28,11 +26,15 @@ export function ResetPasswordForm() {
 
     setLoading(true)
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password,
+      const token = new URLSearchParams(window.location.search).get("token")
+      if (!token) throw new Error("El enlace de recuperación es inválido o ya expiró.")
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword: password, token }),
       })
-      if (updateError) throw updateError
-      router.push("/dashboard")
+      if (!response.ok) throw new Error("No se pudo actualizar la contraseña. Solicita un enlace nuevo.")
+      router.push("/login")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al actualizar la contraseña")
     } finally {

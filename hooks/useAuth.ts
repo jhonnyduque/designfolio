@@ -1,39 +1,29 @@
-// hooks/useAuth.ts
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
-import type { User } from "@supabase/supabase-js"
 
-interface AuthState {
-  user: User | null
-  loading: boolean
-}
+interface SessionUser { id: string; email: string; name: string }
 
 export function useAuth() {
-  const [state, setState] = useState<AuthState>({ user: null, loading: true })
+  const [user, setUser] = useState<SessionUser | null>(null)
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setState({ user, loading: false })
-    })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setState({ user: session?.user ?? null, loading: false })
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabase])
+    fetch("/api/auth/get-session")
+      .then((response) => response.json())
+      .then((session) => setUser(session?.user ?? null))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false))
+  }, [])
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
+    await fetch("/api/auth/sign-out", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
+    setUser(null)
     router.push("/login")
-  }, [supabase, router])
+    router.refresh()
+  }, [router])
 
-  return { ...state, signOut }
+  return { user, loading, signOut }
 }

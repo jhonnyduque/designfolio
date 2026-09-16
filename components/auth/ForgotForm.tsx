@@ -3,14 +3,12 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
 
 export function ForgotForm() {
   const [email, setEmail] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
-  const supabase = createClient()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -18,11 +16,12 @@ export function ForgotForm() {
     setLoading(true)
 
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        email,
-        { redirectTo: `${window.location.origin}/reset-password` }
-      )
-      if (resetError) throw resetError
+      const response = await fetch("/api/auth/request-password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, redirectTo: `${window.location.origin}/reset-password` }),
+      })
+      if (!response.ok) throw new Error("No se pudo enviar el enlace. Inténtalo de nuevo.")
       setSent(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al enviar el enlace")

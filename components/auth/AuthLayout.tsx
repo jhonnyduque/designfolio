@@ -2,7 +2,7 @@
 "use client"
 
 import Link from "next/link"
-import { type ReactNode, useMemo } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 
 // 8 premium solid colors — one picked at random per render
 const PANEL_COLORS = [
@@ -17,10 +17,13 @@ const PANEL_COLORS = [
 ] as const
 
 export function AuthLayout({ children }: { children: ReactNode }) {
-  const bgColor = useMemo(
-    () => PANEL_COLORS[Math.floor(Math.random() * PANEL_COLORS.length)],
-    []
-  )
+  // Inicializamos con el primer color para que el servidor y el primer render del cliente coincidan
+  const [bgColor, setBgColor] = useState<string>(PANEL_COLORS[0])
+
+  useEffect(() => {
+    // Se ejecuta solo en el cliente tras la hidratación, asignando un color aleatorio real
+    setBgColor(PANEL_COLORS[Math.floor(Math.random() * PANEL_COLORS.length)])
+  }, [])
 
   return (
     <div className="min-h-screen flex">

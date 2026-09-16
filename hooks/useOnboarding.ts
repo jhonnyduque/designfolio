@@ -3,8 +3,6 @@
 
 import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
-import { uploadAvatar } from "@/lib/supabase/avatar"
 import type { OnboardingPayload } from "@/types/profile"
 
 type Step = "idle" | "checking" | "uploading" | "saving" | "done" | "error"
@@ -22,26 +20,16 @@ export function useOnboarding(): UseOnboardingReturn {
   const [progress, setProgress] = useState("")
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
 
   /** Check if username is available (not taken by another user) */
   const checkUsername = useCallback(
     async (username: string): Promise<boolean> => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) return false
-
-      const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("username", username)
-        .neq("id", user.id)
-        .maybeSingle()
-
-      return data === null // true = available
+      const response = await fetch(`/api/profile/username?value=${encodeURIComponent(username)}`)
+      if (!response.ok) return false
+      const data = await response.json() as { available?: boolean }
+      return data.available === true
     },
-    [supabase]
+    []
   )
 
   const save = useCallback(
@@ -49,11 +37,6 @@ export function useOnboarding(): UseOnboardingReturn {
       setError(null)
 
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-        if (!user) throw new Error("No autenticado")
-
         // 1. Check username
         setStep("checking")
         setProgress("Verificando nombre de usuario...")
@@ -67,30 +50,37 @@ export function useOnboarding(): UseOnboardingReturn {
         if (avatarFile) {
           setStep("uploading")
           setProgress("Subiendo foto de perfil...")
-          const result = await uploadAvatar(avatarFile, user.id)
-          if (result.error) throw new Error(result.error)
-          avatarUrl = result.url
+          const formData = new FormData()
+          formData.set("avatar", avatarFile)
+          const upload = await fetch("/api/profile", { method: "POST", body: formData })
+          if (!upload.ok) {
+            const data = await upload.json().catch(() => ({})) as { error?: string }
+            throw new Error(data.error ?? "No se pudo subir el avatar.")
+          }
+          avatarUrl = (await upload.json() as { url: string }).url
         }
 
         // 3. Update profile
         setStep("saving")
         setProgress("Guardando perfil...")
 
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({
+        const update = await fetch("/api/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
             username: payload.username,
-            full_name: payload.full_name,
-            avatar_url: avatarUrl,
+            fullName: payload.full_name,
+            avatarUrl,
             bio: payload.bio,
             school: payload.school,
-            career_year: payload.career_year,
+            careerYear: payload.career_year,
             categories: payload.categories,
-            onboarding_completed: true,
-          })
-          .eq("id", user.id)
-
-        if (updateError) throw updateError
+          }),
+        })
+        if (!update.ok) {
+          const data = await update.json().catch(() => ({})) as { error?: string }
+          throw new Error(data.error ?? "No se pudo guardar el perfil.")
+        }
 
         setStep("done")
         setProgress("¡Perfil completo!")
@@ -104,7 +94,7 @@ export function useOnboarding(): UseOnboardingReturn {
         setError(err instanceof Error ? err.message : "Error al guardar")
       }
     },
-    [supabase, router, checkUsername]
+    [router, checkUsername]
   )
 
   return { save, checkUsername, step, progress, error }

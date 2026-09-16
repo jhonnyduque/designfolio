@@ -1,33 +1,30 @@
 // app/(auth)/onboarding/page.tsx
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { headers } from "next/headers"
+import { eq } from "drizzle-orm"
+import { auth } from "@/lib/auth"
+import { getDb } from "@/lib/db/client"
+import { profiles } from "@/lib/db/schema"
 import { AuthLayout } from "@/components/auth/AuthLayout"
 import { OnboardingForm } from "@/components/onboarding/OnboardingForm"
 
 export default async function OnboardingPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const session = await auth.api.getSession({ headers: await headers() })
 
   // Not logged in → login
-  if (!user) redirect("/login")
+  if (!session?.user) redirect("/login")
 
   // Check if already completed onboarding
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("onboarding_completed, full_name")
-    .eq("id", user.id)
-    .single()
+  const [profile] = await getDb().select({ onboardingCompleted: profiles.onboardingCompleted, fullName: profiles.fullName }).from(profiles).where(eq(profiles.id, session.user.id)).limit(1)
 
   // Already completed → dashboard
-  if (profile?.onboarding_completed) {
+  if (profile?.onboardingCompleted) {
     redirect("/dashboard")
   }
 
   return (
     <AuthLayout>
-      <OnboardingForm currentName={profile?.full_name ?? "New User"} />
+      <OnboardingForm currentName={profile?.fullName ?? "New User"} />
     </AuthLayout>
   )
 }
