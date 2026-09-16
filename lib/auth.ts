@@ -27,6 +27,14 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        /**
+         * Reserva el código, sin asignarlo todavía a nadie.
+         *
+         * `used_by` tiene clave foránea contra `profiles`, y el perfil no existe
+         * hasta el hook `after`. Escribirlo aquí provocaba un error 1452 en cada
+         * canje. Por eso aquí solo se marca `used_at`: ese UPDATE condicional es
+         * atómico y ya impide que dos registros simultáneos usen el mismo código.
+         */
         async before(user, context) {
           const bootstrapEmail = process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase()
           if (bootstrapEmail && user.email.toLowerCase() === bootstrapEmail) return
@@ -35,7 +43,7 @@ export const auth = betterAuth({
           if (!inviteCode || inviteCode.length > 64) return false
           const now = new Date()
           const result = await getDb().update(invitationCodes)
-            .set({ usedBy: user.id, usedAt: now })
+            .set({ usedAt: now })
             .where(and(
               eq(invitationCodes.codeHash, hashInviteCode(inviteCode)),
               isNull(invitationCodes.usedAt),
@@ -43,15 +51,25 @@ export const auth = betterAuth({
             ))
           if (result[0].affectedRows !== 1) return false
         },
-        async after(user) {
+        /** Crea el perfil y recién entonces asigna el código reservado a su dueño. */
+        async after(user, context) {
+          const bootstrapEmail = process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase()
+          const isBootstrap = Boolean(bootstrapEmail) && user.email.toLowerCase() === bootstrapEmail
           const username = `user-${user.id.slice(0, 8)}`
+
           await getDb().insert(profiles).values({
             id: user.id,
             username,
             fullName: user.name || username,
-            isFounder: user.email.toLowerCase() === process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase(),
-            onboardingCompleted: user.email.toLowerCase() === process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase(),
+            isFounder: isBootstrap,
+            onboardingCompleted: isBootstrap,
           })
+
+          const inviteCode = context?.headers?.get("x-designfolio-invite")
+          if (isBootstrap || !inviteCode) return
+          await getDb().update(invitationCodes)
+            .set({ usedBy: user.id })
+            .where(eq(invitationCodes.codeHash, hashInviteCode(inviteCode)))
         },
       },
     },

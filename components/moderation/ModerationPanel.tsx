@@ -16,6 +16,14 @@ type Tab =
   | "invites"
   | "taxonomy"
 
+const ACTION_LABELS: Record<string, string> = {
+  approve: "Aprobado",
+  reject: "Rechazado",
+  archive: "Archivado",
+  restore: "Restaurado",
+  delete: "Eliminado",
+}
+
 export function ModerationPanel() {
   const { queue, history, loading, error, stats, approve, reject, refresh } =
     useModeration()
@@ -157,13 +165,29 @@ export function ModerationPanel() {
 
       {tab === "history" && (
         <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+          {history.length === 0 && (
+            <p className="p-8 text-center text-sm text-gray-400">
+              Todavía no hay decisiones registradas.
+            </p>
+          )}
           {history.map((entry) => (
             <div key={entry.id} className="p-4">
               <p className="text-sm text-gray-900">
-                {entry.type === "work_approved"
-                  ? "Obra aprobada"
-                  : "Obra rechazada"}
+                <span className="font-medium">{ACTION_LABELS[entry.action]}</span>
+                {" · "}
+                {entry.work_title}
               </p>
+              <p className="mt-0.5 text-xs text-gray-500">
+                {entry.actor_name} ·{" "}
+                {new Date(entry.created_at).toLocaleDateString("es-ES", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </p>
+              {entry.note && (
+                <p className="mt-1 text-xs text-gray-600 italic">“{entry.note}”</p>
+              )}
             </div>
           ))}
         </div>

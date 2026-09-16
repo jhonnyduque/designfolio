@@ -15,6 +15,20 @@
       "when": 1789422440941,
       "tag": "0001_whole_frog_thor",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1789597428401,
+      "tag": "0002_moderation_log_survives_delete",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1789597785909,
+      "tag": "0003_taxonomy_admin_fields",
+      "breakpoints": true
     }
   ]
 }

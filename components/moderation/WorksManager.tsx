@@ -2,7 +2,11 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
+import {
+  getAdminWorksAction,
+  setWorkArchivedAction,
+  adminDeleteWorkAction,
+} from "@/lib/server/actions/admin"
 
 interface WorkRow {
   id: string
@@ -30,45 +34,20 @@ export function WorksManager() {
     id: string
     title: string
   } | null>(null)
-  const supabase = createClient()
+  const [error, setError] = useState<string | null>(null)
 
   const fetchWorks = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
-      const { data, error } = await supabase
-        .from("works")
-        .select(
-          "id, title, category, images, moderation_status, archived, likes_count, comments_count, created_at, author_id"
-        )
-        .order("created_at", { ascending: false })
-
-      if (error) throw error
-
-      // Get author names
-      const authorIds = [...new Set((data ?? []).map((w: any) => w.author_id))]
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name, username")
-        .in("id", authorIds)
-
-      const profileMap: Record<string, { name: string; username: string }> = {}
-      ;(profiles ?? []).forEach((p: any) => {
-        profileMap[p.id] = { name: p.full_name, username: p.username }
-      })
-
-      setWorks(
-        (data ?? []).map((w: any) => ({
-          ...w,
-          author_name: profileMap[w.author_id]?.name ?? "—",
-          author_username: profileMap[w.author_id]?.username ?? "—",
-        }))
-      )
-    } catch {
-      // Silently fail
+      // "all" trae todo; el filtrado por estado se aplica más abajo en cliente.
+      setWorks(await getAdminWorksAction("all"))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudieron cargar los proyectos.")
     } finally {
       setLoading(false)
     }
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     fetchWorks()
@@ -77,43 +56,32 @@ export function WorksManager() {
   const handleArchive = useCallback(
     async (workId: string, archived: boolean) => {
       setActionLoading(workId)
-      try {
-        const { error } = await supabase.rpc("moderate_archive_work", {
-          p_work_id: workId,
-          p_archived: archived,
-        })
-        if (error) throw error
-        setWorks((prev) =>
-          prev.map((w) =>
-            w.id === workId ? { ...w, archived } : w
-          )
-        )
-      } catch {
-        // Silently fail
-      } finally {
-        setActionLoading(null)
+      setError(null)
+      const result = await setWorkArchivedAction(workId, archived)
+      if (result.success) {
+        setWorks((prev) => prev.map((w) => (w.id === workId ? { ...w, archived } : w)))
+      } else {
+        setError(result.error ?? "No se pudo archivar el proyecto.")
       }
+      setActionLoading(null)
     },
-    [supabase]
+    []
   )
 
   const handleDelete = useCallback(
     async (workId: string) => {
       setActionLoading(workId)
-      try {
-        const { error } = await supabase.rpc("moderate_delete_work", {
-          p_work_id: workId,
-        })
-        if (error) throw error
+      setError(null)
+      const result = await adminDeleteWorkAction(workId)
+      if (result.success) {
         setWorks((prev) => prev.filter((w) => w.id !== workId))
-      } catch {
-        // Silently fail
-      } finally {
-        setActionLoading(null)
-        setConfirmDelete(null)
+      } else {
+        setError(result.error ?? "No se pudo eliminar el proyecto.")
       }
+      setActionLoading(null)
+      setConfirmDelete(null)
     },
-    [supabase]
+    []
   )
 
   // Apply filters
@@ -136,6 +104,11 @@ export function WorksManager() {
 
   return (
     <div>
+      {error && (
+        <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </p>
+      )}
       {/* Filter tabs + search */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="flex gap-2">

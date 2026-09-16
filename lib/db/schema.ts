@@ -94,15 +94,24 @@ export const taxonomy = mysqlTable("taxonomy", {
   name: varchar("name", { length: 80 }).notNull(),
   slug: varchar("slug", { length: 100 }).notNull(),
   active: boolean("active").notNull().default(true),
+  sortOrder: int("sort_order").notNull().default(0),
+  createdBy: id("created_by").references(() => profiles.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
   archivedAt: timestamp("archived_at"),
-}, (table) => [uniqueIndex("taxonomy_kind_slug_key").on(table.kind, table.slug)])
+}, (table) => [
+  uniqueIndex("taxonomy_kind_slug_key").on(table.kind, table.slug),
+  index("taxonomy_kind_order_idx").on(table.kind, table.sortOrder),
+])
 
 export const moderationLog = mysqlTable("moderation_log", {
   id: id("id").primaryKey(),
-  workId: id("work_id").notNull().references(() => works.id, { onDelete: "cascade" }),
+  // Nullable y "set null": si el proyecto se elimina, el registro de esa decisión
+  // debe sobrevivir. Por eso se guarda también el título como instantánea.
+  workId: id("work_id").references(() => works.id, { onDelete: "set null" }),
+  workTitle: varchar("work_title", { length: 150 }).notNull(),
   actorId: id("actor_id").notNull().references(() => profiles.id, { onDelete: "restrict" }),
-  action: mysqlEnum("action", ["approve", "reject", "archive", "delete"]).notNull(),
+  action: mysqlEnum("action", ["approve", "reject", "archive", "restore", "delete"]).notNull(),
   note: text("note"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [index("moderation_log_work_idx").on(table.workId)])

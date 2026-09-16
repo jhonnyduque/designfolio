@@ -71,24 +71,30 @@ export async function getModerationHistoryAction(): Promise<ModerationLogEntry[]
   await requireAdmin()
   const db = getDb()
   
-  const items = await db.query.notifications.findMany({
-    where: (n, { inArray }) => inArray(n.type, ["work_approved", "work_rejected"]),
-    orderBy: (n, { desc }) => [desc(n.createdAt)],
-    limit: 20
-  })
-  
-  // El filtro estrecha el enum de la tabla, que también admite "like" y "comment".
-  return items
-    .filter((n) => n.type === "work_approved" || n.type === "work_rejected")
-    .map((n) => ({
-      id: n.id,
-      user_id: n.userId,
-      type: n.type as "work_approved" | "work_rejected",
-      target_id: n.targetId,
-      payload: n.payload,
-      read_at: n.readAt?.toISOString() ?? null,
-      created_at: n.createdAt.toISOString(),
-    }))
+  const rows = await db
+    .select({
+      id: moderationLog.id,
+      workId: moderationLog.workId,
+      workTitle: moderationLog.workTitle,
+      actorName: profiles.fullName,
+      action: moderationLog.action,
+      note: moderationLog.note,
+      createdAt: moderationLog.createdAt,
+    })
+    .from(moderationLog)
+    .innerJoin(profiles, eq(moderationLog.actorId, profiles.id))
+    .orderBy(desc(moderationLog.createdAt))
+    .limit(50)
+
+  return rows.map((row) => ({
+    id: row.id,
+    work_id: row.workId,
+    work_title: row.workTitle,
+    actor_name: row.actorName,
+    action: row.action,
+    note: row.note,
+    created_at: row.createdAt.toISOString(),
+  }))
 }
 
 export async function moderateWorkAction(workId: string, action: "approve" | "reject", note?: string): Promise<ModerationResult> {
@@ -113,6 +119,7 @@ export async function moderateWorkAction(workId: string, action: "approve" | "re
     await db.insert(moderationLog).values({
       id: crypto.randomUUID(),
       workId,
+      workTitle: work.title,
       actorId: admin.id,
       action,
       note: note || null,

@@ -33,13 +33,16 @@ export interface ModerationResult {
   error?: string
 }
 
+export type ModerationLogAction = "approve" | "reject" | "archive" | "restore" | "delete"
+
+/** Una fila de `moderation_log`: el registro de auditoría real, no la notificación al autor. */
 export interface ModerationLogEntry {
   id: string
-  user_id: string
-  type: "work_approved" | "work_rejected"
-  target_id: string | null
-  /** Columna JSON sin validar en base. Los consumidores deben estrechar antes de leer campos. */
-  payload: Record<string, unknown>
-  read_at: string | null
+  /** Queda en null si el proyecto se eliminó; `work_title` conserva cuál era. */
+  work_id: string | null
+  work_title: string
+  actor_name: string
+  action: ModerationLogAction
+  note: string | null
   created_at: string
 }

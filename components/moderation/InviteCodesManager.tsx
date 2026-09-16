@@ -2,85 +2,64 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
+import {
+  createInviteCodesAction,
+  getInviteCodesAction,
+  revokeInviteCodeAction,
+  type InviteCodeRow,
+} from "@/lib/server/actions/invitations"
 
-interface InviteCode {
-  id: string
-  code: string
-  role: string
-  claimed_by: string | null
-  claimed_at: string | null
-  expires_at: string | null
-  created_at: string
-  // joined from profiles
-  claimer_name?: string
+const QUANTITIES = [1, 3, 5, 10]
+const EXPIRATIONS: [number | null, string][] = [
+  [7, "7 días"],
+  [30, "30 días"],
+  [90, "90 días"],
+  [null, "Sin caducidad"],
+]
+
+const STATUS_STYLES: Record<InviteCodeRow["status"], string> = {
+  active: "bg-green-50 text-green-700",
+  used: "bg-gray-100 text-gray-600",
+  expired: "bg-amber-50 text-amber-700",
 }
 
-function generateCode(length = 8): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789" // no I,O,1,0 to avoid confusion
-  let code = ""
-  for (let i = 0; i < length; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return code
+const STATUS_LABELS: Record<InviteCodeRow["status"], string> = {
+  active: "Disponible",
+  used: "Canjeado",
+  expired: "Caducado",
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })
 }
 
 export function InviteCodesManager() {
-  const [codes, setCodes] = useState<InviteCode[]>([])
+  const [codes, setCodes] = useState<InviteCodeRow[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
-  const [role, setRole] = useState<"early" | "mentor_invite">("early")
-  const supabase = createClient()
+  const [expiresInDays, setExpiresInDays] = useState<number | null>(30)
+  // Los códigos recién generados. Es la única vez que existen en claro: en base
+  // solo se guarda su hash, así que al recargar la página desaparecen.
+  const [freshCodes, setFreshCodes] = useState<string[]>([])
 
   const fetchCodes = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) return
-
-      // Fetch codes created by this founder
-      const { data, error } = await supabase
-        .from("invitation_codes")
-        .select("*")
-        .eq("created_by", user.id)
-        .order("created_at", { ascending: false })
-
-      if (error) throw error
-
-      // For claimed codes, fetch claimer names
-      const claimed = (data ?? []).filter((c: any) => c.claimed_by)
-      let claimerMap: Record<string, string> = {}
-
-      if (claimed.length > 0) {
-        const ids = [...new Set(claimed.map((c: any) => c.claimed_by))]
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, full_name")
-          .in("id", ids)
-
-        if (profiles) {
-          profiles.forEach((p: any) => {
-            claimerMap[p.id] = p.full_name
-          })
-        }
-      }
-
-      setCodes(
-        (data ?? []).map((c: any) => ({
-          ...c,
-          claimer_name: c.claimed_by ? claimerMap[c.claimed_by] ?? "—" : undefined,
-        }))
-      )
-    } catch {
-      // Silently fail
+      setCodes(await getInviteCodesAction())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudieron cargar las invitaciones.")
     } finally {
       setLoading(false)
     }
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     fetchCodes()
@@ -88,51 +67,54 @@ export function InviteCodesManager() {
 
   const handleGenerate = useCallback(async () => {
     setGenerating(true)
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) return
-
-      const newCodes = Array.from({ length: quantity }, () => ({
-        code: generateCode(),
-        created_by: user.id,
-        role,
-      }))
-
-      const { error } = await supabase
-        .from("invitation_codes")
-        .insert(newCodes)
-
-      if (error) throw error
-
+    setError(null)
+    const result = await createInviteCodesAction(quantity, expiresInDays)
+    if (result.success) {
+      setFreshCodes(result.codes)
       await fetchCodes()
-    } catch {
-      // Silently fail
-    } finally {
-      setGenerating(false)
+    } else {
+      setError(result.error)
     }
-  }, [supabase, quantity, role, fetchCodes])
+    setGenerating(false)
+  }, [quantity, expiresInDays, fetchCodes])
 
-  const handleCopy = useCallback((code: string) => {
-    navigator.clipboard.writeText(code)
-    setCopied(code)
+  const handleRevoke = useCallback(
+    async (id: string) => {
+      setError(null)
+      const result = await revokeInviteCodeAction(id)
+      if (result.success) {
+        setCodes((prev) => prev.filter((c) => c.id !== id))
+      } else {
+        setError(result.error ?? "No se pudo revocar el código.")
+      }
+    },
+    []
+  )
+
+  const handleCopy = useCallback((text: string) => {
+    navigator.clipboard.writeText(text)
+    setCopied(text)
     setTimeout(() => setCopied(null), 2000)
   }, [])
 
-  const available = codes.filter((c) => !c.claimed_by)
-  const claimed = codes.filter((c) => c.claimed_by)
+  const activeCount = codes.filter((c) => c.status === "active").length
 
   return (
     <div>
-      {/* Generator */}
+      {error && (
+        <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+
+      {/* Generador */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
         <h3 className="text-sm font-semibold text-gray-900 mb-3">
           Generar códigos de invitación
         </h3>
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Quantity */}
-          {[1, 3, 5, 10].map((n) => (
+
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          {QUANTITIES.map((n) => (
             <button
               key={n}
               type="button"
@@ -146,139 +128,139 @@ export function InviteCodesManager() {
               {n}
             </button>
           ))}
-
-          <span className="text-gray-300 mx-1 hidden sm:block">|</span>
-
-          {/* Role */}
-          <button
-            type="button"
-            onClick={() => setRole("early")}
-            className={`px-3 h-9 text-xs rounded-lg border transition-colors ${
-              role === "early"
-                ? "border-gray-900 bg-gray-900 text-white"
-                : "border-gray-300 text-gray-600 hover:border-gray-400"
-            }`}
-          >
-            Early
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole("mentor_invite")}
-            className={`px-3 h-9 text-xs rounded-lg border transition-colors ${
-              role === "mentor_invite"
-                ? "border-gray-900 bg-gray-900 text-white"
-                : "border-gray-300 text-gray-600 hover:border-gray-400"
-            }`}
-          >
-            Mentor
-          </button>
-
-          <span className="text-gray-300 mx-1 hidden sm:block">|</span>
-
-          {/* Generate button */}
-          <button
-            onClick={handleGenerate}
-            disabled={generating}
-            className="px-4 h-9 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
-          >
-            {generating ? "..." : "Generar"}
-          </button>
+          <span className="text-xs text-gray-400 ml-1">
+            {quantity === 1 ? "código" : "códigos"}
+          </span>
         </div>
+
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {EXPIRATIONS.map(([days, label]) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => setExpiresInDays(days)}
+              className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                expiresInDays === days
+                  ? "border-gray-900 bg-gray-900 text-white"
+                  : "border-gray-300 text-gray-600 hover:border-gray-400"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={handleGenerate}
+          disabled={generating}
+          className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
+        >
+          {generating ? "Generando..." : "Generar"}
+        </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-green-600">{available.length}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Disponibles</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-gray-600">{claimed.length}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Reclamados</p>
-        </div>
-      </div>
-
-      {/* All codes - single unified list */}
-      {!loading && codes.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-900">
-              Todos los códigos
-            </h3>
-            <span className="text-xs text-gray-400">
-              {available.length} disponibles · {claimed.length} usados
-            </span>
+      {/* Códigos recién generados: única oportunidad de copiarlos */}
+      {freshCodes.length > 0 && (
+        <div className="bg-amber-50 rounded-xl border border-amber-200 p-5 mb-6">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div>
+              <h3 className="text-sm font-semibold text-amber-900">
+                Copia estos códigos ahora
+              </h3>
+              <p className="text-xs text-amber-800 mt-0.5">
+                En la base de datos solo se guarda su huella. Si cierras esta vista,
+                no hay forma de recuperarlos.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFreshCodes([])}
+              className="text-xs text-amber-800 hover:underline shrink-0"
+            >
+              Ya los copié
+            </button>
           </div>
-          <div className="divide-y divide-gray-100">
-            {codes.map((c) => {
-              const isUsed = !!c.claimed_by
-              return (
-                <div
-                  key={c.id}
-                  className={`flex items-center justify-between px-5 py-3 ${
-                    isUsed ? "bg-gray-50" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <code
-                      className={`text-sm font-mono px-2.5 py-1 rounded-lg tracking-wider ${
-                        isUsed
-                          ? "text-gray-300 line-through bg-transparent"
-                          : "font-bold text-gray-900 bg-gray-50"
-                      }`}
-                    >
-                      {c.code}
-                    </code>
-                    <span className="text-[11px] text-gray-400 hidden sm:block">
-                      {c.role === "mentor_invite" ? "Mentor" : "Early"}
-                    </span>
-                    {isUsed && (
-                      <span className="text-xs text-gray-400">
-                        → {c.claimer_name} ·{" "}
-                        {new Date(c.claimed_at!).toLocaleDateString("es-ES", {
-                          day: "numeric",
-                          month: "short",
-                        })}
-                      </span>
-                    )}
-                  </div>
 
-                  {isUsed ? (
-                    <span className="text-[11px] text-gray-300 font-medium">
-                      Utilizado
+          <div className="space-y-2">
+            {freshCodes.map((code) => (
+              <div
+                key={code}
+                className="flex items-center justify-between gap-3 bg-white rounded-lg border border-amber-200 px-3 py-2"
+              >
+                <code className="text-sm font-mono text-gray-900 break-all">{code}</code>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(code)}
+                  className="text-xs text-gray-600 hover:text-gray-900 shrink-0"
+                >
+                  {copied === code ? "Copiado" : "Copiar"}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {freshCodes.length > 1 && (
+            <button
+              type="button"
+              onClick={() => handleCopy(freshCodes.join("\n"))}
+              className="mt-3 text-xs text-amber-900 hover:underline"
+            >
+              Copiar los {freshCodes.length} juntos
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Listado */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-gray-900">
+          Invitaciones ({codes.length})
+        </h3>
+        <span className="text-xs text-gray-500">{activeCount} disponibles</span>
+      </div>
+
+      {loading ? (
+        <p className="text-sm text-gray-400 py-8 text-center">Cargando...</p>
+      ) : codes.length === 0 ? (
+        <p className="text-sm text-gray-400 py-8 text-center">
+          Todavía no has generado ninguna invitación.
+        </p>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+          {codes.map((code) => (
+            <div key={code.id} className="flex items-center justify-between gap-3 p-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[code.status]}`}
+                  >
+                    {STATUS_LABELS[code.status]}
+                  </span>
+                  {code.used_by_name && (
+                    <span className="text-sm text-gray-900 truncate">
+                      {code.used_by_name}
                     </span>
-                  ) : (
-                    <button
-                      onClick={() => handleCopy(c.code)}
-                      className={`text-xs font-semibold px-3 py-1 rounded-lg transition-colors ${
-                        copied === c.code
-                          ? "bg-green-50 text-green-600"
-                          : "bg-gray-900 text-white hover:bg-gray-800"
-                      }`}
-                    >
-                      {copied === c.code ? "✓ Copiado" : "Copiar"}
-                    </button>
                   )}
                 </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Creado el {formatDate(code.created_at)}
+                  {code.expires_at && ` · caduca el ${formatDate(code.expires_at)}`}
+                  {code.used_at && ` · canjeado el ${formatDate(code.used_at)}`}
+                </p>
+              </div>
 
-      {/* Loading */}
-      {loading && (
-        <div className="text-center py-8">
-          <p className="text-sm text-gray-400">Cargando códigos...</p>
-        </div>
-      )}
-
-      {/* Empty */}
-      {!loading && codes.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-          <p className="text-sm text-gray-400">
-            No has generado códigos aún. Genera tu primer lote arriba.
-          </p>
+              {code.status !== "used" && (
+                <button
+                  type="button"
+                  onClick={() => handleRevoke(code.id)}
+                  className="text-xs text-gray-400 hover:text-red-600 transition-colors shrink-0"
+                >
+                  Revocar
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>

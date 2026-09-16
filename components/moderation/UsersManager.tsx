@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { getAdminUsersAction, toggleUserActiveAction } from "@/lib/server/actions/admin"
 
 interface UserRow {
   id: string
@@ -30,56 +30,19 @@ export function UsersManager() {
     action: "deactivate" | "activate"
     name: string
   } | null>(null)
-  const supabase = createClient()
+  const [error, setError] = useState<string | null>(null)
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
-      // Fetch profiles
-      const { data: profiles, error } = await supabase
-        .from("profiles")
-        .select(
-          "id, full_name, username, avatar_url, school, is_active, is_founder, reputation_level, created_at"
-        )
-        .order("created_at", { ascending: false })
-
-      if (error) throw error
-
-      // Fetch work counts per user
-      const { data: works } = await supabase
-        .from("works")
-        .select("author_id, moderation_status")
-
-      // Count works per user
-      const counts: Record<
-        string,
-        { approved: number; pending: number; rejected: number }
-      > = {}
-      ;(works ?? []).forEach((w: any) => {
-        if (!counts[w.author_id]) {
-          counts[w.author_id] = { approved: 0, pending: 0, rejected: 0 }
-        }
-        if (w.moderation_status === "approved") counts[w.author_id].approved++
-        else if (w.moderation_status === "pending_review")
-          counts[w.author_id].pending++
-        else if (w.moderation_status === "rejected")
-          counts[w.author_id].rejected++
-      })
-
-      setUsers(
-        (profiles ?? []).map((p: any) => ({
-          ...p,
-          approved_count: counts[p.id]?.approved ?? 0,
-          pending_count: counts[p.id]?.pending ?? 0,
-          rejected_count: counts[p.id]?.rejected ?? 0,
-        }))
-      )
-    } catch {
-      // Silently fail
+      setUsers(await getAdminUsersAction())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudieron cargar los usuarios.")
     } finally {
       setLoading(false)
     }
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     fetchUsers()
@@ -88,25 +51,17 @@ export function UsersManager() {
   const handleToggleActive = useCallback(
     async (userId: string, active: boolean) => {
       setActionLoading(userId)
-      try {
-        const { error } = await supabase.rpc("toggle_user_active", {
-          p_user_id: userId,
-          p_active: active,
-        })
-        if (error) throw error
-        setUsers((prev) =>
-          prev.map((u) =>
-            u.id === userId ? { ...u, is_active: active } : u
-          )
-        )
-      } catch {
-        // Silently fail
-      } finally {
-        setActionLoading(null)
-        setConfirmAction(null)
+      setError(null)
+      const result = await toggleUserActiveAction(userId, active)
+      if (result.success) {
+        setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_active: active } : u)))
+      } else {
+        setError(result.error ?? "No se pudo cambiar el estado de la cuenta.")
       }
+      setActionLoading(null)
+      setConfirmAction(null)
     },
-    [supabase]
+    []
   )
 
   const filtered = search
@@ -122,6 +77,11 @@ export function UsersManager() {
 
   return (
     <div>
+      {error && (
+        <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </p>
+      )}
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
