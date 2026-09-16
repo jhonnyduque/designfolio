@@ -151,3 +151,39 @@ export async function mergeTagsAction(sourceId: string, targetId: string): Promi
     return { success: false, error: err.message }
   }
 }
+
+/**
+ * Categorías y tags activos para el formulario de publicación.
+ *
+ * Es la fuente de verdad: lo que se ofrece aquí es exactamente lo que la API de
+ * creación acepta, así que añadir una categoría en el panel la habilita de
+ * inmediato sin tocar código.
+ */
+export async function getActiveTaxonomyAction(): Promise<{ categories: Tag[]; tags: Tag[] }> {
+  const items = await getDb().query.taxonomy.findMany({
+    where: (t, { eq, and, isNull }) => and(eq(t.active, true), isNull(t.archivedAt)),
+    orderBy: (t, { asc }) => [asc(t.sortOrder), asc(t.name)],
+  })
+
+  const map = (kind: "category" | "tag") =>
+    items
+      .filter((item) => item.kind === kind)
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        slug: item.slug,
+        usage_count: 0,
+        created_at: item.createdAt.toISOString(),
+      }))
+
+  return { categories: map("category"), tags: map("tag") }
+}
+
+/** Nombres de categoría aceptables al publicar. Lo usa la API de creación. */
+export async function getActiveCategoryNames(): Promise<string[]> {
+  const items = await getDb().query.taxonomy.findMany({
+    where: (t, { eq, and, isNull }) => and(eq(t.kind, "category"), eq(t.active, true), isNull(t.archivedAt)),
+    columns: { name: true },
+  })
+  return items.map((item) => item.name)
+}

@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { getDb } from "@/lib/db/client"
 import { profiles, works } from "@/lib/db/schema"
+import { getActiveCategoryNames } from "@/lib/server/actions/taxonomy"
 import { normalizeSlug } from "@/lib/slug"
-import { WORK_CATEGORIES, WORK_LIMITS, type WorkImage } from "@/types/work"
+import { WORK_LIMITS, type WorkImage } from "@/types/work"
 
 export const runtime = "nodejs"
 
@@ -63,7 +64,11 @@ export async function POST(request: NextRequest) {
   if (description.length < WORK_LIMITS.DESCRIPTION_MIN) return invalid(`La descripción debe tener al menos ${WORK_LIMITS.DESCRIPTION_MIN} caracteres.`)
   if (description.length > 10000) return invalid("La descripción supera el límite de 10.000 caracteres.")
   if (!slug || slug.length > 180) return invalid("El slug debe contener entre 1 y 180 caracteres válidos.")
-  if (!WORK_CATEGORIES.includes(category as (typeof WORK_CATEGORIES)[number])) return invalid("Selecciona una categoría válida.")
+  // La lista viene de `taxonomy`, no de una constante: así lo que ofrece el
+  // formulario y lo que acepta la API son siempre lo mismo, y una categoría
+  // nueva del panel queda disponible sin tocar código.
+  const allowedCategories = await getActiveCategoryNames()
+  if (!allowedCategories.includes(category)) return invalid("Selecciona una categoría válida.")
   if (tags.length > WORK_LIMITS.TAGS_MAX || tags.some((tag) => typeof tag !== "string" || tag.length > 80)) return invalid(`Puedes añadir hasta ${WORK_LIMITS.TAGS_MAX} etiquetas válidas.`)
   if (images.length < WORK_LIMITS.IMAGES_MIN || images.length > WORK_LIMITS.IMAGES_MAX || !images.every(isWorkImage)) return invalid(`Debes incluir entre ${WORK_LIMITS.IMAGES_MIN} y ${WORK_LIMITS.IMAGES_MAX} medios válidos.`)
 

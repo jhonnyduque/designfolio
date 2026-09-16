@@ -1,15 +1,10 @@
 // hooks/useTaxonomy.ts
 "use client"
 
-import { useCallback, useState } from "react"
-import type {
-  Taxonomy,
-  TaxonomyType,
-  AssignTagsResult,
-  AssignCategoryResult,
-} from "@/types/taxonomy"
+import { useCallback, useEffect, useState } from "react"
+import { getActiveTaxonomyAction } from "@/lib/server/actions/taxonomy"
+import type { Taxonomy, AssignTagsResult, AssignCategoryResult } from "@/types/taxonomy"
 import { TAXONOMY_LIMITS } from "@/types/taxonomy"
-import { WORK_CATEGORIES } from "@/types/work"
 
 interface UseTaxonomyReturn {
   categories: Taxonomy[]
@@ -30,19 +25,49 @@ export function useTaxonomy(
   initialCategory?: string,
   initialTags?: string[]
 ): UseTaxonomyReturn {
+  const [categories, setCategories] = useState<Taxonomy[]>([])
+  const [tags, setTags] = useState<Taxonomy[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState(initialCategory ?? "")
   const [selectedTags, setSelectedTags] = useState<string[]>(initialTags ?? [])
-  const categories: Taxonomy[] = WORK_CATEGORIES.map((name) => ({
-    id: `category-${name}`,
-    name,
-    slug: name.toLowerCase(),
-    type: "category",
-    active: true,
-    usage_count: 0,
-    sort_order: 0,
-    created_at: new Date().toISOString(),
-  }))
-  const tags: Taxonomy[] = []
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await getActiveTaxonomyAction()
+        if (cancelled) return
+        const toTaxonomy = (kind: "category" | "tag") => (item: { id: string; name: string; slug: string; created_at: string }): Taxonomy => ({
+          id: item.id,
+          name: item.name,
+          slug: item.slug,
+          type: kind,
+          active: true,
+          usage_count: 0,
+          sort_order: 0,
+          created_at: item.created_at,
+        })
+        setCategories(data.categories.map(toTaxonomy("category")))
+        setTags(data.tags.map(toTaxonomy("tag")))
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "No se pudieron cargar las categorías y etiquetas.")
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const isMaxTagsReached = selectedTags.length >= TAXONOMY_LIMITS.MAX_TAGS_PER_WORK
 
   const selectCategory = useCallback((name: string) => {
@@ -58,21 +83,25 @@ export function useTaxonomy(
     })
   }, [])
 
-  const assignCategoryToWork = useCallback(async (_workId: string): Promise<AssignCategoryResult> => {
-    return { success: true, category: selectedCategory }
-  }, [selectedCategory])
+  // La categoría y las etiquetas viajan en el cuerpo de POST /api/works, que es
+  // quien las persiste. Estas funciones existen para la interfaz anterior.
+  const assignCategoryToWork = useCallback(
+    async (): Promise<AssignCategoryResult> => ({ success: true, category: selectedCategory }),
+    [selectedCategory]
+  )
 
-  const assignTagsToWork = useCallback(async (_workId: string): Promise<AssignTagsResult> => {
-    return { success: true, tags_assigned: selectedTags.length }
-  }, [selectedTags])
+  const assignTagsToWork = useCallback(
+    async (): Promise<AssignTagsResult> => ({ success: true, tags_assigned: selectedTags.length }),
+    [selectedTags]
+  )
 
   return {
     categories,
     tags,
     selectedCategory,
     selectedTags,
-    loading: false,
-    error: null,
+    loading,
+    error,
     selectCategory,
     toggleTag,
     setSelectedTags,
