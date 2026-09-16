@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { getDb } from "@/lib/db/client"
 import { profiles } from "@/lib/db/schema"
+import { MEDIA_URL_PREFIX, mediaUrl, workMediaDirectory } from "@/lib/media-storage"
 import { PROFILE_LIMITS } from "@/types/profile"
 
 export const runtime = "nodejs"
@@ -44,7 +45,7 @@ export async function PATCH(request: NextRequest) {
   if (bio.length < PROFILE_LIMITS.BIO_MIN || bio.length > PROFILE_LIMITS.BIO_MAX) return NextResponse.json({ error: `La bio debe tener entre ${PROFILE_LIMITS.BIO_MIN} y ${PROFILE_LIMITS.BIO_MAX} caracteres.` }, { status: 400 })
   if (school.length > 150) return NextResponse.json({ error: "El nombre de la escuela no puede superar 150 caracteres." }, { status: 400 })
   if (categories.length < PROFILE_LIMITS.CATEGORIES_MIN || categories.length > PROFILE_LIMITS.CATEGORIES_MAX) return NextResponse.json({ error: `Selecciona entre ${PROFILE_LIMITS.CATEGORIES_MIN} y ${PROFILE_LIMITS.CATEGORIES_MAX} categorías.` }, { status: 400 })
-  if (avatarUrl && !avatarUrl.startsWith(`/uploads/${session.user.id}/avatar/`)) return NextResponse.json({ error: "El avatar no pertenece a tu cuenta." }, { status: 400 })
+  if (avatarUrl && !avatarUrl.startsWith(`${MEDIA_URL_PREFIX}/${session.user.id}/avatar/`)) return NextResponse.json({ error: "El avatar no pertenece a tu cuenta." }, { status: 400 })
 
   const [taken] = await getDb().select({ id: profiles.id }).from(profiles).where(eq(profiles.username, username)).limit(1)
   if (taken && taken.id !== session.user.id) return NextResponse.json({ error: "Ese nombre de usuario ya está en uso." }, { status: 409 })
@@ -64,16 +65,21 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (process.env.NODE_ENV === "production") return NextResponse.json({ error: "La carga local de avatar está desactivada en producción hasta configurar almacenamiento persistente." }, { status: 503 })
   const session = await currentUser(request)
   if (!session?.user) return NextResponse.json({ error: "Sesión requerida." }, { status: 401 })
   const formData = await request.formData()
   const file = formData.get("avatar")
   if (!(file instanceof File) || !avatarExtensions.has(file.type)) return NextResponse.json({ error: "Usa una imagen JPG, PNG o WebP para el avatar." }, { status: 400 })
   if (file.size === 0 || file.size > PROFILE_LIMITS.AVATAR_MAX_SIZE_BYTES) return NextResponse.json({ error: `El avatar debe pesar como máximo ${PROFILE_LIMITS.AVATAR_MAX_SIZE_MB}MB.` }, { status: 400 })
-  const directory = path.join(process.cwd(), "public", "uploads", session.user.id, "avatar")
+
+  const directory = workMediaDirectory(session.user.id, "avatar")
   const filename = `${crypto.randomUUID()}.${avatarExtensions.get(file.type)}`
-  await mkdir(directory, { recursive: true })
-  await writeFile(path.join(directory, filename), Buffer.from(await file.arrayBuffer()))
-  return NextResponse.json({ url: `/uploads/${session.user.id}/avatar/${filename}` })
+  try {
+    await mkdir(directory, { recursive: true })
+    await writeFile(path.join(/* turbopackIgnore: true */ directory, filename), Buffer.from(await file.arrayBuffer()))
+  } catch (error) {
+    console.error("No se pudo guardar el avatar", error)
+    return NextResponse.json({ error: "No se pudo guardar el avatar. Revisa el almacenamiento del servidor." }, { status: 500 })
+  }
+  return NextResponse.json({ url: mediaUrl(session.user.id, "avatar", filename) })
 }

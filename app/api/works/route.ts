@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { getDb } from "@/lib/db/client"
 import { profiles, works } from "@/lib/db/schema"
+import { MEDIA_URL_PREFIX } from "@/lib/media-storage"
 import { getActiveCategoryNames } from "@/lib/server/actions/taxonomy"
 import { normalizeSlug } from "@/lib/slug"
 import { WORK_LIMITS, type WorkImage } from "@/types/work"
@@ -72,8 +73,11 @@ export async function POST(request: NextRequest) {
   if (tags.length > WORK_LIMITS.TAGS_MAX || tags.some((tag) => typeof tag !== "string" || tag.length > 80)) return invalid(`Puedes añadir hasta ${WORK_LIMITS.TAGS_MAX} etiquetas válidas.`)
   if (images.length < WORK_LIMITS.IMAGES_MIN || images.length > WORK_LIMITS.IMAGES_MAX || !images.every(isWorkImage)) return invalid(`Debes incluir entre ${WORK_LIMITS.IMAGES_MIN} y ${WORK_LIMITS.IMAGES_MAX} medios válidos.`)
 
-  const uploadPrefix = `/uploads/${session.user.id}/${id}/`
-  if (process.env.NODE_ENV !== "production" && images.some((image, index) => image.url.indexOf(uploadPrefix) !== 0 || image.order !== index || image.width < 1 || image.height < 1)) {
+  // Se valida SIEMPRE, también en producción. Antes la condición llevaba
+  // `NODE_ENV !== "production"`, así que en el entorno que importa se aceptaba
+  // cualquier URL en images[].url sin comprobar de quién era.
+  const uploadPrefix = `${MEDIA_URL_PREFIX}/${session.user.id}/${id}/`
+  if (images.some((image, index) => !image.url.startsWith(uploadPrefix) || image.order !== index || image.width < 1 || image.height < 1)) {
     return invalid("Uno o más medios no pertenecen a esta publicación. Vuelve a subirlos antes de publicar.")
   }
 
