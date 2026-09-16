@@ -4,7 +4,6 @@
 import { useState, useCallback, useEffect, useRef, type TouchEvent } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 import { LikeButton } from "./LikeButton"
 import { ShareButton } from "./ShareButton"
 import { CommentsSection } from "./CommentsSection"
@@ -66,9 +65,9 @@ export function WorkDetail({
   const [description, setDescription] = useState(work.description)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const router = useRouter()
-  const supabase = createClient()
   const isOwner = currentUserId === author.id
   const currentImage = work.images[selectedImage]
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -84,57 +83,67 @@ export function WorkDetail({
   const handleSaveEdit = useCallback(async () => {
     if (!editTitle.trim()) return
     setSaving(true)
+    setActionError(null)
     try {
-      const { error } = await supabase
-        .from("works")
-        .update({
+      const response = await fetch(`/api/works/${work.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           title: editTitle.trim(),
           description: editDescription.trim(),
-        })
-        .eq("id", work.id)
-
-      if (error) throw error
+        }),
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error ?? "No se pudieron guardar los cambios.")
+      }
       setTitle(editTitle.trim())
       setDescription(editDescription.trim())
       setEditing(false)
-    } catch {
-      // Silently fail
+      router.refresh()
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "No se pudieron guardar los cambios.")
     } finally {
       setSaving(false)
     }
-  }, [supabase, work.id, editTitle, editDescription])
+  }, [work.id, editTitle, editDescription, router])
 
   const handleArchive = useCallback(async () => {
     setActionLoading(true)
+    setActionError(null)
     try {
-      const { error } = await supabase.rpc("user_archive_work", {
-        p_work_id: work.id,
-        p_archived: true,
+      const response = await fetch(`/api/works/${work.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ archived: true }),
       })
-      if (error) throw error
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error ?? "No se pudo archivar el proyecto.")
+      }
       router.push("/dashboard/my-works")
-    } catch {
-      // Silently fail
-    } finally {
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "No se pudo archivar el proyecto.")
       setActionLoading(false)
     }
-  }, [supabase, work.id, router])
+  }, [work.id, router])
 
   const handleDelete = useCallback(async () => {
     setActionLoading(true)
+    setActionError(null)
     try {
-      const { error } = await supabase.rpc("user_delete_work", {
-        p_work_id: work.id,
-      })
-      if (error) throw error
+      const response = await fetch(`/api/works/${work.id}`, { method: "DELETE" })
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error ?? "No se pudo eliminar el proyecto.")
+      }
       router.push("/dashboard/my-works")
-    } catch {
-      // Silently fail
-    } finally {
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "No se pudo eliminar el proyecto.")
       setActionLoading(false)
       setConfirmDelete(false)
     }
-  }, [supabase, work.id, router])
+  }, [work.id, router])
 
   const goPrevImage = useCallback(() => {
     if (!hasMultipleImages) return
@@ -361,6 +370,11 @@ export function WorkDetail({
                     Cancelar
                   </button>
                 </div>
+                {actionError && (
+                  <p role="alert" className="text-sm text-red-600">
+                    {actionError}
+                  </p>
+                )}
               </div>
             ) : (
               /* View mode */
@@ -442,6 +456,11 @@ export function WorkDetail({
             </div>
 
             {/* Owner actions */}
+            {isOwner && !editing && actionError && (
+              <p role="alert" className="mt-4 text-sm text-red-600">
+                {actionError}
+              </p>
+            )}
             {isOwner && !editing && (
               <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-1">
                 {/* Edit */}

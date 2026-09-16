@@ -1,6 +1,8 @@
 // app/(protected)/dashboard/work/[id]/page.tsx
-import { notFound } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { headers } from "next/headers"
+import { notFound, redirect } from "next/navigation"
+import { auth } from "@/lib/auth"
+import { getDashboardWork } from "@/lib/works/dashboard"
 import { WorkDetail } from "@/components/works/WorkDetail"
 
 interface PageProps {
@@ -9,54 +11,12 @@ interface PageProps {
 
 export default async function WorkPage({ params }: PageProps) {
   const { id } = await params
-  const supabase = await createClient()
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (!session?.user) redirect("/login")
 
-  // Fetch work
-  const { data: work, error } = await supabase
-    .from("works")
-    .select("*")
-    .eq("id", id)
-    .eq("moderation_status", "approved")
-    .single()
-
-  if (error || !work) {
-    notFound()
-  }
-
-  // Fetch author profile
-  const { data: author } = await supabase
-    .from("profiles")
-    .select("id, username, full_name, avatar_url, reputation_level, bio, school")
-    .eq("id", work.author_id)
-    .single()
-
-  if (!author) {
-    notFound()
-  }
-
-  // Get current user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const [{ data: prevWork }, { data: nextWork }] = await Promise.all([
-    supabase
-      .from("works")
-      .select("id")
-      .eq("moderation_status", "approved")
-      .gt("published_at", work.published_at)
-      .order("published_at", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("works")
-      .select("id")
-      .eq("moderation_status", "approved")
-      .lt("published_at", work.published_at)
-      .order("published_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ])
+  const result = await getDashboardWork(id, session.user.id)
+  if (!result) notFound()
+  const { work, author, likesCount, commentsCount, previous, next } = result
 
   return (
     <WorkDetail
@@ -66,17 +26,25 @@ export default async function WorkPage({ params }: PageProps) {
         title: work.title,
         description: work.description,
         category: work.category,
-        tags: work.tags,
-        images: work.images ?? [],
-        likes_count: work.likes_count,
-        comments_count: work.comments_count,
-        views_count: work.views_count,
-        published_at: work.published_at,
+        tags: work.tags ?? [],
+        images: work.images,
+        likes_count: likesCount,
+        comments_count: commentsCount,
+        views_count: work.viewsCount,
+        published_at: (work.publishedAt ?? work.createdAt).toISOString(),
       }}
-      author={author}
-      currentUserId={user?.id ?? null}
-      prevHref={prevWork ? `/dashboard/work/${prevWork.id}` : null}
-      nextHref={nextWork ? `/dashboard/work/${nextWork.id}` : null}
+      author={{
+        id: author.id,
+        username: author.username,
+        full_name: author.fullName,
+        avatar_url: author.avatarUrl,
+        reputation_level: author.reputationLevel,
+        bio: author.bio,
+        school: author.school,
+      }}
+      currentUserId={session.user.id}
+      prevHref={previous ? `/dashboard/work/${previous.id}` : null}
+      nextHref={next ? `/dashboard/work/${next.id}` : null}
     />
   )
 }

@@ -25,7 +25,8 @@ interface UserProfileProps {
     career_year: string | null
     categories: string[] | null
     reputation_level: number
-    total_points: number
+    /** Columna heredada de Supabase que no existe en MySQL. Sin valor, el badge omite los puntos. */
+    total_points?: number | null
     created_at: string
   }
   works: WorkItem[]
@@ -87,8 +88,8 @@ export function UserProfile({ profile, works }: UserProfileProps) {
                   LEVEL_STYLES[profile.reputation_level] ?? LEVEL_STYLES[0]
                 }`}
               >
-                {LEVEL_LABELS[profile.reputation_level] ?? "Novato"} ·{" "}
-                {profile.total_points} pts
+                {LEVEL_LABELS[profile.reputation_level] ?? "Novato"}
+                {typeof profile.total_points === "number" && ` · ${profile.total_points} pts`}
               </span>
               {profile.categories?.map((cat) => (
                 <span

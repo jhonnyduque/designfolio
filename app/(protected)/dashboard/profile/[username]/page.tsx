@@ -1,6 +1,6 @@
 // app/(protected)/dashboard/profile/[username]/page.tsx
 import { notFound } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { getProfileByUsername } from "@/lib/works/dashboard"
 import { UserProfile } from "@/components/profile/UserProfile"
 
 interface PageProps {
@@ -9,28 +9,25 @@ interface PageProps {
 
 export default async function ProfilePage({ params }: PageProps) {
   const { username } = await params
-  const supabase = await createClient()
+  const result = await getProfileByUsername(username)
+  if (!result) notFound()
+  const { profile, works } = result
 
-  // Fetch profile
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select(
-      "id, username, full_name, avatar_url, bio, school, career_year, categories, reputation_level, total_points, created_at"
-    )
-    .eq("username", username)
-    .single()
-
-  if (error || !profile) {
-    notFound()
-  }
-
-  // Fetch user's approved works
-  const { data: works } = await supabase
-    .from("works")
-    .select("id, title, category, images, likes_count, comments_count, published_at")
-    .eq("author_id", profile.id)
-    .eq("moderation_status", "approved")
-    .order("published_at", { ascending: false })
-
-  return <UserProfile profile={profile} works={works ?? []} />
+  return (
+    <UserProfile
+      profile={{
+        id: profile.id,
+        username: profile.username,
+        full_name: profile.fullName,
+        avatar_url: profile.avatarUrl,
+        bio: profile.bio,
+        school: profile.school,
+        career_year: profile.careerYear,
+        categories: profile.categories,
+        reputation_level: profile.reputationLevel,
+        created_at: profile.createdAt.toISOString(),
+      }}
+      works={works}
+    />
+  )
 }
