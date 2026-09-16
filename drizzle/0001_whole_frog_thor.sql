@@ -1,0 +1,11 @@
+ALTER TABLE `likes` ADD CONSTRAINT `likes_actor_check` CHECK ((`likes`.`user_id` is null) <> (`likes`.`visitor_id` is null));--> statement-breakpoint
+ALTER TABLE `comments` ADD CONSTRAINT `comments_work_id_works_id_fk` FOREIGN KEY (`work_id`) REFERENCES `works`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `comments` ADD CONSTRAINT `comments_user_id_profiles_id_fk` FOREIGN KEY (`user_id`) REFERENCES `profiles`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `invitation_codes` ADD CONSTRAINT `invitation_codes_created_by_profiles_id_fk` FOREIGN KEY (`created_by`) REFERENCES `profiles`(`id`) ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `invitation_codes` ADD CONSTRAINT `invitation_codes_used_by_profiles_id_fk` FOREIGN KEY (`used_by`) REFERENCES `profiles`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `likes` ADD CONSTRAINT `likes_work_id_works_id_fk` FOREIGN KEY (`work_id`) REFERENCES `works`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `likes` ADD CONSTRAINT `likes_user_id_profiles_id_fk` FOREIGN KEY (`user_id`) REFERENCES `profiles`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `moderation_log` ADD CONSTRAINT `moderation_log_work_id_works_id_fk` FOREIGN KEY (`work_id`) REFERENCES `works`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `moderation_log` ADD CONSTRAINT `moderation_log_actor_id_profiles_id_fk` FOREIGN KEY (`actor_id`) REFERENCES `profiles`(`id`) ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `notifications` ADD CONSTRAINT `notifications_user_id_profiles_id_fk` FOREIGN KEY (`user_id`) REFERENCES `profiles`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `works` ADD CONSTRAINT `works_author_id_profiles_id_fk` FOREIGN KEY (`author_id`) REFERENCES `profiles`(`id`) ON DELETE restrict ON UPDATE no action;
