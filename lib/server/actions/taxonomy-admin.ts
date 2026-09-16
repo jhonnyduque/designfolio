@@ -65,8 +65,9 @@ async function usageByName(): Promise<Map<string, number>> {
   const [categoryRows, tagRows] = await Promise.all([
     db.select({ name: works.category, count: sql<number>`count(*)` })
       .from(works).groupBy(works.category),
+    // coalesce: JSON_TABLE lanza error si el argumento es NULL, y `tags` lo admite.
     db.select({ name: sql<string>`jt.tag`, count: sql<number>`count(*)` })
-      .from(sql`${works} join json_table(${works.tags}, '$[*]' columns (tag varchar(80) path '$')) as jt`)
+      .from(sql`${works} join json_table(coalesce(${works.tags}, json_array()), '$[*]' columns (tag varchar(80) path '$')) as jt`)
       .groupBy(sql`jt.tag`),
   ])
 
@@ -229,19 +230,21 @@ export async function mergeTaxonomyAction(sourceId: string, targetId: string): P
         .where(eq(works.category, source.name))
       moved = result[0].affectedRows
     } else {
-      // Sustituye el tag dentro del array JSON y elimina duplicados si el
-      // proyecto ya tenía también el término de destino.
-      const result = await db.update(works).set({
-        tags: sql`json_merge_preserve(
-          json_array(),
-          (select coalesce(json_arrayagg(t.v), json_array()) from (
-            select distinct if(jt.tag = ${source.name}, ${target.name}, jt.tag) as v
-            from json_table(${works.tags}, '$[*]' columns (tag varchar(80) path '$')) as jt
-          ) as t)
-        )`,
-        updatedAt: new Date(),
-      }).where(sql`json_contains(${works.tags}, json_quote(${source.name}))`)
-      moved = result[0].affectedRows
+      // La reescritura del array JSON se hace en código y no en SQL: manipular
+      // works.tags con JSON_TABLE dentro de un UPDATE sobre la propia tabla es
+      // frágil y además falla cuando tags es NULL.
+      const affected = await db
+        .select({ id: works.id, tags: works.tags })
+        .from(works)
+        .where(sql`json_contains(coalesce(${works.tags}, json_array()), json_quote(${source.name}))`)
+
+      for (const row of affected) {
+        const merged = Array.from(
+          new Set((row.tags ?? []).map((tag) => (tag === source.name ? target.name : tag))),
+        )
+        await db.update(works).set({ tags: merged, updatedAt: new Date() }).where(eq(works.id, row.id))
+      }
+      moved = affected.length
     }
 
     await db.update(taxonomy)
