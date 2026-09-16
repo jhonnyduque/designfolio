@@ -1,7 +1,8 @@
 /**
- * Promueve UNA cuenta a fundadora, identificada por correo.
+ * Promueve o degrada UNA cuenta, identificada por correo.
  *
  * Uso:  npx tsx --env-file=.env.local scripts/make_founder.ts persona@ejemplo.com
+ *       npx tsx --env-file=.env.local scripts/make_founder.ts persona@ejemplo.com --demote
  *
  * Solo para entorno local. El correo vive en la tabla `user` de Better Auth,
  * no en `profiles`, por eso se resuelve primero el id y luego se actualiza el perfil.
@@ -17,9 +18,17 @@ async function main() {
     process.exit(1)
   }
 
-  const email = process.argv[2]?.trim().toLowerCase()
+  const args = process.argv.slice(2)
+  const demote = args.includes("--demote")
+  const email = args.find((arg) => !arg.startsWith("--"))?.trim().toLowerCase()
   if (!email) {
-    console.error("Falta el correo.\nUso: npx tsx scripts/make_founder.ts persona@ejemplo.com")
+    console.error("Falta el correo.\nUso: npx tsx --env-file=.env.local scripts/make_founder.ts persona@ejemplo.com [--demote]")
+    process.exit(1)
+  }
+
+  const bootstrapEmail = process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase()
+  if (demote && bootstrapEmail && email === bootstrapEmail) {
+    console.error(`Abortado: ${email} es la cuenta de BOOTSTRAP_ADMIN_EMAIL. Degradarla te dejaría sin administrador.`)
     process.exit(1)
   }
 
@@ -37,7 +46,7 @@ async function main() {
 
   const result = await getDb()
     .update(profiles)
-    .set({ isFounder: true })
+    .set({ isFounder: !demote, updatedAt: new Date() })
     .where(eq(profiles.id, userId))
 
   const affected = (result[0] as ResultSetHeader).affectedRows
@@ -47,7 +56,7 @@ async function main() {
     process.exit(1)
   }
 
-  console.log(`${email} ahora es fundador.`)
+  console.log(demote ? `${email} ya no es fundador.` : `${email} ahora es fundador.`)
   await pool.end()
 }
 
