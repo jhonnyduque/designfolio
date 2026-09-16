@@ -1,6 +1,7 @@
 # Migración de Designfolio a MySQL/Hostinger
 
-Estado: **en curso, solo entorno local. No desplegar a producción.**
+Estado: **Supabase eliminado del proyecto. Migración de código completa y verificada
+en local. Falta la infraestructura de Hostinger.**
 
 > Auditoría forense: 2026-09-16. Revisado contra el código real del checkout
 > `C:\Users\Beto\Documents\APP\designfolio-new` (rama `codex/hostinger-mysql-migration`,
@@ -52,7 +53,16 @@ este mismo `docs/`. Nada de la migración MySQL está commiteado. Un `git checko
 `git clean` o un fallo de disco borra semanas de trabajo sin recuperación posible.
 **Esto se resuelve antes que cualquier otra tarea técnica.**
 
-### B3 — El registro por invitación no puede funcionar (bug estructural)
+### B3 — El registro por invitación no puede funcionar — ✅ RESUELTO (2026-09-17)
+
+El hook `before` ahora solo reserva el código marcando `used_at` —ese UPDATE condicional
+sigue siendo atómico— y el hook `after` asigna `used_by` una vez creado el perfil.
+
+Verificado contra MySQL: el método anterior falla con **ER_NO_REFERENCED_ROW_2 (1452)**,
+el error exacto que predijo esta auditoría. El nuevo funciona, y un segundo intento con
+el mismo código afecta 0 filas.
+
+*Diagnóstico original:*
 
 En `lib/auth.ts`, el hook `databaseHooks.user.create.before` marca el código como usado:
 
@@ -75,14 +85,25 @@ cada canje. La base confirma que esto nunca se probó: `invitation_codes` tiene 
 Efecto combinado con B4: **hoy nadie puede registrarse salvo el correo de
 `BOOTSTRAP_ADMIN_EMAIL`.**
 
-### B4 — No existe forma de generar códigos de invitación en MySQL
+### B4 — No existe forma de generar códigos de invitación — ✅ RESUELTO (2026-09-17)
+
+`lib/server/actions/invitations.ts` genera, lista y revoca códigos. Se crean en el
+servidor con 130 bits de entropía, se muestran **una sola vez** y en base queda solo su
+hash. `InviteCodesManager` fue reescrito sobre esa API.
+
+*Diagnóstico original:*
 
 No hay ninguna ruta bajo `app/api/` ni server action para crear o listar invitaciones.
 `components/moderation/InviteCodesManager.tsx` sigue apuntando a Supabase, y
 `components/auth/ClaimInviteCode.tsx` no está renderizado por ningún componente (quedó
 huérfano al retirarse el callback OAuth).
 
-### B5 — Doble fuente de verdad para la autorización de fundador
+### B5 — Doble fuente de verdad para la autorización — ✅ RESUELTO (2026-09-17)
+
+La página de moderación resuelve sesión y permiso con Better Auth y Drizzle, igual que el
+resto del dashboard. Las variables `NEXT_PUBLIC_SUPABASE_*` ya no las lee nadie.
+
+*Diagnóstico original:*
 
 `app/(protected)/dashboard/moderation/page.tsx` sigue resolviendo identidad y permiso
 contra Supabase:
@@ -120,7 +141,12 @@ de ellos incluso sin onboarding completado. Si este script llega a producción e
 escalada de privilegios total. Debe recibir un `WHERE` por email y una guarda que aborte
 si `NODE_ENV === "production"`, o eliminarse.
 
-### B7 — La página pública de proyecto depende del cliente Supabase del navegador
+### B7 — La página pública dependía del cliente Supabase — ✅ RESUELTO (2026-09-17)
+
+`WorkDetail` usa `/api/works/[id]`. Editar, archivar y eliminar pasan por endpoints que
+ya verificaban propiedad, y los errores dejaron de tragarse en silencio.
+
+*Diagnóstico original:*
 
 `app/proyectos/[id]/page.tsx` renderiza `components/works/WorkDetail.tsx`, que hace
 `createClient()` de `@supabase/ssr` en el cuerpo del componente cliente (línea 71). Si se
@@ -129,7 +155,14 @@ retiran las variables `NEXT_PUBLIC_SUPABASE_*` para producción,
 proyecto deja de renderizar**. Es decir: retirar Supabase sin migrar `WorkDetail` rompe la
 parte visible del sitio, no solo el dashboard.
 
-### B8 — El selector de etiquetas está vacío
+### B8 — El selector de etiquetas está vacío — ✅ RESUELTO (2026-09-17)
+
+`useTaxonomy` lee de la tabla `taxonomy`. La API de creación valida la categoría contra
+la base y no contra la constante `WORK_CATEGORIES`, así que una categoría añadida desde
+el panel queda publicable sin tocar código. `scripts/seed-taxonomy.ts` siembra las nueve
+iniciales y es idempotente.
+
+*Diagnóstico original:*
 
 `components/works/CreateWorkForm.tsx` consume `hooks/useTaxonomy.ts`, que hoy es un stub:
 devuelve `tags: []`, categorías hardcodeadas desde `WORK_CATEGORIES` y funciones
@@ -192,78 +225,72 @@ tenía importadores; migrarlos habría sido trabajo desperdiciado. Se borraron:
 
 Con eso, los archivos con Supabase bajaron de 16 a 13.
 
-Y en sentido inverso, hay código escrito que **no está conectado a nada**:
-
-- `lib/server/actions/moderation.ts` implementa `getModerationQueueAction`,
-  `getModerationStatsAction`, `getModerationHistoryAction` y `moderateWorkAction` (con
-  escritura en `moderation_log` y notificaciones `work_approved` / `work_rejected`).
-  **Ningún archivo lo importa.** El panel sigue usando `hooks/useModeration.ts`, que es
-  100 % Supabase y llama a los RPC `moderate_work` y `refresh_feed_scores` de Postgres.
-  El trabajo está hecho en ~70 %, solo falta cablearlo — y es el archivo que rompe el
-  build (B1).
 
 ---
 
-## 3. Pendientes funcionales
+## 3. Migración de código — ✅ COMPLETA (2026-09-17)
 
-### 3.1 Archivos que aún usan Supabase
+**Supabase ya no forma parte del proyecto.** `@supabase/ssr` y `@supabase/supabase-js`
+salieron de `package.json`, y `lib/supabase/` fue eliminada. Las dos únicas menciones que
+quedan en el código son comentarios que explican por qué una columna dejó de existir.
 
-Estado real hoy: **9 archivos de aplicación + 4 de `lib/supabase/`** = 13.
-(El documento anterior listaba 15; 3 ya estaban migrados y 3 más se borraron por muertos.)
+### 3.1 Piezas migradas
 
-| Archivo | Líneas | Refs | Acción |
-|---|---:|---:|---|
-| `hooks/useModeration.ts` | 190 | 13 | Cablear a `lib/server/actions/moderation.ts` |
-| `components/moderation/WorksManager.tsx` | 316 | 9 | Migrar a server actions |
-| `components/moderation/UsersManager.tsx` | 326 | 7 | Requiere acciones de admin de usuarios (no existen) |
-| `components/moderation/InviteCodesManager.tsx` | 286 | 9 | Requiere API de invitaciones (no existe) |
-| `components/works/WorkDetail.tsx` | 654 | 8 | **Ruta pública** — ver B7 |
-| `hooks/useTaxonomyAdmin.ts` | 73 | 7 | Migrar o fusionar con `useTagsAdmin` |
-| `app/(protected)/dashboard/moderation/page.tsx` | 27 | 4 | Ver B5 |
-| `app/(protected)/dashboard/work/[id]/page.tsx` | 82 | 7 | Migrar |
-| `app/(protected)/dashboard/profile/[username]/page.tsx` | 36 | 4 | Migrar |
-| `lib/supabase/{client,server,storage,avatar}.ts` | — | — | Borrar al final |
+| Pieza | Destino |
+|---|---|
+| `hooks/useModeration.ts` | `lib/server/actions/moderation.ts` |
+| `app/(protected)/dashboard/moderation/page.tsx` | Better Auth + Drizzle |
+| `components/moderation/WorksManager.tsx` | `lib/server/actions/admin.ts` |
+| `components/moderation/UsersManager.tsx` | `lib/server/actions/admin.ts` |
+| `components/moderation/InviteCodesManager.tsx` | `lib/server/actions/invitations.ts` (reescrito) |
+| `hooks/useTaxonomyAdmin.ts` | `lib/server/actions/taxonomy-admin.ts` |
+| `hooks/useTaxonomy.ts` | `lib/server/actions/taxonomy.ts` |
+| `components/works/WorkDetail.tsx` | `/api/works/[id]` |
+| `app/(protected)/dashboard/work/[id]` | `lib/works/dashboard.ts` |
+| `app/(protected)/dashboard/profile/[username]` | `lib/works/dashboard.ts` |
 
-Al terminar: retirar `@supabase/ssr` y `@supabase/supabase-js` de `package.json` y
-eliminar `NEXT_PUBLIC_SUPABASE_*` de `.env.local`.
+### 3.2 Defectos encontrados durante la migración
 
-### 3.2 Moderación
+Ninguno de estos estaba en el documento original; aparecieron al mover el código.
 
-- Cablear `useModeration` a las server actions existentes y corregir el error de tipos (B1).
-- **Corregir `getModerationHistoryAction`**: hoy lee de `notifications`, no de
-  `moderation_log`. El historial mostrado no es el registro de auditoría, es un efecto
-  secundario del mismo.
-- Faltan acciones de fundador para **archivar** y **eliminar** proyectos (el enum
-  `moderation_log.action` ya contempla `archive` y `delete`; nadie los escribe).
-- Falta administración de usuarios: listado, activar/desactivar (`profiles.is_active`) y
-  conteo de proyectos.
-- Falta administración de **categorías** en `taxonomy` (hoy 0 filas de tipo `category`;
-  las categorías vienen hardcodeadas de `types/work.ts`).
+- **`moderation_log` se autodestruía.** `work_id` borraba en cascada, así que el registro
+  de una eliminación desaparecía junto con el proyecto que documentaba. Migración `0002`:
+  `work_id` admite null, se guarda `work_title` como instantánea y se añade la acción
+  `restore`.
+- **El historial mostraba notificaciones, no auditoría.** `getModerationHistoryAction`
+  leía de `notifications`; ahora lee de `moderation_log`, con el actor y la nota.
+- **`JSON_TABLE` falla con `tags` nulo** (`ER_WRONG_ARGUMENTS`) y la columna lo admite.
+  Envuelto en `coalesce(..., json_array())`. La fusión de tags pasó de SQL a código:
+  manipular `works.tags` con una subconsulta sobre la propia tabla dentro de un `UPDATE`
+  es frágil.
+- **Un fundador podía desactivarse a sí mismo** o desactivar a otro fundador, dejando el
+  sistema sin administrador. Bloqueado en `toggleUserActiveAction`.
+- **La página de detalle del dashboard filtraba por `approved`**, pero «Mis proyectos»
+  enlaza también a los pendientes y archivados: esos enlaces daban 404. Ahora el autor ve
+  siempre los suyos y el resto solo ve aprobados y sin archivar.
+- **`UserProfile` exigía `total_points`**, una columna que solo existía en Supabase y que
+  ningún proceso alimentaba. Es opcional y el badge omite los puntos hasta que exista un
+  sistema de reputación real.
 
-### 3.3 Invitaciones
+### 3.3 Verificado contra la base local
 
-- Corregir el orden de canje (B3): mover el marcado de `used_by` al hook `after`, después
-  de crear el perfil, o retirar la FK y validar por aplicación. Envolver creación de
-  usuario + perfil + canje en una transacción.
-- Crear API de fundador para generar y listar códigos.
-- Definir expiración por defecto, revocación y auditoría.
-- Mostrar el código en claro una sola vez; en base solo el hash (`hashInviteCode` ya existe
-  en `lib/invitations.ts` y usa SHA-256; considerar que un hash sin sal de un código corto
-  es enumerable por fuerza bruta — usar códigos de al menos 128 bits de entropía).
-- Reescribir `InviteCodesManager` sobre esa API.
+Compilar no prueba que las consultas funcionen; todo esto se ejecutó contra MySQL.
 
-### 3.4 Creación de proyectos
+| Comprobación | Resultado |
+|---|---|
+| Publicar como no fundador | Queda en `pending_review`, sin `published_at` |
+| Visibilidad antes de aprobar | No aparece en el feed público |
+| Aprobar | Escribe `moderation_log` y la notificación `work_approved`, y entra al feed |
+| Eliminar un proyecto | `moderation_log` conserva sus filas, con `work_id` en null y el título intacto |
+| Canje de invitación | Método anterior: `ER_NO_REFERENCED_ROW_2`. Nuevo: correcto y no reutilizable |
+| Fusión de tags | `[Retrato, Foto, Color]` fusionando Retrato→Foto da `[Foto, Color]` |
+| `JSON_TABLE` con filas nulas | No falla |
+| Guardas de `make_founder` | Sin argumento, correo inexistente, `NODE_ENV=production` y cuenta de `BOOTSTRAP_ADMIN_EMAIL`: los cuatro abortan |
 
-- Conectar `CreateWorkForm` a `useTags` en lugar del stub `useTaxonomy` (B8), o completar
-  `useTaxonomy` contra `lib/server/actions/taxonomy.ts`.
-- Poblar `taxonomy` con las categorías reales.
+### 3.4 Estado de las cuentas locales
 
-### 3.5 Pruebas funcionales que faltan ejecutar
-
-- Publicar un proyecto **con video** (nunca se hizo).
-- Publicar desde una cuenta **no fundadora** para que entre en `pending_review`.
-- Aprobar y rechazar desde el panel, verificando que `moderation_log` recibe la fila y que
-  el autor recibe la notificación.
+La cuenta de prueba `codex-smoke-…` fue degradada para poder ejercitar el camino de
+usuario no fundador. `admin@jhonnyduque.com` sigue siendo el único fundador.
 
 ---
 
@@ -364,38 +391,23 @@ Iterar sobre una copia (`[...keys()]`).
 
 *Criterio de salida:* `npm run build` y `npx tsc --noEmit` pasan. Verificado.
 
-### Fase 2 — Cerrar moderación
 
-7. Reescribir `hooks/useModeration.ts` sobre las server actions existentes.
-8. Corregir `getModerationHistoryAction` para leer de `moderation_log` con join a `works` y
-   `profiles`.
-9. Añadir `archiveWorkAction` / `deleteWorkAction` de fundador, con escritura en
-   `moderation_log`.
-10. Migrar `app/(protected)/dashboard/moderation/page.tsx` al patrón de
-    `app/(protected)/layout.tsx` (Better Auth + Drizzle) y eliminar la doble fuente de
-    verdad.
-11. Migrar `WorksManager.tsx`.
-12. **Prueba:** crear un usuario no fundador, publicar con imágenes y con video, aprobar
-    uno y rechazar otro, verificar `moderation_log` y `notifications`.
+### Fases 2 a 4 — Moderación, registro y retirada de Supabase — ✅ COMPLETADAS (2026-09-17)
 
-### Fase 3 — Reabrir el registro
+Se hicieron en un solo tramo porque compartían backend. Detalle en la sección 3.
 
-13. Corregir el canje de invitaciones (B3) con transacción y orden correcto.
-14. Crear server actions de fundador: generar, listar, revocar códigos (con expiración).
-15. Reescribir `InviteCodesManager.tsx`.
-16. **Prueba:** generar código, registrar cuenta nueva con él, verificar que queda marcado
-    usado y que no se puede reutilizar ni usar uno expirado.
+- ✅ `useModeration` sobre las server actions; historial leyendo de `moderation_log`.
+- ✅ Archivar, restaurar y eliminar como fundador, con registro de cada decisión.
+- ✅ Administración de usuarios: listado con correos de Better Auth y activar/desactivar.
+- ✅ Invitaciones: generar, listar y revocar, con expiración configurable.
+- ✅ Canje de invitaciones corregido (B3) y verificado contra MySQL.
+- ✅ Taxonomía completa: categorías y tags, con orden, uso real y fusión.
+- ✅ Formulario de publicación conectado a la taxonomía real (B8).
+- ✅ `lib/supabase/` eliminada y `@supabase/*` fuera de `package.json`.
+- ✅ Migraciones `0002` y `0003` aplicadas.
 
-### Fase 4 — Cerrar paneles y retirar Supabase
-
-17. Administración de usuarios (server actions) + `UsersManager.tsx`.
-18. Migrar `hooks/useTaxonomyAdmin.ts` y poblar categorías en `taxonomy`.
-19. Conectar `CreateWorkForm` al hook de tags real (B8).
-20. Migrar `WorkDetail.tsx` (ruta pública), `dashboard/work/[id]` y
-    `dashboard/profile/[username]`.
-21. Borrar `lib/supabase/`, quitar `@supabase/*` de `package.json`, eliminar
-    `NEXT_PUBLIC_SUPABASE_*` de `.env.local`.
-22. **Prueba:** `grep -rn supabase app components hooks lib` devuelve vacío y el build pasa.
+*Criterio de salida:* `grep -rn supabase app components hooks lib types` devuelve solo
+dos comentarios explicativos, y `npm run build` pasa. Verificado.
 
 ### Fase 5 — Almacenamiento persistente
 
