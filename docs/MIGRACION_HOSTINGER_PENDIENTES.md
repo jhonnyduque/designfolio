@@ -14,9 +14,16 @@ Estado: **en curso, solo entorno local. No desplegar a producción.**
 
 Estos puntos no estaban en el documento anterior y tienen prioridad sobre todo lo demás.
 
-### B1 — El build está roto (verificado hoy)
+### B1 — El build está roto — ✅ RESUELTO (2026-09-17, commit `f9ba825`)
 
-`npm run build` y `npx tsc --noEmit` **fallan**:
+`ModerationLogEntry` declaraba el payload del RPC de Supabase mientras
+`moderateWorkAction` escribía otro. Ahora el payload se declara como
+`Record<string, unknown>` (es JSON sin validar) y el enum se estrecha con un
+filtro en vez de un cast. `npm run build` y `npx tsc --noEmit` pasan.
+
+*Diagnóstico original:*
+
+`npm run build` y `npx tsc --noEmit` **fallaban**:
 
 ```
 lib/server/actions/moderation.ts(80,10): error TS2352
@@ -27,7 +34,17 @@ may be a mistake because neither type sufficiently overlaps with the other.
 El documento anterior afirmaba «Verificaciones realizadas: TypeScript, build de Next.js».
 Eso dejó de ser cierto. Ningún despliegue es posible mientras esto no se corrija.
 
-### B2 — Toda la migración está fuera de control de versiones
+### B2 — Toda la migración está fuera de control de versiones — ✅ RESUELTO (2026-09-16)
+
+Las 47 rutas quedaron en 8 commits temáticos sobre `codex/hostinger-mysql-migration`,
+y el proyecto de clase en su estado Supabase quedó congelado en el tag
+`aula-v1-supabase` (commit `953479b`).
+
+Matiz sobre el diagnóstico original: el **proyecto de clase sí estaba commiteado y
+publicado** en GitHub desde hacía 5 meses. Lo que estaba suelto en disco era
+únicamente el trabajo de migración a MySQL encima de él.
+
+*Diagnóstico original:*
 
 `git status` en el checkout principal reporta **47 rutas modificadas o sin seguimiento**,
 incluyendo `lib/db/`, `lib/auth.ts`, `lib/server/`, `app/api/`, `drizzle/`, `scripts/` y
@@ -81,7 +98,18 @@ Better Auth. `.env.local` **todavía contiene `NEXT_PUBLIC_SUPABASE_URL` y
 `NEXT_PUBLIC_SUPABASE_ANON_KEY`**, así que el panel de moderación consulta un proyecto
 Supabase vivo y desincronizado de MySQL. Dos sistemas distintos deciden quién es fundador.
 
-### B6 — `scripts/make_founder.ts` promueve a TODOS los usuarios
+### B6 — `scripts/make_founder.ts` promueve a TODOS los usuarios — ✅ RESUELTO (2026-09-17, commit `dd59d68`)
+
+Ahora exige un correo como argumento, resuelve el id en la tabla `user` de Better
+Auth y aborta si `NODE_ENV === "production"`. Verificado por sus tres caminos:
+sin argumento, con correo inexistente y con `NODE_ENV=production`; ninguno
+modifica datos.
+
+Pendiente aparte: los 2 perfiles de la base local siguen siendo fundadores porque
+el script viejo ya se ejecutó. Hay que degradar uno para poder probar el camino de
+usuario no fundador (ver 3.5).
+
+*Diagnóstico original:*
 
 ```ts
 await db.update(profiles).set({ isFounder: true });   // sin WHERE
@@ -151,16 +179,18 @@ La base local demuestra que varios caminos **nunca se ejercitaron**:
 
 ---
 
-## 2. Código muerto detectado (retirar, no migrar)
+## 2. Código muerto — ✅ ELIMINADO (2026-09-17, commit `89327ca`)
 
-El documento anterior listaba estos archivos como «pendientes de migrar». La auditoría
-muestra que no los importa nadie; migrarlos sería trabajo desperdiciado:
+El documento anterior listaba estos archivos como «pendientes de migrar». Ninguno
+tenía importadores; migrarlos habría sido trabajo desperdiciado. Se borraron:
 
-| Archivo | Estado real |
+| Archivo | Motivo |
 |---|---|
-| `hooks/useCreateWork.ts` (224 líneas) | Reemplazado por `hooks/useCreateWorkMySql.ts`. Sin importadores. **Borrar.** |
-| `components/auth/ClaimInviteCode.tsx` (42 líneas) | Ningún componente lo renderiza. **Borrar.** |
-| `app/auth/callback/route.ts` (39 líneas) | Callback OAuth de Supabase. Ruta pública viva que intercambia un código Supabase y redirige a `/dashboard`. Better Auth no la usa y `socialProviders` está vacío. **Borrar.** |
+| `hooks/useCreateWork.ts` (224 líneas) | Reemplazado por `hooks/useCreateWorkMySql.ts` |
+| `components/auth/ClaimInviteCode.tsx` (42 líneas) | Ningún componente lo renderizaba |
+| `app/auth/callback/route.ts` (39 líneas) | Callback OAuth de Supabase, ruta pública que Better Auth no usa (`socialProviders` vacío) |
+
+Con eso, los archivos con Supabase bajaron de 16 a 13.
 
 Y en sentido inverso, hay código escrito que **no está conectado a nada**:
 
@@ -178,8 +208,8 @@ Y en sentido inverso, hay código escrito que **no está conectado a nada**:
 
 ### 3.1 Archivos que aún usan Supabase
 
-Estado real hoy: **12 archivos de aplicación + 4 de `lib/supabase/`** (el documento
-anterior listaba 15; 3 ya fueron migrados).
+Estado real hoy: **9 archivos de aplicación + 4 de `lib/supabase/`** = 13.
+(El documento anterior listaba 15; 3 ya estaban migrados y 3 más se borraron por muertos.)
 
 | Archivo | Líneas | Refs | Acción |
 |---|---:|---:|---|
@@ -192,9 +222,6 @@ anterior listaba 15; 3 ya fueron migrados).
 | `app/(protected)/dashboard/moderation/page.tsx` | 27 | 4 | Ver B5 |
 | `app/(protected)/dashboard/work/[id]/page.tsx` | 82 | 7 | Migrar |
 | `app/(protected)/dashboard/profile/[username]/page.tsx` | 36 | 4 | Migrar |
-| `hooks/useCreateWork.ts` | 224 | 12 | **Borrar** (código muerto) |
-| `components/auth/ClaimInviteCode.tsx` | 42 | 5 | **Borrar** (código muerto) |
-| `app/auth/callback/route.ts` | 39 | 5 | **Borrar** (código muerto) |
 | `lib/supabase/{client,server,storage,avatar}.ts` | — | — | Borrar al final |
 
 Al terminar: retirar `@supabase/ssr` y `@supabase/supabase-js` de `package.json` y
@@ -264,6 +291,25 @@ siempre contra el prefijo firmado que emita el backend.
 
 ## 5. Preparar Hostinger
 
+**Verificado en la cuenta (2026-09-17):**
+
+| | |
+|---|---|
+| Plan | Business Web Hosting, activo y pagado hasta **2028-10-10** |
+| Node.js | **Soportado y en uso**: ya corren 3 apps Node en ese plan (`barberia.jhonnyduque.com`, `app.draeleanagomez.com`, y una más) |
+| Subdominio | **`designfolio.jhonnyduque.com` ya está creado** desde 2026-02-11 |
+| VPS | Ninguno |
+
+Esto resuelve la incógnita mayor del plan original —si el hosting aguanta
+Next.js persistente— y elimina la necesidad de partir la infraestructura entre
+Vercel y Hostinger. Con la app y MySQL en el mismo host, la base se conecta por
+`localhost`: sin IPs dinámicas que autorizar ni saturación de conexiones desde
+funciones serverless.
+
+Motivo de la migración, para que quede registrado: **Supabase pausó y eliminó la
+base de datos por inactividad** en su plan gratuito. Vercel no borró nada. El
+problema era de hosting de base de datos, no de frontend.
+
 - Crear base MySQL y usuario exclusivos para Designfolio.
 - Crear correo SMTP real (`SMTP_USER` / `SMTP_PASSWORD` hoy no están en `.env.local`; solo
   funciona Mailpit sin autenticación).
@@ -272,8 +318,7 @@ siempre contra el prefijo firmado que emita el backend.
 - Aplicar migraciones MySQL y el esquema de Better Auth (`sql/auth-schema.sql`) en la nueva
   base.
 - Copias de seguridad automáticas **y una prueba de restauración real**.
-- Verificar que el hosting soporte Node.js/Next.js persistente; si no, mantener el frontend
-  en Vercel y MySQL/SMTP/medios bajo control propio.
+- ~~Verificar que el hosting soporte Node.js/Next.js persistente~~ — confirmado arriba.
 
 ---
 
@@ -298,24 +343,21 @@ Iterar sobre una copia (`[...keys()]`).
 
 ## 7. Plan de resolución
 
-### Fase 0 — Asegurar el trabajo (antes de tocar código)
+### Fase 0 — Asegurar el trabajo — ✅ COMPLETADA (2026-09-16)
 
-1. Confirmar que `.env.local`, `.env.mysql.local` y `public/uploads/` están ignorados.
-2. Commitear los 47 cambios en `codex/hostinger-mysql-migration` en commits temáticos
-   (esquema/db, auth, API, UI, scripts, docs).
-3. `git push` de la rama al remoto. **No tocar `main`.**
+1. ✅ Verificado que `.env.local`, `.env.mysql.local` y `public/uploads/` están
+   ignorados, y escaneado el árbol en busca de credenciales antes de commitear.
+2. ✅ Las 47 rutas quedaron en 8 commits temáticos.
+3. ✅ Tag `aula-v1-supabase` sobre `953479b`.
+4. ⏳ `git push` de la rama. **No tocar `main`.**
 
-*Criterio de salida:* `git status` limpio y la rama existe en `origin`.
+### Fase 1 — Desbloquear el build — ✅ COMPLETADA (2026-09-17)
 
-### Fase 1 — Desbloquear el build
+5. ✅ `f9ba825` — tipos del historial de moderación corregidos.
+6. ✅ `dd59d68` — `make_founder.ts` con guarda de producción y correo obligatorio.
+7. ✅ `89327ca` — borrados los 3 archivos muertos.
 
-4. Corregir `lib/server/actions/moderation.ts:80` (tipar `payload` correctamente en
-   `types/moderation.ts` en vez de forzar el cast).
-5. Añadir guarda de producción y `WHERE` por email en `scripts/make_founder.ts`.
-6. Borrar los 3 archivos muertos: `hooks/useCreateWork.ts`,
-   `components/auth/ClaimInviteCode.tsx`, `app/auth/callback/route.ts`.
-
-*Criterio de salida:* `npm run build` en verde.
+*Criterio de salida:* `npm run build` y `npx tsc --noEmit` pasan. Verificado.
 
 ### Fase 2 — Cerrar moderación
 
@@ -393,9 +435,18 @@ Mailpit: http://localhost:8025 — MySQL local: `127.0.0.1:3307`
 
 ## 9. Nota sobre producción actual
 
-La web publicada depende todavía de Supabase. No ejecutar `git push origin main` ni
-desplegar la migración hasta completar, como mínimo, las fases 0 a 5.
+**Corrección importante (2026-09-17).** Este documento asumía que había una producción
+sana que proteger. No la hay: Supabase eliminó la base de datos, así que
+`designfolio-six.vercel.app` sirve el cascarón de Next.js contra un backend que ya no
+existe. No hay nada que preservar y sí algo que recuperar, de modo que **desplegar la
+migración es ganancia neta**, no riesgo.
 
-Riesgo concreto a tener presente: retirar las variables `NEXT_PUBLIC_SUPABASE_*` sin haber
-migrado `components/works/WorkDetail.tsx` rompe la página pública de cada proyecto, no solo
-el dashboard (B7). El orden de las fases 4 y 5 no es negociable.
+Consecuencia práctica: la cautela deja de estar en «no desplegar» y pasa a estar en
+«desplegar en el orden correcto».
+
+- Los datos del curso —proyectos, likes y comentarios de los estudiantes— se perdieron
+  con la base. El tag `aula-v1-supabase` conserva el código, no el contenido. Si aparece
+  un dump o export, se puede importar a MySQL.
+- Sigue vigente B7: retirar las variables `NEXT_PUBLIC_SUPABASE_*` sin haber migrado
+  `components/works/WorkDetail.tsx` rompe la página pública de cada proyecto.
+- `main` se toca solo cuando el portafolio esté verificado en el subdominio.

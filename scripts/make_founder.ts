@@ -1,7 +1,7 @@
 /**
  * Promueve UNA cuenta a fundadora, identificada por correo.
  *
- * Uso:  npx tsx scripts/make_founder.ts persona@ejemplo.com
+ * Uso:  npx tsx --env-file=.env.local scripts/make_founder.ts persona@ejemplo.com
  *
  * Solo para entorno local. El correo vive en la tabla `user` de Better Auth,
  * no en `profiles`, por eso se resuelve primero el id y luego se actualiza el perfil.
