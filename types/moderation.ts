@@ -37,12 +37,9 @@ export interface ModerationLogEntry {
   id: string
   user_id: string
   type: "work_approved" | "work_rejected"
-  target_id: string
-  payload: {
-    action: string
-    moderated_by: string
-    note: string
-    moderated_at: string
-  }
+  target_id: string | null
+  /** Columna JSON sin validar en base. Los consumidores deben estrechar antes de leer campos. */
+  payload: Record<string, unknown>
+  read_at: string | null
   created_at: string
 }

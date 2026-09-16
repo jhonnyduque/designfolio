@@ -77,15 +77,18 @@ export async function getModerationHistoryAction(): Promise<ModerationLogEntry[]
     limit: 20
   })
   
-  return items.map(n => ({
-    id: n.id,
-    user_id: n.userId,
-    type: n.type,
-    target_id: n.targetId,
-    payload: n.payload,
-    read_at: n.readAt?.toISOString() || null,
-    created_at: n.createdAt.toISOString()
-  })) as ModerationLogEntry[]
+  // El filtro estrecha el enum de la tabla, que también admite "like" y "comment".
+  return items
+    .filter((n) => n.type === "work_approved" || n.type === "work_rejected")
+    .map((n) => ({
+      id: n.id,
+      user_id: n.userId,
+      type: n.type as "work_approved" | "work_rejected",
+      target_id: n.targetId,
+      payload: n.payload,
+      read_at: n.readAt?.toISOString() ?? null,
+      created_at: n.createdAt.toISOString(),
+    }))
 }
 
 export async function moderateWorkAction(workId: string, action: "approve" | "reject", note?: string): Promise<ModerationResult> {
