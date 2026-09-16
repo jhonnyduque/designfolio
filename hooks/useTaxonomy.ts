@@ -46,7 +46,6 @@ export function useTaxonomy(
           name: item.name,
           slug: item.slug,
           type: kind,
-          active: true,
           usage_count: 0,
           sort_order: 0,
           created_at: item.created_at,
