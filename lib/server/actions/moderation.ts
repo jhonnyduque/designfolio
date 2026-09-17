@@ -1,6 +1,6 @@
 "use server"
 
-import { eq, desc, sql } from "drizzle-orm"
+import { asc, eq, desc, sql } from "drizzle-orm"
 import { getDb } from "@/lib/db/client"
 import { works, moderationLog, notifications, profiles } from "@/lib/db/schema"
 import type { ModerationWork, ModerationLogEntry, ModerationResult } from "@/types/moderation"
@@ -12,10 +12,12 @@ async function requireAdmin() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) throw new Error("No autenticado")
   
-  const profile = await getDb().query.profiles.findFirst({
-    where: (p, { eq }) => eq(p.id, session.user.id),
-  })
-  if (!profile?.isFounder) throw new Error("No autorizado")
+  const [profile] = await getDb()
+    .select({ id: profiles.id, isFounder: profiles.isFounder, isActive: profiles.isActive })
+    .from(profiles)
+    .where(eq(profiles.id, session.user.id))
+    .limit(1)
+  if (!profile?.isFounder || !profile.isActive) throw new Error("No autorizado")
   return profile
 }
 
@@ -23,29 +25,47 @@ export async function getModerationQueueAction(): Promise<ModerationWork[]> {
   await requireAdmin()
   const db = getDb()
   
-  const items = await db.query.works.findMany({
-    where: (w, { eq }) => eq(w.moderationStatus, "pending_review"),
-    with: {
-      author: true
-    },
-    orderBy: (w, { asc }) => [asc(w.createdAt)],
-  })
-  
-  return items.map(w => ({
+  // Join explícito y no la API relacional de Drizzle: `with: { author: true }`
+  // exige declarar relations() en el esquema, y aquí no hay ninguna. Sin ellas
+  // falla en tiempo de ejecución con "Cannot read properties of undefined
+  // (reading 'referencedTable')", que el compilador no detecta.
+  const items = await db
+    .select({
+      id: works.id,
+      authorId: works.authorId,
+      title: works.title,
+      description: works.description,
+      category: works.category,
+      tags: works.tags,
+      images: works.images,
+      moderationStatus: works.moderationStatus,
+      createdAt: works.createdAt,
+      publishedAt: works.publishedAt,
+      authorUsername: profiles.username,
+      authorFullName: profiles.fullName,
+      authorAvatarUrl: profiles.avatarUrl,
+      authorReputationLevel: profiles.reputationLevel,
+    })
+    .from(works)
+    .innerJoin(profiles, eq(works.authorId, profiles.id))
+    .where(eq(works.moderationStatus, "pending_review"))
+    .orderBy(asc(works.createdAt))
+
+  return items.map((w) => ({
     id: w.id,
     author_id: w.authorId,
     title: w.title,
     description: w.description,
     category: w.category,
     tags: w.tags,
-    images: w.images,
+    images: w.images ?? [],
     moderation_status: w.moderationStatus,
     created_at: w.createdAt.toISOString(),
-    published_at: w.publishedAt?.toISOString() || null,
-    author_username: (w as any).author?.username || "",
-    author_full_name: (w as any).author?.fullName || "Unknown",
-    author_avatar_url: (w as any).author?.avatarUrl || null,
-    author_reputation_level: (w as any).author?.reputationLevel || 0,
+    published_at: w.publishedAt?.toISOString() ?? null,
+    author_username: w.authorUsername,
+    author_full_name: w.authorFullName,
+    author_avatar_url: w.authorAvatarUrl,
+    author_reputation_level: w.authorReputationLevel,
   }))
 }
 
@@ -102,9 +122,11 @@ export async function moderateWorkAction(workId: string, action: "approve" | "re
     const admin = await requireAdmin()
     const db = getDb()
     
-    const work = await db.query.works.findFirst({
-      where: eq(works.id, workId)
-    })
+    const [work] = await db
+      .select({ title: works.title, authorId: works.authorId })
+      .from(works)
+      .where(eq(works.id, workId))
+      .limit(1)
     
     if (!work) throw new Error("Obra no encontrada")
     

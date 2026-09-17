@@ -39,6 +39,17 @@ export const auth = betterAuth({
   database: getPool(),
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
+  /**
+   * Sin esto, Better Auth no logra resolver la IP del cliente detrás de
+   * LiteSpeed y avisa de que cae a "un único bucket compartido": su límite de
+   * intentos pasa a aplicarse a todo el mundo junto, de modo que los fallos de
+   * login de una persona bloquearían a las demás.
+   */
+  advanced: {
+    ipAddress: {
+      ipAddressHeaders: ["x-forwarded-for", "x-real-ip"],
+    },
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
