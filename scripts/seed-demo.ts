@@ -48,14 +48,15 @@ function distribucionLargaCola(maximo: number): number {
 
 // ---------------------------------------------------------------- catálogo
 
+// Los medios viven en public/demo, no en MEDIA_ROOT: así viajan con el
+// despliegue y los datos de demostración funcionan en cualquier entorno sin
+// tener que copiar archivos al servidor a mano.
 const MEDIOS = [
-  ...Array.from({ length: 9 }, (_, i) => ({ url: `/media/demo/media/arte-${i + 1}.jpg`, width: 1200, height: 900, type: "image/jpeg" })),
-  { url: "/media/demo/media/foto-1.jpg", width: 1320, height: 990, type: "image/jpeg" },
-  { url: "/media/demo/media/foto-2.jpg", width: 3964, height: 5946, type: "image/jpeg" },
-  { url: "/media/demo/media/foto-3.jpg", width: 8192, height: 5464, type: "image/jpeg" },
+  ...Array.from({ length: 9 }, (_, i) => ({ url: `/demo/arte-${i + 1}.jpg`, width: 1200, height: 900, type: "image/jpeg" })),
+  { url: "/demo/foto-1.jpg", width: 1200, height: 900, type: "image/jpeg" },
 ] as const
 
-const VIDEO = { url: "/media/demo/media/muestra.mp4", width: 1280, height: 720, type: "video/mp4" }
+const VIDEO = { url: "/demo/muestra.mp4", width: 1280, height: 720, type: "video/mp4" }
 
 const PERSONAS = [
   ["Valeria Ocampo", "Escuela de Diseño Elisava"],

@@ -17,6 +17,7 @@ export type AdminWorkRow = {
   archived: boolean
   likes_count: number
   comments_count: number
+  views_count: number
   created_at: string
   author_name: string
   author_username: string
@@ -89,6 +90,7 @@ export async function getAdminWorksAction(
       archivedAt: works.archivedAt,
       likesCount: sql<number>`coalesce(${likeCounts.count}, 0)`,
       commentsCount: sql<number>`coalesce(${commentCounts.count}, 0)`,
+      viewsCount: works.viewsCount,
       createdAt: works.createdAt,
       authorName: profiles.fullName,
       authorUsername: profiles.username,
@@ -109,6 +111,7 @@ export async function getAdminWorksAction(
     archived: row.archivedAt !== null,
     likes_count: Number(row.likesCount),
     comments_count: Number(row.commentsCount),
+    views_count: row.viewsCount,
     created_at: row.createdAt.toISOString(),
     author_name: row.authorName,
     author_username: row.authorUsername,

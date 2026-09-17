@@ -2,6 +2,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
+import { Button, EmptyState, Stat, StatLine } from "@/components/ui/Panel"
 import {
   createInviteCodesAction,
   getInviteCodesAction,
@@ -17,10 +18,11 @@ const EXPIRATIONS: [number | null, string][] = [
   [null, "Sin caducidad"],
 ]
 
+/** Solo "disponible" merece contraste: es el único estado sobre el que se actúa. */
 const STATUS_STYLES: Record<InviteCodeRow["status"], string> = {
-  active: "bg-green-50 text-green-700",
-  used: "bg-gray-100 text-gray-600",
-  expired: "bg-amber-50 text-amber-700",
+  active: "font-medium text-gray-900",
+  used: "text-gray-500",
+  expired: "text-gray-400",
 }
 
 const STATUS_LABELS: Record<InviteCodeRow["status"], string> = {
@@ -108,10 +110,8 @@ export function InviteCodesManager() {
       )}
 
       {/* Generador */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">
-          Generar códigos de invitación
-        </h3>
+      <div className="mb-7 border-b border-gray-200 pb-6">
+        <h3 className="mb-3 text-[14px] font-semibold text-gray-900">Generar códigos</h3>
 
         <div className="flex flex-wrap items-center gap-2 mb-3">
           {QUANTITIES.map((n) => (
@@ -150,14 +150,9 @@ export function InviteCodesManager() {
           ))}
         </div>
 
-        <button
-          type="button"
-          onClick={handleGenerate}
-          disabled={generating}
-          className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
-        >
-          {generating ? "Generando..." : "Generar"}
-        </button>
+        <Button variant="primary" onClick={handleGenerate} disabled={generating}>
+          {generating ? "Generando…" : "Generar"}
+        </Button>
       </div>
 
       {/* Códigos recién generados: única oportunidad de copiarlos */}
@@ -212,29 +207,26 @@ export function InviteCodesManager() {
         </div>
       )}
 
-      {/* Listado */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-900">
-          Invitaciones ({codes.length})
-        </h3>
-        <span className="text-xs text-gray-500">{activeCount} disponibles</span>
-      </div>
+      <StatLine>
+        <Stat value={activeCount} label="disponibles" />
+        <Stat value={codes.filter((c) => c.status === "used").length} label="canjeadas" />
+        <Stat value={codes.filter((c) => c.status === "expired").length} label="caducadas" />
+      </StatLine>
 
       {loading ? (
         <p className="text-sm text-gray-400 py-8 text-center">Cargando...</p>
       ) : codes.length === 0 ? (
-        <p className="text-sm text-gray-400 py-8 text-center">
-          Todavía no has generado ninguna invitación.
-        </p>
+        <EmptyState
+          title="Sin invitaciones"
+          text="Genera un código y compártelo. Quien lo use entrará a la beta, y su primera publicación pasará por verificación."
+        />
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+        <div className="border-t border-gray-200">
           {codes.map((code) => (
-            <div key={code.id} className="flex items-center justify-between gap-3 p-4">
+            <div key={code.id} className="flex items-center justify-between gap-3 border-b border-gray-200 py-3 last:border-0">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[code.status]}`}
-                  >
+                  <span className={`text-[13px] ${STATUS_STYLES[code.status]}`}>
                     {STATUS_LABELS[code.status]}
                   </span>
                   {code.used_by_name && (
