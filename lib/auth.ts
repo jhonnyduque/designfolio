@@ -3,6 +3,7 @@ import { and, eq, gt, isNull, or } from "drizzle-orm"
 import { getPool, getDb } from "@/lib/db/client"
 import { invitationCodes, profiles } from "@/lib/db/schema"
 import { sendEmail } from "@/lib/email"
+import { renderAuthEmail } from "@/lib/email-template"
 import { hashInviteCode } from "@/lib/invitations"
 import { INVITE_COOKIE_NAME, unpackInviteCode } from "@/lib/invite-cookie"
 
@@ -54,13 +55,29 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     async sendResetPassword({ user, url }) {
-      await sendEmail(user.email, "Restablecer contraseña de Designfolio", `Para restablecer tu contraseña, abre este enlace: ${url}`)
+      const { html, text } = renderAuthEmail({
+        heading: "Restablece tu contraseña",
+        intro: "Recibimos una solicitud para cambiar la contraseña de tu cuenta. Pulsa el botón y elige una nueva.",
+        action: "Elegir nueva contraseña",
+        url,
+        note: "Este enlace caduca en una hora. Si no pediste el cambio, puedes ignorar este correo: tu contraseña seguirá siendo la misma.",
+        preheader: "Elige una contraseña nueva para tu cuenta de Designfolio.",
+      })
+      await sendEmail({ to: user.email, subject: "Restablece tu contraseña · Designfolio", text, html })
     },
   },
   emailVerification: {
     sendOnSignUp: true,
     async sendVerificationEmail({ user, url }) {
-      await sendEmail(user.email, "Confirma tu correo en Designfolio", `Para confirmar tu correo, abre este enlace: ${url}`)
+      const { html, text } = renderAuthEmail({
+        heading: "Confirma tu correo",
+        intro: "Bienvenido a Designfolio. Solo falta confirmar tu dirección para que puedas empezar a publicar tu trabajo.",
+        action: "Confirmar mi correo",
+        url,
+        note: "Si no creaste esta cuenta, ignora este correo y no se activará nada.",
+        preheader: "Confirma tu dirección para activar tu cuenta de Designfolio.",
+      })
+      await sendEmail({ to: user.email, subject: "Confirma tu correo · Designfolio", text, html })
     },
   },
   /**

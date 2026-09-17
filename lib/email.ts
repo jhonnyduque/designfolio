@@ -1,6 +1,14 @@
 import nodemailer from "nodemailer"
 
-export async function sendEmail(to: string, subject: string, text: string) {
+type SendOptions = {
+  to: string
+  subject: string
+  text: string
+  /** Opcional: si falta, el correo sale solo en texto plano. */
+  html?: string
+}
+
+export async function sendEmail(options: SendOptions): Promise<void> {
   const host = process.env.SMTP_HOST
   const from = process.env.SMTP_FROM
   if (!host || !from) {
@@ -21,5 +29,13 @@ export async function sendEmail(to: string, subject: string, text: string) {
     auth: user && password ? { user, pass: password } : undefined,
   })
 
-  await transport.sendMail({ from, to, subject, text })
+  // Se envían las dos versiones: los filtros antispam penalizan los correos que
+  // solo llevan HTML, y algunos clientes muestran únicamente el texto.
+  await transport.sendMail({
+    from,
+    to: options.to,
+    subject: options.subject,
+    text: options.text,
+    ...(options.html ? { html: options.html } : {}),
+  })
 }
