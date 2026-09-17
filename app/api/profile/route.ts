@@ -8,6 +8,7 @@ import { profiles } from "@/lib/db/schema"
 import { SIGNATURE_BYTES, verifyDeclaredType } from "@/lib/media-signature"
 import { MEDIA_URL_PREFIX, mediaUrl, workMediaDirectory } from "@/lib/media-storage"
 import { LIMITS, checkRateLimit, clientKey, tooManyRequests } from "@/lib/rate-limit"
+import { faltasDelPerfil } from "@/lib/profile-validation"
 import { PROFILE_LIMITS } from "@/types/profile"
 
 export const runtime = "nodejs"
@@ -43,11 +44,24 @@ export async function PATCH(request: NextRequest) {
   const avatarUrl = typeof body.avatarUrl === "string" ? body.avatarUrl : null
 
   if (username.length < PROFILE_LIMITS.USERNAME_MIN || username.length > PROFILE_LIMITS.USERNAME_MAX) return NextResponse.json({ error: `El usuario debe tener entre ${PROFILE_LIMITS.USERNAME_MIN} y ${PROFILE_LIMITS.USERNAME_MAX} caracteres.` }, { status: 400 })
-  if (fullName.length < 2 || fullName.length > 150) return NextResponse.json({ error: "Indica un nombre completo válido." }, { status: 400 })
-  if (bio.length < PROFILE_LIMITS.BIO_MIN || bio.length > PROFILE_LIMITS.BIO_MAX) return NextResponse.json({ error: `La bio debe tener entre ${PROFILE_LIMITS.BIO_MIN} y ${PROFILE_LIMITS.BIO_MAX} caracteres.` }, { status: 400 })
   if (school.length > 150) return NextResponse.json({ error: "El nombre de la escuela no puede superar 150 caracteres." }, { status: 400 })
-  if (categories.length < PROFILE_LIMITS.CATEGORIES_MIN || categories.length > PROFILE_LIMITS.CATEGORIES_MAX) return NextResponse.json({ error: `Selecciona entre ${PROFILE_LIMITS.CATEGORIES_MIN} y ${PROFILE_LIMITS.CATEGORIES_MAX} categorías.` }, { status: 400 })
   if (avatarUrl && !avatarUrl.startsWith(`${MEDIA_URL_PREFIX}/${session.user.id}/avatar/`)) return NextResponse.json({ error: "El avatar no pertenece a tu cuenta." }, { status: 400 })
+
+  // El perfil se exige completo una sola vez, al darlo de alta. Que sea la
+  // primera vez lo decide el estado guardado, no lo que mande el cliente.
+  const [actual] = await getDb()
+    .select({ onboardingCompleted: profiles.onboardingCompleted })
+    .from(profiles)
+    .where(eq(profiles.id, session.user.id))
+    .limit(1)
+
+  const faltas = faltasDelPerfil(
+    { fullName, bio, categories },
+    { primeraVez: !actual?.onboardingCompleted },
+  )
+  if (faltas.length > 0) {
+    return NextResponse.json({ error: `Para guardar, ${faltas.join(" · ")}.` }, { status: 400 })
+  }
 
   const [taken] = await getDb().select({ id: profiles.id }).from(profiles).where(eq(profiles.username, username)).limit(1)
   if (taken && taken.id !== session.user.id) return NextResponse.json({ error: "Ese nombre de usuario ya está en uso." }, { status: 409 })

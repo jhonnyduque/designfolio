@@ -9,6 +9,7 @@ import {
   PROFILE_LIMITS,
 } from "@/types/profile"
 import type { UserProfile } from "@/types/profile"
+import { faltasDelPerfil } from "@/lib/profile-validation"
 
 interface EditProfileFormProps {
   profile: UserProfile
@@ -56,12 +57,13 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
     })
   }, [])
 
-  const isValid =
-    fullName.trim().length >= 2 &&
-    bioLen >= PROFILE_LIMITS.BIO_MIN &&
-    bioLen <= PROFILE_LIMITS.BIO_MAX &&
-    categories.length >= PROFILE_LIMITS.CATEGORIES_MIN &&
-    categories.length <= PROFILE_LIMITS.CATEGORIES_MAX
+  // La misma función que usa la API, para que el botón y el servidor no puedan
+  // discrepar. El perfil se exige completo solo la primera vez.
+  const faltas = faltasDelPerfil(
+    { fullName, bio, categories },
+    { primeraVez: !profile.onboarding_completed },
+  )
+  const isValid = faltas.length === 0
 
   async function handleSave() {
     if (!isValid || saving) return
@@ -214,17 +216,10 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
             className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none resize-none transition-colors"
             placeholder="Cuéntale a la comunidad quién eres..."
           />
-          <p
-            className={`mt-1 text-xs text-right ${
-              bioLen >= PROFILE_LIMITS.BIO_MIN &&
-              bioLen <= PROFILE_LIMITS.BIO_MAX
-                ? "text-green-600"
-                : bioLen > 50
-                  ? "text-amber-500"
-                  : "text-gray-400"
-            }`}
-          >
-            {bioLen}/{PROFILE_LIMITS.BIO_MIN}–{PROFILE_LIMITS.BIO_MAX}
+          <p className="mt-1 text-xs text-right text-gray-400">
+            {bioLen === 0 && profile.onboarding_completed
+              ? "Opcional"
+              : `${bioLen}/${PROFILE_LIMITS.BIO_MIN}–${PROFILE_LIMITS.BIO_MAX}`}
           </p>
         </div>
 
@@ -301,20 +296,29 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
         </div>
 
         {/* Save */}
-        <div className="pt-4 flex gap-3">
-          <button
-            onClick={handleSave}
-            disabled={!isValid || saving}
-            className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            {saving ? "Guardando..." : "Guardar cambios"}
-          </button>
-          <button
-            onClick={() => router.back()}
-            className="px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            Cancelar
-          </button>
+        <div className="pt-4">
+          <div className="flex gap-3">
+            <button
+              onClick={handleSave}
+              disabled={!isValid || saving}
+              className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              {saving ? "Guardando..." : "Guardar cambios"}
+            </button>
+            <button
+              onClick={() => router.back()}
+              className="px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+
+          {/* Un botón apagado sin explicación deja al usuario adivinando. */}
+          {!isValid && (
+            <p className="mt-2 text-xs text-gray-500">
+              Para guardar, {faltas.join(" · ")}.
+            </p>
+          )}
         </div>
       </div>
     </div>
