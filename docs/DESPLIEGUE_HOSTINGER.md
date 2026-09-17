@@ -16,9 +16,22 @@ Hostinger, y solo entonces se cambia el dominio.
 |---|---|
 | 1. Base MySQL y usuario | ✅ `u152224864_designfolio` |
 | 2. Esquema importado | ✅ 13 tablas, 9 categorías, 4 migraciones registradas |
-| 3. Sitio como aplicación Node.js | ⏳ |
-| 4. Variables de entorno | ⏳ |
-| 5. Despliegue de la rama | ⏳ |
+| 3. GitHub conectado | ✅ Instalación de `jhonnyduque`, ve `designfolio` |
+| 4. Ajustes de compilación | ✅ Node 22, tipo `next`, script `build`, salida `.next` |
+| 5. Variables de entorno | ⏳ |
+| 6. Despliegue de la rama | ⏳ |
+
+### El orden real, y por qué
+
+La sección de variables de entorno **no aparece en hPanel hasta que el sitio es una
+aplicación Node**, y Hostinger determina eso por lo que hay desplegado, no por los
+ajustes guardados. De ahí un círculo aparente: las variables antes de compilar, pero
+la pantalla de variables después de compilar.
+
+Se rompe porque **ninguna variable de este proyecto es de tiempo de compilación**: no
+hay ni una `NEXT_PUBLIC_*`, todas se leen en el servidor al atender una petición. Así
+que la primera compilación puede correr sin ellas, y basta con reiniciar la
+aplicación después de guardarlas — no hace falta recompilar.
 | 6. Respaldo por cron | ⏳ |
 | 7. Verificación funcional | ⏳ |
 | 8. Conectar dominio y SSL | ⏳ |
