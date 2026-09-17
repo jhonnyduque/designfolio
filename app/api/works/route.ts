@@ -98,7 +98,23 @@ export async function POST(request: NextRequest) {
   const [existing] = await db.select({ id: works.id }).from(works).where(eq(works.slug, slug)).limit(1)
   if (existing) return NextResponse.json({ error: `El slug \"${slug}\" ya está en uso. Elige otro para crear una URL única.` }, { status: 409 })
 
-  const moderationStatus = profile.isFounder ? "approved" : "pending_review"
+  // Confianza tras la primera publicación aprobada.
+  //
+  // Revisar cada publicación de cada persona no escala con un solo moderador:
+  // alguien publica un viernes, se revisa el lunes, y para entonces perdió el
+  // impulso. Revisar cada persona UNA vez sí escala, y filtra en la entrada, que
+  // es donde sale barato.
+  //
+  // Se deduce del historial en lugar de guardarse en una columna: así no hay un
+  // estado que mantener sincronizado, y si una cuenta se degrada en el futuro
+  // (se le rechazan o eliminan todas sus publicaciones) vuelve a revisión sola.
+  const [aprobadaPrevia] = await db
+    .select({ id: works.id })
+    .from(works)
+    .where(and(eq(works.authorId, session.user.id), eq(works.moderationStatus, "approved")))
+    .limit(1)
+
+  const moderationStatus = profile.isFounder || aprobadaPrevia ? "approved" : "pending_review"
   try {
     await db.insert(works).values({
       id,

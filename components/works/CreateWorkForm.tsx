@@ -133,7 +133,7 @@ export function CreateWorkForm() {
         <p className="mt-2 text-gray-500">
           {wasAutoApproved
             ? "Tu proyecto ya está visible en el feed."
-            : "Tu proyecto fue enviado a revisión."}
+            : "Revisamos la primera publicación de cada cuenta. En cuanto la aprobemos, las siguientes se publicarán al instante."}
         </p>
         <Link href="/dashboard" className="mt-6 inline-block px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
           Volver al feed
@@ -351,7 +351,7 @@ export function CreateWorkForm() {
 
           <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
             <p className="text-sm text-amber-700">
-              Si tu cuenta no es administradora, la publicación pasará por revisión antes de aparecer en el feed.
+              Si es tu primera publicación, pasará por una revisión rápida. A partir de la segunda se publican directamente.
             </p>
           </div>
 
