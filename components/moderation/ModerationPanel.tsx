@@ -1,22 +1,12 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useCallback, useState } from "react"
 import { useModeration } from "@/hooks/useModeration"
+import { PageHeader, Stat, StatLine, Tabs, EmptyState } from "@/components/ui/Panel"
+import { Scroller } from "@/components/ui/Scroller"
 import { WorkPreview } from "./WorkPreview"
-import { InviteCodesManager } from "./InviteCodesManager"
-import { UsersManager } from "./UsersManager"
-import { WorksManager } from "./WorksManager"
-import { TaxonomyPanel } from "./TaxonomyPanel"
 
-type Tab =
-  | "queue"
-  | "history"
-  | "works"
-  | "users"
-  | "invites"
-  | "taxonomy"
-
-const ACTION_LABELS: Record<string, string> = {
+const ACCIONES: Record<string, string> = {
   approve: "Aprobado",
   reject: "Rechazado",
   archive: "Archivado",
@@ -24,179 +14,133 @@ const ACTION_LABELS: Record<string, string> = {
   delete: "Eliminado",
 }
 
+/** Aprobar y rechazar son las decisiones fuertes; el resto se lee en gris. */
+const DESTACADAS = new Set(["approve"])
+
+function fecha(iso: string) {
+  return new Date(iso).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" })
+}
+
 export function ModerationPanel() {
-  const { queue, history, loading, error, stats, approve, reject, refresh } =
-    useModeration()
+  const { queue, history, loading, error, stats, approve, reject } = useModeration()
+  const [vista, setVista] = useState<"cola" | "historial">("cola")
+  const [enCurso, setEnCurso] = useState<string | null>(null)
+  const [aviso, setAviso] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null)
 
-  const [tab, setTab] = useState<Tab>("queue")
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<{
-    type: "success" | "error"
-    message: string
-  } | null>(null)
+  const decidir = useCallback(
+    async (workId: string, accion: "aprobar" | "rechazar", nota?: string) => {
+      setEnCurso(workId)
+      setAviso(null)
+      const resultado = accion === "aprobar" ? await approve(workId) : await reject(workId, nota ?? "")
+      setEnCurso(null)
 
-  const handleApprove = useCallback(
-    async (workId: string) => {
-      setActionLoading(workId)
-      setFeedback(null)
-      const result = await approve(workId)
-      setActionLoading(null)
-
-      if (result.success) {
-        setFeedback({
-          type: "success",
-          message:
-            "Obra aprobada. Aparecerá en el feed tras el próximo refresh.",
+      if (resultado.success) {
+        setAviso({
+          tipo: "ok",
+          texto: accion === "aprobar"
+            ? "Cuenta verificada. Sus próximas publicaciones saldrán directas."
+            : "Publicación rechazada. El autor recibió la notificación.",
         })
-        setTimeout(() => setFeedback(null), 4000)
+        setTimeout(() => setAviso(null), 5000)
       } else {
-        setFeedback({
-          type: "error",
-          message: result.error ?? "Error al aprobar",
-        })
+        setAviso({ tipo: "error", texto: resultado.error ?? "No se pudo completar la acción." })
       }
     },
-    [approve]
-  )
-
-  const handleReject = useCallback(
-    async (workId: string, note: string) => {
-      setActionLoading(workId)
-      setFeedback(null)
-      const result = await reject(workId, note)
-      setActionLoading(null)
-
-      if (result.success) {
-        setFeedback({
-          type: "success",
-          message: "Obra rechazada. El autor fue notificado.",
-        })
-        setTimeout(() => setFeedback(null), 4000)
-      } else {
-        setFeedback({
-          type: "error",
-          message: result.error ?? "Error al rechazar",
-        })
-      }
-    },
-    [reject]
+    [approve, reject],
   )
 
   return (
     <div>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Moderación</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Gestiona contenido, usuarios y taxonomía del sistema.
-        </p>
-      </div>
+      <PageHeader
+        title="Verificación"
+        subtitle="Cada cuenta pasa por aquí una sola vez, con su primera publicación. Después publica directamente."
+      />
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-2xl font-bold text-amber-600">{stats.pending}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Pendientes</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Aprobadas</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-2xl font-bold text-red-500">{stats.rejected}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Rechazadas</p>
-        </div>
-      </div>
+      <StatLine>
+        <Stat value={stats.pending} label="pendientes" />
+        <Stat value={stats.approved} label="aprobadas" />
+        <Stat value={stats.rejected} label="rechazadas" />
+      </StatLine>
 
-      {/* Feedback */}
-      {feedback && (
-        <div
-          className={`mb-6 p-3 rounded-lg text-sm font-medium ${
-            feedback.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
+      {aviso && (
+        <p
+          role="status"
+          className={`mb-5 text-[13px] ${aviso.tipo === "ok" ? "text-gray-900" : "text-red-700"}`}
         >
-          {feedback.message}
-        </div>
+          {aviso.texto}
+        </p>
       )}
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 overflow-x-auto pb-1 -mx-1 px-1">
-        {(
-          [
-            ["queue", `Cola (${stats.pending})`],
-            ["history", "Historial"],
-            ["works", "Publicaciones"],
-            ["users", "Usuarios"],
-            ["invites", "Invitaciones"],
-            ["taxonomy", "Taxonomía"],
-          ] as [Tab, string][]
-        ).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={`px-3 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap ${
-              tab === key
-                ? "bg-gray-900 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        value={vista}
+        onChange={(v) => setVista(v as typeof vista)}
+        items={[
+          { value: "cola", label: "Cola", count: stats.pending },
+          { value: "historial", label: "Historial" },
+        ]}
+      />
 
-      {/* Tabs content */}
+      {error && <p className="py-8 text-[13px] text-red-700">{error}</p>}
 
-      {tab === "queue" && (
-        <div className="space-y-6">
-          {queue.map((work) => (
-            <WorkPreview
-              key={work.id}
-              work={work}
-              onApprove={() => handleApprove(work.id)}
-              onReject={(note) => handleReject(work.id, note)}
-              loading={actionLoading === work.id}
-            />
-          ))}
-        </div>
+      {!error && loading && <p className="py-8 text-[13px] text-gray-500">Cargando…</p>}
+
+      {!error && !loading && vista === "cola" && (
+        queue.length === 0 ? (
+          <EmptyState
+            title="No hay nada pendiente"
+            text="Cuando alguien publique por primera vez, su trabajo aparecerá aquí para que lo revises."
+          />
+        ) : (
+          <div className="space-y-6 pt-6">
+            {queue.map((work) => (
+              <WorkPreview
+                key={work.id}
+                work={work}
+                onApprove={() => decidir(work.id, "aprobar")}
+                onReject={(nota) => decidir(work.id, "rechazar", nota)}
+                loading={enCurso === work.id}
+              />
+            ))}
+          </div>
+        )
       )}
 
-      {tab === "history" && (
-        <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
-          {history.length === 0 && (
-            <p className="p-8 text-center text-sm text-gray-400">
-              Todavía no hay decisiones registradas.
-            </p>
-          )}
-          {history.map((entry) => (
-            <div key={entry.id} className="p-4">
-              <p className="text-sm text-gray-900">
-                <span className="font-medium">{ACTION_LABELS[entry.action]}</span>
-                {" · "}
-                {entry.work_title}
-              </p>
-              <p className="mt-0.5 text-xs text-gray-500">
-                {entry.actor_name} ·{" "}
-                {new Date(entry.created_at).toLocaleDateString("es-ES", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </p>
-              {entry.note && (
-                <p className="mt-1 text-xs text-gray-600 italic">“{entry.note}”</p>
-              )}
-            </div>
-          ))}
-        </div>
+      {!error && !loading && vista === "historial" && (
+        history.length === 0 ? (
+          <EmptyState
+            title="Sin decisiones todavía"
+            text="Aquí queda registrada cada aprobación, rechazo y eliminación, con quién la hizo y cuándo."
+          />
+        ) : (
+          <Scroller>
+            <table className="w-full min-w-[560px] border-collapse">
+              <thead>
+                <tr className="border-b border-gray-200 text-left">
+                  <th className="w-[110px] py-2.5 pr-3 text-[11.5px] font-normal text-gray-400">Acción</th>
+                  <th className="py-2.5 pr-3 text-[11.5px] font-normal text-gray-400">Proyecto</th>
+                  <th className="w-[150px] py-2.5 pr-3 text-[11.5px] font-normal text-gray-400">Responsable</th>
+                  <th className="w-[110px] py-2.5 text-[11.5px] font-normal text-gray-400">Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((entrada) => (
+                  <tr key={entrada.id} className="border-b border-gray-200 last:border-0">
+                    <td className={`py-3 pr-3 align-top text-[13px] ${DESTACADAS.has(entrada.action) ? "font-medium text-gray-900" : "text-gray-500"}`}>
+                      {ACCIONES[entrada.action] ?? entrada.action}
+                    </td>
+                    <td className="py-3 pr-3 align-top text-[13px]">
+                      {entrada.work_title}
+                      {entrada.note && <p className="mt-0.5 text-[12px] text-gray-500">{entrada.note}</p>}
+                    </td>
+                    <td className="py-3 pr-3 align-top text-[13px] text-gray-500">{entrada.actor_name}</td>
+                    <td className="py-3 align-top text-[13px] tabular-nums text-gray-500">{fecha(entrada.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Scroller>
+        )
       )}
-
-      {tab === "works" && <WorksManager />}
-      {tab === "users" && <UsersManager />}
-      {tab === "invites" && <InviteCodesManager />}
-      {tab === "taxonomy" && <TaxonomyPanel />}
     </div>
   )
 }
