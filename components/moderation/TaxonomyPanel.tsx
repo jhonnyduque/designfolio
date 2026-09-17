@@ -1,327 +1,409 @@
 // components/moderation/TaxonomyPanel.tsx
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useTaxonomyAdmin } from "@/hooks/useTaxonomyAdmin"
+import { Button, EmptyState, Stat, StatLine, Tabs } from "@/components/ui/Panel"
+import { Scroller } from "@/components/ui/Scroller"
 import type { TaxonomyAdmin } from "@/types/taxonomy"
 
-type Tab = "category" | "tag"
-type Filter = "all" | "active" | "inactive" | "archived"
-type Modal =
-  | { type: "create" }
-  | { type: "rename"; item: TaxonomyAdmin }
-  | { type: "merge"; source: TaxonomyAdmin }
+type Tipo = "category" | "tag"
+type Filtro = "all" | "active" | "inactive" | "archived"
+
+type Dialogo =
+  | { tipo: "crear" }
+  | { tipo: "renombrar"; item: TaxonomyAdmin }
+  | { tipo: "fusionar"; origen: TaxonomyAdmin }
+  | { tipo: "archivar"; item: TaxonomyAdmin }
   | null
+
+/** Solo el estado sobre el que hay que actuar merece contraste. */
+function etiquetaEstado(item: TaxonomyAdmin) {
+  if (item.is_archived) return { texto: "Archivada", clase: "text-gray-400" }
+  if (!item.is_active) return { texto: "Oculta", clase: "font-medium text-gray-900" }
+  return { texto: "En uso", clase: "text-gray-500" }
+}
+
+const FILTROS: [Filtro, string][] = [
+  ["all", "Todas"],
+  ["active", "En uso"],
+  ["inactive", "Ocultas"],
+  ["archived", "Archivadas"],
+]
 
 export function TaxonomyPanel() {
   const { items, loading, create, rename, toggle, archive, restore, merge, reorder } = useTaxonomyAdmin()
 
-  const [tab, setTab] = useState<Tab>("category")
-  const [filter, setFilter] = useState<Filter>("all")
-  const [search, setSearch] = useState("")
-  const [modal, setModal] = useState<Modal>(null)
-  const [input, setInput] = useState("")
-  const [mergeTarget, setMergeTarget] = useState("")
-  const [busy, setBusy] = useState(false)
-  const [toast, setToast] = useState<string | null>(null)
+  const [tipo, setTipo] = useState<Tipo>("category")
+  const [filtro, setFiltro] = useState<Filtro>("all")
+  const [busqueda, setBusqueda] = useState("")
+  const [dialogo, setDialogo] = useState<Dialogo>(null)
+  const [texto, setTexto] = useState("")
+  const [destino, setDestino] = useState("")
+  const [enCurso, setEnCurso] = useState(false)
+  const [aviso, setAviso] = useState<string | null>(null)
 
-  const tabItems = items.filter((i) => i.type === tab)
+  const delTipo = useMemo(() => items.filter((i) => i.type === tipo), [items, tipo])
 
-  const filtered = tabItems.filter((i) => {
-    const matchSearch = !search.trim() || i.name.toLowerCase().includes(search.toLowerCase()) || i.slug.includes(search.toLowerCase())
-    const matchFilter =
-      filter === "all" ||
-      (filter === "active" && i.is_active && !i.is_archived) ||
-      (filter === "inactive" && !i.is_active && !i.is_archived) ||
-      (filter === "archived" && i.is_archived)
-    return matchSearch && matchFilter
-  })
+  const visibles = useMemo(() => {
+    const t = busqueda.trim().toLowerCase()
+    return delTipo.filter((i) => {
+      const coincide = !t || i.name.toLowerCase().includes(t) || i.slug.includes(t)
+      const pasaFiltro =
+        filtro === "all" ||
+        (filtro === "active" && i.is_active && !i.is_archived) ||
+        (filtro === "inactive" && !i.is_active && !i.is_archived) ||
+        (filtro === "archived" && i.is_archived)
+      return coincide && pasaFiltro
+    })
+  }, [delTipo, busqueda, filtro])
 
-  const stats = {
-    total: tabItems.length,
-    active: tabItems.filter((i) => i.is_active && !i.is_archived).length,
-    inactive: tabItems.filter((i) => !i.is_active && !i.is_archived).length,
-    archived: tabItems.filter((i) => i.is_archived).length,
-  }
+  const enUso = delTipo.filter((i) => i.is_active && !i.is_archived).length
+  const ocultas = delTipo.filter((i) => !i.is_active && !i.is_archived).length
+  const archivadas = delTipo.filter((i) => i.is_archived).length
 
-  const mergeCandidates = tabItems.filter(
-    (i) => !i.is_archived && i.is_active && (modal?.type === "merge" ? i.id !== modal.source.id : true)
+  const candidatas = delTipo.filter(
+    (i) => !i.is_archived && i.is_active && (dialogo?.tipo === "fusionar" ? i.id !== dialogo.origen.id : true),
   )
 
-  function notify(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(null), 4000)
+  const singular = tipo === "category" ? "categoría" : "etiqueta"
+  const plural = tipo === "category" ? "categorías" : "etiquetas"
+
+  function notificar(mensaje: string) {
+    setAviso(mensaje)
+    setTimeout(() => setAviso(null), 5000)
   }
 
-  async function handleCreate() {
-    if (modal?.type !== "create" || !input.trim()) return
-    setBusy(true)
-    const r = await create(tab, input.trim())
-    setBusy(false)
-    if (r.success) { notify(`"${input.trim()}" creada`); setModal(null); setInput("") }
-    else notify(`Error: ${r.error}`)
+  /** Todas las operaciones comparten el mismo ciclo: bloquear, ejecutar, avisar. */
+  async function ejecutar(
+    operacion: () => Promise<{ success: boolean; error?: string }>,
+    exito: string,
+  ) {
+    setEnCurso(true)
+    const r = await operacion()
+    setEnCurso(false)
+    if (r.success) {
+      notificar(exito)
+      setDialogo(null)
+      setTexto("")
+      setDestino("")
+    } else {
+      notificar(r.error ?? "La operación no se pudo completar.")
+    }
   }
 
-  async function handleRename() {
-    if (modal?.type !== "rename" || !input.trim()) return
-    setBusy(true)
-    const r = await rename(modal.item.id, input.trim())
-    setBusy(false)
-    if (r.success) { notify(`Renombrada: "${r.old_name}" → "${r.new_name}"`); setModal(null) }
-    else notify(`Error: ${r.error}`)
-  }
-
-  async function handleMerge() {
-    if (modal?.type !== "merge" || !mergeTarget) return
-    setBusy(true)
-    const r = await merge(modal.source.id, mergeTarget)
-    setBusy(false)
-    if (r.success) { notify(`Fusionada: "${r.source_name}" → "${r.target_name}" (${r.moved} movidas)`); setModal(null) }
-    else notify(`Error: ${r.error}`)
-  }
-
-  async function handleToggle(item: TaxonomyAdmin) {
-    setBusy(true)
-    const r = await toggle(item.id, !item.is_active)
-    setBusy(false)
-    if (r.success) notify(`"${item.name}" ${!item.is_active ? "activada" : "desactivada"}`)
-    else notify(`Error: ${r.error}`)
-  }
-
-  async function handleArchive(item: TaxonomyAdmin) {
-    if (!confirm(`¿Archivar "${item.name}"? (${item.usage_count} obras)`)) return
-    setBusy(true)
-    const r = await archive(item.id)
-    setBusy(false)
-    if (r.success) notify(`"${item.name}" archivada`)
-    else notify(`Error: ${r.error}`)
-  }
-
-  async function handleRestore(item: TaxonomyAdmin) {
-    setBusy(true)
-    const r = await restore(item.id)
-    setBusy(false)
-    if (r.success) notify(`"${item.name}" restaurada`)
-    else notify(`Error: ${r.error}`)
-  }
-
-  async function handleReorder(item: TaxonomyAdmin, dir: "up" | "down") {
-    setBusy(true)
-    const r = await reorder(item.id, dir)
-    setBusy(false)
-    if (!r.success) notify(`Error: ${r.error}`)
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin w-6 h-6 border-2 border-gray-300 border-t-gray-900 rounded-full" />
-      </div>
-    )
-  }
+  if (loading) return <p className="py-8 text-[13px] text-gray-500">Cargando…</p>
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Taxonomía</h1>
-          <p className="mt-1 text-sm text-gray-500">Administra categorías y tags del catálogo.</p>
-        </div>
-        <button
-          onClick={() => { setModal({ type: "create" }); setInput("") }}
-          className="px-4 py-2 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+    <div>
+      <Tabs
+        value={tipo}
+        onChange={(v) => {
+          setTipo(v as Tipo)
+          setFiltro("all")
+          setBusqueda("")
+        }}
+        items={[
+          { value: "category", label: "Categorías", count: items.filter((i) => i.type === "category").length },
+          { value: "tag", label: "Etiquetas", count: items.filter((i) => i.type === "tag").length },
+        ]}
+      />
+
+      <div className="mt-5">
+        <StatLine>
+          <Stat value={enUso} label="en uso" />
+          <Stat value={ocultas} label="ocultas" />
+          <Stat value={archivadas} label="archivadas" />
+        </StatLine>
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <input
+          type="search"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder={`Buscar ${plural}`}
+          className="w-full max-w-xs rounded-md border border-gray-300 px-3 py-1.5 text-[13px] text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-gray-900"
+        />
+        <select
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value as Filtro)}
+          className="h-[34px] rounded-md border border-gray-300 bg-white px-2 text-[13px] text-gray-900 outline-none transition-colors focus:border-gray-900"
         >
-          + Nueva {tab === "category" ? "categoría" : "tag"}
-        </button>
+          {FILTROS.map(([valor, rotulo]) => (
+            <option key={valor} value={valor}>
+              {rotulo}
+            </option>
+          ))}
+        </select>
+        <Button
+          variant="primary"
+          className="ml-auto"
+          onClick={() => {
+            setDialogo({ tipo: "crear" })
+            setTexto("")
+          }}
+        >
+          Nueva {singular}
+        </Button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
-        {([
-          { value: "category" as Tab, label: "Categorías" },
-          { value: "tag" as Tab, label: "Tags" },
-        ]).map((t) => (
-          <button
-            key={t.value}
-            onClick={() => { setTab(t.value); setFilter("all"); setSearch("") }}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-              tab === t.value ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            {t.label}
+      {aviso && (
+        <p role="status" className="mb-4 flex items-center justify-between gap-3 text-[13px] text-gray-700">
+          <span>{aviso}</span>
+          <button type="button" onClick={() => setAviso(null)} className="text-[12px] text-gray-400 hover:text-gray-900">
+            Cerrar
           </button>
-        ))}
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
-        {([
-          { label: "Total", value: stats.total, f: "all" as Filter },
-          { label: "Activas", value: stats.active, f: "active" as Filter },
-          { label: "Inactivas", value: stats.inactive, f: "inactive" as Filter },
-          { label: "Archivadas", value: stats.archived, f: "archived" as Filter },
-        ]).map((s) => (
-          <button key={s.label} onClick={() => setFilter(s.f)}
-            className={`p-3 rounded-lg border text-left transition-colors ${filter === s.f ? "border-gray-900 bg-gray-50" : "border-gray-200 hover:border-gray-300"}`}>
-            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
-            <p className="text-xs text-gray-500">{s.label}</p>
-          </button>
-        ))}
-      </div>
-
-      {/* Search */}
-      <div className="mb-4">
-        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..."
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none" />
-      </div>
-
-      {/* Toast */}
-      {toast && (
-        <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-between">
-          <p className="text-sm text-gray-700">{toast}</p>
-          <button onClick={() => setToast(null)} className="text-xs text-gray-400 hover:text-gray-600 ml-3">✕</button>
-        </div>
+        </p>
       )}
 
-      {/* Table */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              {tab === "category" && <th className="text-center px-3 py-3 font-medium text-gray-500 w-16">Orden</th>}
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Nombre</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Slug</th>
-              <th className="text-center px-4 py-3 font-medium text-gray-500">Uso</th>
-              <th className="text-center px-4 py-3 font-medium text-gray-500">Estado</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-500">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filtered.map((item) => (
-              <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                {tab === "category" && (
-                  <td className="px-3 py-3 text-center">
-                    {!item.is_archived && (
-                      <div className="flex flex-col items-center gap-0.5">
-                        <button onClick={() => handleReorder(item, "up")} disabled={busy}
-                          className="text-gray-400 hover:text-gray-700 disabled:opacity-30 text-xs leading-none">▲</button>
-                        <span className="text-xs text-gray-400">{item.sort_order}</span>
-                        <button onClick={() => handleReorder(item, "down")} disabled={busy}
-                          className="text-gray-400 hover:text-gray-700 disabled:opacity-30 text-xs leading-none">▼</button>
+      {visibles.length === 0 ? (
+        <EmptyState
+          title={busqueda || filtro !== "all" ? "Sin resultados" : `Todavía no hay ${plural}`}
+          text={
+            busqueda || filtro !== "all"
+              ? "Prueba con otro término o cambia el filtro."
+              : `Crea una ${singular} y aparecerá al instante en el formulario de publicación.`
+          }
+        />
+      ) : (
+        <Scroller>
+          <table className="w-full min-w-[720px] border-collapse">
+            <thead>
+              <tr className="border-b border-gray-200 text-left text-[11.5px] font-normal text-gray-400">
+                {tipo === "category" && <th className="w-[64px] py-2.5 pr-3 font-normal">Orden</th>}
+                <th className="py-2.5 pr-3 font-normal">Nombre</th>
+                <th className="w-[76px] py-2.5 pr-3 font-normal">Obras</th>
+                <th className="w-[96px] py-2.5 pr-3 font-normal">Estado</th>
+                <th className="w-[290px] py-2.5 font-normal" />
+              </tr>
+            </thead>
+            <tbody>
+              {visibles.map((item) => {
+                const estado = etiquetaEstado(item)
+                return (
+                  <tr key={item.id} className="border-b border-gray-200 transition-colors last:border-0 hover:bg-gray-50/60">
+                    {tipo === "category" && (
+                      <td className="py-2.5 pr-3">
+                        {!item.is_archived && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[13px] tabular-nums text-gray-500">{item.sort_order}</span>
+                            {/* Dos flechas de 9px apiladas se leen como dos puntos.
+                                Necesitan cuerpo y un área de clic real. */}
+                            <span className="flex flex-col gap-px">
+                              <button
+                                type="button"
+                                aria-label={`Subir ${item.name}`}
+                                disabled={enCurso}
+                                onClick={() => ejecutar(() => reorder(item.id, "up"), `«${item.name}» subió`)}
+                                className="flex h-[13px] w-[18px] items-center justify-center rounded-sm text-[11px] leading-none text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 disabled:opacity-30"
+                              >
+                                ▴
+                              </button>
+                              <button
+                                type="button"
+                                aria-label={`Bajar ${item.name}`}
+                                disabled={enCurso}
+                                onClick={() => ejecutar(() => reorder(item.id, "down"), `«${item.name}» bajó`)}
+                                className="flex h-[13px] w-[18px] items-center justify-center rounded-sm text-[11px] leading-none text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 disabled:opacity-30"
+                              >
+                                ▾
+                              </button>
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                    )}
+                    <td className="max-w-0 py-2.5 pr-3 text-[13px]">
+                      <span className={`block truncate ${item.is_archived ? "text-gray-400" : "font-medium text-gray-900"}`}>
+                        {item.name}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[12px] text-gray-500">
+                        {item.slug}
+                        {item.created_by_name && ` · la creó ${item.created_by_name}`}
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-3 text-[13px] tabular-nums text-gray-500">{item.usage_count}</td>
+                    <td className={`py-2.5 pr-3 text-[13px] ${estado.clase}`}>{estado.texto}</td>
+                    <td className="py-2.5">
+                      <div className="flex justify-end gap-1.5">
+                        {item.is_archived ? (
+                          <Button
+                            disabled={enCurso}
+                            onClick={() => ejecutar(() => restore(item.id), `«${item.name}» restaurada`)}
+                          >
+                            Restaurar
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              disabled={enCurso}
+                              onClick={() => {
+                                setDialogo({ tipo: "renombrar", item })
+                                setTexto(item.name)
+                              }}
+                            >
+                              Renombrar
+                            </Button>
+                            <Button
+                              disabled={enCurso}
+                              onClick={() =>
+                                ejecutar(
+                                  () => toggle(item.id, !item.is_active),
+                                  item.is_active ? `«${item.name}» ya no se ofrece` : `«${item.name}» vuelve a ofrecerse`,
+                                )
+                              }
+                            >
+                              {item.is_active ? "Ocultar" : "Mostrar"}
+                            </Button>
+                            <Button
+                              disabled={enCurso}
+                              onClick={() => {
+                                setDialogo({ tipo: "fusionar", origen: item })
+                                setDestino("")
+                              }}
+                            >
+                              Fusionar
+                            </Button>
+                            <Button disabled={enCurso} onClick={() => setDialogo({ tipo: "archivar", item })}>
+                              Archivar
+                            </Button>
+                          </>
+                        )}
                       </div>
-                    )}
-                  </td>
-                )}
-                <td className="px-4 py-3">
-                  <span className={item.is_archived ? "line-through text-gray-400" : "text-gray-900 font-medium"}>{item.name}</span>
-                  {item.created_by_name && <p className="text-xs text-gray-400 mt-0.5">por {item.created_by_name}</p>}
-                </td>
-                <td className="px-4 py-3 text-gray-500 font-mono text-xs">{item.slug}</td>
-                <td className="px-4 py-3 text-center"><span className="font-semibold text-gray-900">{item.usage_count}</span></td>
-                <td className="px-4 py-3 text-center">
-                  {item.is_archived ? (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">Archivada</span>
-                  ) : item.is_active ? (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700">Activa</span>
-                  ) : (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700">Inactiva</span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center justify-end gap-1">
-                    {item.is_archived ? (
-                      <button onClick={() => handleRestore(item)} disabled={busy}
-                        className="px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50">Restaurar</button>
-                    ) : (
-                      <>
-                        <button onClick={() => { setModal({ type: "rename", item }); setInput(item.name) }} disabled={busy}
-                          className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-50">Renombrar</button>
-                        <button onClick={() => handleToggle(item)} disabled={busy}
-                          className="px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-50 rounded transition-colors disabled:opacity-50">
-                          {item.is_active ? "Desactivar" : "Activar"}
-                        </button>
-                        <button onClick={() => { setModal({ type: "merge", source: item }); setMergeTarget("") }} disabled={busy}
-                          className="px-2 py-1 text-xs font-medium text-purple-600 hover:bg-purple-50 rounded transition-colors disabled:opacity-50">Merge</button>
-                        <button onClick={() => handleArchive(item)} disabled={busy}
-                          className="px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50">Archivar</button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={tab === "category" ? 6 : 5} className="px-4 py-8 text-center text-gray-400 text-sm">
-                  No se encontraron {tab === "category" ? "categorías" : "tags"}
-                </td>
-              </tr>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </Scroller>
+      )}
+
+      {dialogo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/20 p-4">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5">
+            {dialogo.tipo === "crear" && (
+              <>
+                <p className="text-[14px] font-medium text-gray-900">Nueva {singular}</p>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-gray-500">
+                  Quedará disponible de inmediato en el formulario de publicación.
+                </p>
+                <input
+                  type="text"
+                  value={texto}
+                  onChange={(e) => setTexto(e.target.value)}
+                  placeholder="Nombre"
+                  autoFocus
+                  maxLength={50}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && texto.trim().length >= 2) {
+                      ejecutar(() => create(tipo, texto.trim()), `«${texto.trim()}» creada`)
+                    }
+                  }}
+                  className="mt-4 w-full rounded-md border border-gray-300 px-3 py-1.5 text-[13px] text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-gray-900"
+                />
+                <div className="mt-5 flex justify-end gap-2">
+                  <Button onClick={() => setDialogo(null)}>Cancelar</Button>
+                  <Button
+                    variant="primary"
+                    disabled={enCurso || texto.trim().length < 2}
+                    onClick={() => ejecutar(() => create(tipo, texto.trim()), `«${texto.trim()}» creada`)}
+                  >
+                    {enCurso ? "Creando…" : "Crear"}
+                  </Button>
+                </div>
+              </>
             )}
-          </tbody>
-        </table>
-      </div>
 
-      {/* Create Modal */}
-      {modal?.type === "create" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Nueva {tab === "category" ? "categoría" : "tag"}
-            </h3>
-            <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Nombre..."
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
-              autoFocus maxLength={50} onKeyDown={(e) => e.key === "Enter" && handleCreate()} />
-            <div className="flex justify-end gap-2 mt-4">
-              <button onClick={() => setModal(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancelar</button>
-              <button onClick={handleCreate} disabled={busy || input.trim().length < 2}
-                className="px-4 py-2 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50">
-                {busy ? "Creando..." : "Crear"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            {dialogo.tipo === "renombrar" && (
+              <>
+                <p className="text-[14px] font-medium text-gray-900">Renombrar «{dialogo.item.name}»</p>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-gray-500">
+                  Las {dialogo.item.usage_count} obras que la usan pasan al nombre nuevo.
+                </p>
+                <input
+                  type="text"
+                  value={texto}
+                  onChange={(e) => setTexto(e.target.value)}
+                  autoFocus
+                  maxLength={50}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && texto.trim()) {
+                      ejecutar(() => rename(dialogo.item.id, texto.trim()), `Ahora se llama «${texto.trim()}»`)
+                    }
+                  }}
+                  className="mt-4 w-full rounded-md border border-gray-300 px-3 py-1.5 text-[13px] text-gray-900 outline-none transition-colors focus:border-gray-900"
+                />
+                <div className="mt-5 flex justify-end gap-2">
+                  <Button onClick={() => setDialogo(null)}>Cancelar</Button>
+                  <Button
+                    variant="primary"
+                    disabled={enCurso || !texto.trim()}
+                    onClick={() => ejecutar(() => rename(dialogo.item.id, texto.trim()), `Ahora se llama «${texto.trim()}»`)}
+                  >
+                    {enCurso ? "Guardando…" : "Guardar"}
+                  </Button>
+                </div>
+              </>
+            )}
 
-      {/* Rename Modal */}
-      {modal?.type === "rename" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Renombrar &quot;{modal.item.name}&quot;</h3>
-            <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
-              autoFocus onKeyDown={(e) => e.key === "Enter" && handleRename()} />
-            <div className="flex justify-end gap-2 mt-4">
-              <button onClick={() => setModal(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancelar</button>
-              <button onClick={handleRename} disabled={busy || !input.trim()}
-                className="px-4 py-2 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50">
-                {busy ? "Guardando..." : "Guardar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            {dialogo.tipo === "fusionar" && (
+              <>
+                <p className="text-[14px] font-medium text-gray-900">Fusionar «{dialogo.origen.name}»</p>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-gray-500">
+                  Sus {dialogo.origen.usage_count} obras se mueven al destino y esta {singular} desaparece. No se puede
+                  deshacer.
+                </p>
+                <select
+                  value={destino}
+                  onChange={(e) => setDestino(e.target.value)}
+                  className="mt-4 w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-[13px] text-gray-900 outline-none transition-colors focus:border-gray-900"
+                >
+                  <option value="">Elige el destino</option>
+                  {candidatas.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} · {c.usage_count} obras
+                    </option>
+                  ))}
+                </select>
+                <div className="mt-5 flex justify-end gap-2">
+                  <Button onClick={() => setDialogo(null)}>Cancelar</Button>
+                  <Button
+                    variant="primary"
+                    disabled={enCurso || !destino}
+                    onClick={() =>
+                      ejecutar(
+                        () => merge(dialogo.origen.id, destino),
+                        `«${dialogo.origen.name}» quedó fusionada`,
+                      )
+                    }
+                  >
+                    {enCurso ? "Fusionando…" : "Fusionar"}
+                  </Button>
+                </div>
+              </>
+            )}
 
-      {/* Merge Modal */}
-      {modal?.type === "merge" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Fusionar &quot;{modal.source.name}&quot;</h3>
-            <p className="text-sm text-gray-500 mb-4">Todas las obras se moverán a la {tab === "category" ? "categoría" : "tag"} destino.</p>
-            <select value={mergeTarget} onChange={(e) => setMergeTarget(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none">
-              <option value="">Selecciona destino...</option>
-              {mergeCandidates.map((t) => (
-                <option key={t.id} value={t.id}>{t.name} ({t.usage_count} obras)</option>
-              ))}
-            </select>
-            <div className="flex justify-end gap-2 mt-4">
-              <button onClick={() => setModal(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancelar</button>
-              <button onClick={handleMerge} disabled={busy || !mergeTarget}
-                className="px-4 py-2 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50">
-                {busy ? "Fusionando..." : "Fusionar"}
-              </button>
-            </div>
+            {dialogo.tipo === "archivar" && (
+              <>
+                <p className="text-[14px] font-medium text-gray-900">Archivar «{dialogo.item.name}»</p>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-gray-500">
+                  Deja de ofrecerse al publicar. Las {dialogo.item.usage_count} obras que ya la usan la conservan, y
+                  puedes restaurarla cuando quieras.
+                </p>
+                <div className="mt-5 flex justify-end gap-2">
+                  <Button onClick={() => setDialogo(null)}>Cancelar</Button>
+                  <Button
+                    variant="primary"
+                    disabled={enCurso}
+                    onClick={() => ejecutar(() => archive(dialogo.item.id), `«${dialogo.item.name}» archivada`)}
+                  >
+                    {enCurso ? "Archivando…" : "Archivar"}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -2,12 +2,13 @@
 "use client"
 
 import Link from "next/link"
+import { coverUrl, soloVideo } from "@/lib/works/cover"
 
 interface WorkStat {
   id: string
   title: string
   category: string
-  images: { url: string }[]
+  images: { url: string; type?: string }[]
   moderation_status: string
   likes_count: number
   comments_count: number
@@ -132,7 +133,8 @@ export function AuthorDashboard({ profile, works }: AuthorDashboardProps) {
           </div>
           <div className="divide-y divide-gray-100">
             {topWorks.map((work) => {
-              const thumb = work.images?.[0]?.url ?? null
+              const thumb = coverUrl(work.images)
+              const esVideo = soloVideo(work.images)
               return (
                 <Link
                   key={work.id}
@@ -149,7 +151,9 @@ export function AuthorDashboard({ profile, works }: AuthorDashboardProps) {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-gray-300 text-xs">—</span>
+                        <span className="text-gray-400 text-[9px] uppercase tracking-wide">
+                          {esVideo ? "Video" : "—"}
+                        </span>
                       </div>
                     )}
                   </div>

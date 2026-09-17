@@ -7,12 +7,13 @@ import type { RowDataPacket } from "mysql2"
 import { auth } from "@/lib/auth"
 import { getDb, getPool } from "@/lib/db/client"
 import { comments, likes, moderationLog, profiles, works } from "@/lib/db/schema"
+import type { WorkImage } from "@/types/work"
 
 export type AdminWorkRow = {
   id: string
   title: string
   category: string
-  images: { url: string }[] | null
+  images: WorkImage[] | null
   moderation_status: string
   archived: boolean
   likes_count: number

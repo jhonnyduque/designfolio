@@ -2,13 +2,14 @@
 "use client"
 
 import Link from "next/link"
+import { coverUrl, soloVideo } from "@/lib/works/cover"
 import { LikeButton } from "@/components/works/LikeButton"
 
 interface WorkItem {
   id: string
   title: string
   category: string
-  images: { url: string }[]
+  images: { url: string; type?: string }[]
   likes_count: number
   comments_count: number
   published_at: string
@@ -133,7 +134,8 @@ export function UserProfile({ profile, works }: UserProfileProps) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {works.map((work) => {
-            const thumb = work.images?.[0]?.url ?? null
+            const thumb = coverUrl(work.images)
+            const esVideo = soloVideo(work.images)
             return (
               <Link
                 key={work.id}
@@ -149,6 +151,12 @@ export function UserProfile({ profile, works }: UserProfileProps) {
                         className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
                         loading="lazy"
                       />
+                    ) : esVideo ? (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                        <span className="text-[11px] uppercase tracking-wider text-gray-400">
+                          Video
+                        </span>
+                      </div>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <svg

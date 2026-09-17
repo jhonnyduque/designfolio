@@ -11,6 +11,7 @@ import {
 } from "@/lib/server/actions/admin"
 import { Button, EmptyState, Tabs } from "@/components/ui/Panel"
 import { Scroller } from "@/components/ui/Scroller"
+import { coverUrl, soloVideo } from "@/lib/works/cover"
 
 type Filtro = "approved" | "archived" | "all"
 type Columna = "title" | "author_name" | "views_count" | "likes_count" | "comments_count" | "created_at"
@@ -168,10 +169,12 @@ export function WorksManager() {
                 <tr key={w.id} className="border-b border-gray-200 transition-colors last:border-0 hover:bg-gray-50/60">
                   <td className="py-2.5 pr-3">
                     <span
-                      className="block h-[30px] w-10 rounded bg-gray-200 bg-cover bg-center"
-                      style={w.images?.[0]?.url ? { backgroundImage: `url(${w.images[0].url})` } : undefined}
+                      className="flex h-[30px] w-10 items-center justify-center rounded bg-gray-200 bg-cover bg-center text-[9px] text-gray-500"
+                      style={coverUrl(w.images) ? { backgroundImage: `url(${coverUrl(w.images)})` } : undefined}
                       aria-hidden="true"
-                    />
+                    >
+                      {soloVideo(w.images) && "VIDEO"}
+                    </span>
                   </td>
                   <td className="max-w-0 py-2.5 pr-3 text-[13px]">
                     <Link href={`/dashboard/work/${w.id}`} className="block truncate font-medium text-gray-900 hover:underline">

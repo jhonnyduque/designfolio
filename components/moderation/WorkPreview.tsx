@@ -36,14 +36,24 @@ export function WorkPreview({
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       {/* Images */}
       <div className="grid grid-cols-1">
-        {/* Main image */}
+        {/* Medio principal. Si es un video hay que poder reproducirlo: es
+            justamente lo que se está moderando. */}
         {work.images?.[0] && (
           <div className="aspect-video bg-gray-100 overflow-hidden">
-            <img
-              src={work.images[0].url}
-              alt={work.title}
-              className="w-full h-full object-contain bg-gray-50"
-            />
+            {work.images[0].type?.startsWith("video/") ? (
+              <video
+                src={work.images[0].url}
+                controls
+                preload="metadata"
+                className="w-full h-full bg-gray-900 object-contain"
+              />
+            ) : (
+              <img
+                src={work.images[0].url}
+                alt={work.title}
+                className="w-full h-full object-contain bg-gray-50"
+              />
+            )}
           </div>
         )}
 
@@ -55,11 +65,20 @@ export function WorkPreview({
                 key={i}
                 className="w-16 h-16 rounded overflow-hidden flex-shrink-0 border border-gray-200"
               >
-                <img
-                  src={img.url}
-                  alt={`${i + 1}`}
-                  className="w-full h-full object-cover"
-                />
+                {img.type?.startsWith("video/") ? (
+                  <video
+                    src={img.url}
+                    preload="metadata"
+                    muted
+                    className="w-full h-full bg-gray-900 object-cover"
+                  />
+                ) : (
+                  <img
+                    src={img.url}
+                    alt={`${i + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -76,7 +95,7 @@ export function WorkPreview({
           <span>·</span>
           <span>{timeAgo}</span>
           <span>·</span>
-          <span>{work.images.length} imagen{work.images.length !== 1 ? "es" : ""}</span>
+          <span>{work.images.length} {work.images.length === 1 ? "archivo" : "archivos"}</span>
         </div>
 
         <h2 className="text-xl font-bold text-gray-900">{work.title}</h2>
