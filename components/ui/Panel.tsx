@@ -1,7 +1,8 @@
 // components/ui/Panel.tsx
 "use client"
 
-import type { ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
+import { createPortal } from "react-dom"
 import { Scroller } from "@/components/ui/Scroller"
 
 /**
@@ -100,6 +101,120 @@ export function EmptyState({ title, text }: { title: string; text: string }) {
     <div className="px-5 py-16 text-center">
       <p className="text-[14px] font-medium text-gray-900">{title}</p>
       <p className="mx-auto mt-1.5 max-w-[42ch] text-[13px] leading-relaxed text-gray-500">{text}</p>
+    </div>
+  )
+}
+
+export type AccionFila = {
+  label: string
+  onClick: () => void
+  disabled?: boolean
+  /** Para lo que no se puede deshacer. Es el único sitio donde entra el rojo. */
+  destructiva?: boolean
+}
+
+const ANCHO_MENU = 176
+
+/**
+ * Las acciones de una fila, plegadas tras un botón de tres puntos.
+ *
+ * Cuatro botones repetidos en cada fila compiten con el contenido y obligan a
+ * la tabla a ser más ancha de lo que necesita. Plegadas, la fila vuelve a ser
+ * sobre lo que trata; el menú solo aparece cuando alguien lo pide.
+ */
+export function RowMenu({ acciones, label = "Acciones" }: { acciones: AccionFila[]; label?: string }) {
+  // El menú se dibuja en un portal porque la tabla vive dentro de Scroller, y
+  // su overflow recortaría (y difuminaría) cualquier cosa posicionada dentro.
+  const [posicion, setPosicion] = useState<{ top: number; left: number } | null>(null)
+  const disparador = useRef<HTMLButtonElement>(null)
+  const menu = useRef<HTMLDivElement>(null)
+  const abierto = posicion !== null
+
+  // 32px por opción (py-1.5 + línea de 13px) más el relleno del contenedor.
+  const alto = acciones.length * 32 + 8
+
+  const abrir = () => {
+    const r = disparador.current?.getBoundingClientRect()
+    if (!r) return
+    // Se abre hacia arriba si abajo no cabe, y nunca se sale por la derecha.
+    const haciaArriba = r.bottom + alto > window.innerHeight - 8
+    setPosicion({
+      top: haciaArriba ? r.top - alto - 4 : r.bottom + 4,
+      left: Math.max(8, Math.min(r.right - ANCHO_MENU, window.innerWidth - ANCHO_MENU - 8)),
+    })
+  }
+
+  useEffect(() => {
+    if (!abierto) return
+    const fuera = (e: MouseEvent) => {
+      const destino = e.target as Node
+      if (!menu.current?.contains(destino) && !disparador.current?.contains(destino)) setPosicion(null)
+    }
+    const teclado = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPosicion(null)
+    }
+    // Al desplazar, el menú dejaría de apuntar a su fila: se cierra.
+    const cerrar = () => setPosicion(null)
+    document.addEventListener("mousedown", fuera)
+    document.addEventListener("keydown", teclado)
+    window.addEventListener("scroll", cerrar, true)
+    window.addEventListener("resize", cerrar)
+    return () => {
+      document.removeEventListener("mousedown", fuera)
+      document.removeEventListener("keydown", teclado)
+      window.removeEventListener("scroll", cerrar, true)
+      window.removeEventListener("resize", cerrar)
+    }
+  }, [abierto])
+
+  if (acciones.length === 0) return null
+
+  return (
+    <div className="flex justify-end">
+      <button
+        ref={disparador}
+        type="button"
+        aria-label={label}
+        aria-expanded={abierto}
+        aria-haspopup="menu"
+        onClick={() => (abierto ? setPosicion(null) : abrir())}
+        className={`flex h-[26px] w-[26px] items-center justify-center rounded-md text-[15px] leading-none transition-colors ${
+          abierto ? "bg-gray-100 text-gray-900" : "text-gray-400 hover:bg-gray-100 hover:text-gray-900"
+        }`}
+      >
+        ⋮
+      </button>
+
+      {abierto &&
+        createPortal(
+          <div
+            ref={menu}
+            role="menu"
+            style={{ top: posicion.top, left: posicion.left, width: ANCHO_MENU }}
+            className="fixed z-50 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+          >
+            {acciones.map((accion) => (
+              <button
+                key={accion.label}
+                type="button"
+                role="menuitem"
+                disabled={accion.disabled}
+                onClick={() => {
+                  setPosicion(null)
+                  accion.onClick()
+                }}
+                className={`block w-full px-3 py-1.5 text-left text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                  accion.destructiva
+                    ? "text-red-600 hover:bg-red-50"
+                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+              >
+                {accion.label}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }

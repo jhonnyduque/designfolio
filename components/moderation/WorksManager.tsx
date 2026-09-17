@@ -9,7 +9,7 @@ import {
   setWorkArchivedAction,
   type AdminWorkRow,
 } from "@/lib/server/actions/admin"
-import { Button, EmptyState, Tabs } from "@/components/ui/Panel"
+import { Button, EmptyState, RowMenu, Tabs } from "@/components/ui/Panel"
 import { Scroller } from "@/components/ui/Scroller"
 import { coverUrl, soloVideo } from "@/lib/works/cover"
 
@@ -137,7 +137,7 @@ export function WorksManager() {
         />
       ) : (
         <Scroller>
-          <table className="w-full min-w-[760px] border-collapse">
+          <table className="w-full min-w-[680px] border-collapse">
             <thead>
               <tr className="border-b border-gray-200 text-left">
                 <th className="w-[52px] py-2.5" />
@@ -161,7 +161,7 @@ export function WorksManager() {
                     </button>
                   </th>
                 ))}
-                <th className="w-[150px] py-2.5" />
+                <th className="w-[44px] py-2.5" />
               </tr>
             </thead>
             <tbody>
@@ -197,14 +197,22 @@ export function WorksManager() {
                     {new Date(w.created_at).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "2-digit" })}
                   </td>
                   <td className="py-2.5">
-                    <div className="flex justify-end gap-1.5">
-                      <Button onClick={() => archivar(w.id, !w.archived)} disabled={enCurso === w.id}>
-                        {w.archived ? "Restaurar" : "Archivar"}
-                      </Button>
-                      <Button onClick={() => setConfirmar({ id: w.id, title: w.title })} disabled={enCurso === w.id}>
-                        Eliminar
-                      </Button>
-                    </div>
+                    <RowMenu
+                      label={`Acciones de ${w.title}`}
+                      acciones={[
+                        {
+                          label: w.archived ? "Restaurar" : "Archivar",
+                          disabled: enCurso === w.id,
+                          onClick: () => archivar(w.id, !w.archived),
+                        },
+                        {
+                          label: "Eliminar",
+                          destructiva: true,
+                          disabled: enCurso === w.id,
+                          onClick: () => setConfirmar({ id: w.id, title: w.title }),
+                        },
+                      ]}
+                    />
                   </td>
                 </tr>
               ))}

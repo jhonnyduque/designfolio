@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from "react"
 import { useTaxonomyAdmin } from "@/hooks/useTaxonomyAdmin"
-import { Button, EmptyState, Stat, StatLine, Tabs } from "@/components/ui/Panel"
+import { Button, EmptyState, RowMenu, Stat, StatLine, Tabs } from "@/components/ui/Panel"
 import { Scroller } from "@/components/ui/Scroller"
 import type { TaxonomyAdmin } from "@/types/taxonomy"
 
@@ -168,14 +168,14 @@ export function TaxonomyPanel() {
         />
       ) : (
         <Scroller>
-          <table className="w-full min-w-[720px] border-collapse">
+          <table className="w-full min-w-[600px] border-collapse">
             <thead>
               <tr className="border-b border-gray-200 text-left text-[11.5px] font-normal text-gray-400">
-                {tipo === "category" && <th className="w-[64px] py-2.5 pr-3 font-normal">Orden</th>}
+                {tipo === "category" && <th className="w-[58px] py-2.5 pr-3 font-normal">Orden</th>}
                 <th className="py-2.5 pr-3 font-normal">Nombre</th>
                 <th className="w-[76px] py-2.5 pr-3 font-normal">Obras</th>
                 <th className="w-[96px] py-2.5 pr-3 font-normal">Estado</th>
-                <th className="w-[290px] py-2.5 font-normal" />
+                <th className="w-[44px] py-2.5 font-normal" />
               </tr>
             </thead>
             <tbody>
@@ -184,34 +184,8 @@ export function TaxonomyPanel() {
                 return (
                   <tr key={item.id} className="border-b border-gray-200 transition-colors last:border-0 hover:bg-gray-50/60">
                     {tipo === "category" && (
-                      <td className="py-2.5 pr-3">
-                        {!item.is_archived && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-[13px] tabular-nums text-gray-500">{item.sort_order}</span>
-                            {/* Dos flechas de 9px apiladas se leen como dos puntos.
-                                Necesitan cuerpo y un área de clic real. */}
-                            <span className="flex flex-col gap-px">
-                              <button
-                                type="button"
-                                aria-label={`Subir ${item.name}`}
-                                disabled={enCurso}
-                                onClick={() => ejecutar(() => reorder(item.id, "up"), `«${item.name}» subió`)}
-                                className="flex h-[13px] w-[18px] items-center justify-center rounded-sm text-[11px] leading-none text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 disabled:opacity-30"
-                              >
-                                ▴
-                              </button>
-                              <button
-                                type="button"
-                                aria-label={`Bajar ${item.name}`}
-                                disabled={enCurso}
-                                onClick={() => ejecutar(() => reorder(item.id, "down"), `«${item.name}» bajó`)}
-                                className="flex h-[13px] w-[18px] items-center justify-center rounded-sm text-[11px] leading-none text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 disabled:opacity-30"
-                              >
-                                ▾
-                              </button>
-                            </span>
-                          </div>
-                        )}
+                      <td className="py-2.5 pr-3 text-[13px] tabular-nums text-gray-500">
+                        {item.is_archived ? "—" : item.sort_order}
                       </td>
                     )}
                     <td className="max-w-0 py-2.5 pr-3 text-[13px]">
@@ -226,51 +200,68 @@ export function TaxonomyPanel() {
                     <td className="py-2.5 pr-3 text-[13px] tabular-nums text-gray-500">{item.usage_count}</td>
                     <td className={`py-2.5 pr-3 text-[13px] ${estado.clase}`}>{estado.texto}</td>
                     <td className="py-2.5">
-                      <div className="flex justify-end gap-1.5">
-                        {item.is_archived ? (
-                          <Button
-                            disabled={enCurso}
-                            onClick={() => ejecutar(() => restore(item.id), `«${item.name}» restaurada`)}
-                          >
-                            Restaurar
-                          </Button>
-                        ) : (
-                          <>
-                            <Button
-                              disabled={enCurso}
-                              onClick={() => {
-                                setDialogo({ tipo: "renombrar", item })
-                                setTexto(item.name)
-                              }}
-                            >
-                              Renombrar
-                            </Button>
-                            <Button
-                              disabled={enCurso}
-                              onClick={() =>
-                                ejecutar(
-                                  () => toggle(item.id, !item.is_active),
-                                  item.is_active ? `«${item.name}» ya no se ofrece` : `«${item.name}» vuelve a ofrecerse`,
-                                )
-                              }
-                            >
-                              {item.is_active ? "Ocultar" : "Mostrar"}
-                            </Button>
-                            <Button
-                              disabled={enCurso}
-                              onClick={() => {
-                                setDialogo({ tipo: "fusionar", origen: item })
-                                setDestino("")
-                              }}
-                            >
-                              Fusionar
-                            </Button>
-                            <Button disabled={enCurso} onClick={() => setDialogo({ tipo: "archivar", item })}>
-                              Archivar
-                            </Button>
-                          </>
-                        )}
-                      </div>
+                      <RowMenu
+                        label={`Acciones de ${item.name}`}
+                        acciones={
+                          item.is_archived
+                            ? [
+                                {
+                                  label: "Restaurar",
+                                  disabled: enCurso,
+                                  onClick: () => ejecutar(() => restore(item.id), `«${item.name}» restaurada`),
+                                },
+                              ]
+                            : [
+                                {
+                                  label: "Renombrar",
+                                  disabled: enCurso,
+                                  onClick: () => {
+                                    setDialogo({ tipo: "renombrar", item })
+                                    setTexto(item.name)
+                                  },
+                                },
+                                {
+                                  label: item.is_active ? "Ocultar al publicar" : "Volver a ofrecer",
+                                  disabled: enCurso,
+                                  onClick: () =>
+                                    ejecutar(
+                                      () => toggle(item.id, !item.is_active),
+                                      item.is_active
+                                        ? `«${item.name}» ya no se ofrece`
+                                        : `«${item.name}» vuelve a ofrecerse`,
+                                    ),
+                                },
+                                // El orden solo existe para las categorías.
+                                ...(tipo === "category"
+                                  ? [
+                                      {
+                                        label: "Subir en el orden",
+                                        disabled: enCurso,
+                                        onClick: () => ejecutar(() => reorder(item.id, "up"), `«${item.name}» subió`),
+                                      },
+                                      {
+                                        label: "Bajar en el orden",
+                                        disabled: enCurso,
+                                        onClick: () => ejecutar(() => reorder(item.id, "down"), `«${item.name}» bajó`),
+                                      },
+                                    ]
+                                  : []),
+                                {
+                                  label: "Fusionar con otra",
+                                  disabled: enCurso,
+                                  onClick: () => {
+                                    setDialogo({ tipo: "fusionar", origen: item })
+                                    setDestino("")
+                                  },
+                                },
+                                {
+                                  label: "Archivar",
+                                  disabled: enCurso,
+                                  onClick: () => setDialogo({ tipo: "archivar", item }),
+                                },
+                              ]
+                        }
+                      />
                     </td>
                   </tr>
                 )
