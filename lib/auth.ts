@@ -4,6 +4,36 @@ import { getPool, getDb } from "@/lib/db/client"
 import { invitationCodes, profiles } from "@/lib/db/schema"
 import { sendEmail } from "@/lib/email"
 import { hashInviteCode } from "@/lib/invitations"
+import { INVITE_COOKIE_NAME, unpackInviteCode } from "@/lib/invite-cookie"
+
+function readGoogleCredentials() {
+  const clientId = process.env.GOOGLE_CLIENT_ID?.trim()
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim()
+  return clientId && clientSecret ? { clientId, clientSecret } : null
+}
+
+const googleCredentials = readGoogleCredentials()
+
+export const googleSignInEnabled = googleCredentials !== null
+
+/**
+ * El código de invitación llega por dos caminos según cómo se registre la persona:
+ * por cabecera si usa correo y contraseña, o por cookie firmada si vuelve de Google.
+ */
+function readInviteCode(headers: Headers | undefined): string | null {
+  const fromHeader = headers?.get("x-designfolio-invite")?.trim()
+  if (fromHeader) return fromHeader
+
+  const cookieHeader = headers?.get("cookie")
+  if (!cookieHeader) return null
+  const match = cookieHeader
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${INVITE_COOKIE_NAME}=`))
+  if (!match) return null
+
+  return unpackInviteCode(decodeURIComponent(match.slice(INVITE_COOKIE_NAME.length + 1)))
+}
 
 export const auth = betterAuth({
   database: getPool(),
@@ -22,8 +52,18 @@ export const auth = betterAuth({
       await sendEmail(user.email, "Confirma tu correo en Designfolio", `Para confirmar tu correo, abre este enlace: ${url}`)
     },
   },
-  // OAuth sign-up stays closed until invitation codes are enforced across redirects.
-  socialProviders: {},
+  /**
+   * El acceso con Google solo se declara si hay credenciales configuradas. Así
+   * el despliegue no depende de tenerlas, y el botón del formulario aparece o no
+   * en consecuencia.
+   *
+   * La invitación se sigue exigiendo: el código viaja en una cookie firmada que
+   * sobrevive al desvío por Google, que es lo que faltaba cuando esto se
+   * desactivó (ver lib/invite-cookie.ts).
+   */
+  socialProviders: googleCredentials
+    ? { google: { clientId: googleCredentials.clientId, clientSecret: googleCredentials.clientSecret } }
+    : {},
   databaseHooks: {
     user: {
       create: {
@@ -39,7 +79,7 @@ export const auth = betterAuth({
           const bootstrapEmail = process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase()
           if (bootstrapEmail && user.email.toLowerCase() === bootstrapEmail) return
 
-          const inviteCode = context?.headers?.get("x-designfolio-invite")
+          const inviteCode = readInviteCode(context?.headers)
           if (!inviteCode || inviteCode.length > 64) return false
           const now = new Date()
           const result = await getDb().update(invitationCodes)
@@ -65,7 +105,7 @@ export const auth = betterAuth({
             onboardingCompleted: isBootstrap,
           })
 
-          const inviteCode = context?.headers?.get("x-designfolio-invite")
+          const inviteCode = readInviteCode(context?.headers)
           if (isBootstrap || !inviteCode) return
           await getDb().update(invitationCodes)
             .set({ usedBy: user.id })

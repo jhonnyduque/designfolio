@@ -3,10 +3,11 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { GoogleButton } from "@/components/auth/GoogleButton"
 import { PasswordInput } from "@/components/auth/PasswordInput"
 import { CaptchaField, useCaptchaEnabled } from "@/components/security/CaptchaField"
 
-export function RegisterForm() {
+export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -193,6 +194,10 @@ export function RegisterForm() {
           {loading ? "Creando cuenta..." : "Crear cuenta"}
         </button>
       </form>
+
+      {googleEnabled && (
+        <GoogleButton inviteCode={inviteCode} requireInvite onError={setError} />
+      )}
 
       <p className="mt-6 text-center text-sm text-gray-500">
         ¿Ya tienes cuenta?{" "}

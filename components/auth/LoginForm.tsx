@@ -4,9 +4,10 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { GoogleButton } from "@/components/auth/GoogleButton"
 import { PasswordInput } from "@/components/auth/PasswordInput"
 
-export function LoginForm() {
+export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [remember, setRemember] = useState(true)
@@ -119,6 +120,8 @@ export function LoginForm() {
           {loading ? "Ingresando..." : "Iniciar sesión"}
         </button>
       </form>
+
+      {googleEnabled && <GoogleButton onError={setError} />}
 
       <p className="mt-6 text-center text-sm text-gray-500">
         ¿No tienes cuenta?{" "}
