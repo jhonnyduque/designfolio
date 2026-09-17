@@ -28,21 +28,40 @@ Hostinger, y solo entonces se cambia el dominio.
 
 ## 3. Sitio como aplicación Node.js
 
-El sitio existe desde 2026-02-11 pero está vacío y como tipo genérico. Hay que
-convertirlo en aplicación Node.
+El sitio existe desde 2026-02-11 pero está vacío y como tipo genérico
+(`website_type: "other"`, sin ajustes de compilación guardados). Hay que convertirlo
+en aplicación Node.
 
-**Requisito que hay que confirmar antes de nada: Next.js 16 necesita Node 20 o
-superior.** Si el plan solo ofrece Node 18, hay que resolverlo antes de seguir.
+**Node confirmado en el plan (2026-09-17): 18.x, 20.x, 22.x y 24.x.** Next.js 16
+necesita 20 o superior, así que no hay bloqueo. `package.json` declara
+`engines.node: ">=20.9.0 <23"` para que la detección automática no elija la 18.
 
 Configuración esperada:
 
 | Ajuste | Valor |
 |---|---|
-| Versión de Node | 20 o superior |
+| Versión de Node | **22.x** — LTS maduro, bien probado con Next 16 y `mysql2` |
 | Comando de instalación | `npm install` (**no** `--omit=dev`: la compilación necesita TypeScript y Tailwind) |
 | Comando de compilación | `npm run build` |
 | Comando de arranque | `npm start` |
 | Puerto | El que provea el entorno; `next start` respeta `PORT` |
+
+### Cuidado con dónde vive la aplicación
+
+La raíz del sitio es:
+
+```
+/home/u152224864/domains/jhonnyduque.com/public_html/designfolio
+```
+
+Está **dentro de `public_html`**, que en hosting compartido es territorio servido por
+el servidor web. Dos consecuencias:
+
+- `MEDIA_ROOT` debe quedar **fuera** de ahí. De lo contrario los archivos podrían
+  quedar accesibles saltándose la ruta `/media`, que es la que valida las rutas.
+- Conviene comprobar que `.env`, `.git` y `node_modules` no queden expuestos por
+  URL una vez desplegado. Probar, por ejemplo,
+  `https://<url-temporal>/.env` — debe dar 404 o 403, nunca contenido.
 
 El despliegue desde GitHub es preferible: la rama `codex/hostinger-mysql-migration`
 ya está publicada y cada cambio posterior se despliega solo.
