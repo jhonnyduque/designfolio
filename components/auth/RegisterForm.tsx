@@ -3,6 +3,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { PasswordInput } from "@/components/auth/PasswordInput"
 import { CaptchaField, useCaptchaEnabled } from "@/components/security/CaptchaField"
 
 export function RegisterForm() {
@@ -171,9 +172,8 @@ export function RegisterForm() {
           >
             Contraseña
           </label>
-          <input
+          <PasswordInput
             id="regPassword"
-            type="password"
             required
             minLength={8}
             value={password}

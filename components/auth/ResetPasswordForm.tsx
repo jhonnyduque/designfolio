@@ -3,6 +3,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { PasswordInput } from "@/components/auth/PasswordInput"
 
 export function ResetPasswordForm() {
   const [password, setPassword] = useState("")
@@ -60,9 +61,8 @@ export function ResetPasswordForm() {
           <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
             Nueva contraseña
           </label>
-          <input
+          <PasswordInput
             id="newPassword"
-            type="password"
             required
             minLength={8}
             value={password}
@@ -76,9 +76,8 @@ export function ResetPasswordForm() {
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
             Confirmar contraseña
           </label>
-          <input
+          <PasswordInput
             id="confirmPassword"
-            type="password"
             required
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}

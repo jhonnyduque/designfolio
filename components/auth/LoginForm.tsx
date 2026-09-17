@@ -4,6 +4,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { PasswordInput } from "@/components/auth/PasswordInput"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
@@ -82,9 +83,8 @@ export function LoginForm() {
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">
             Contraseña
           </label>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
