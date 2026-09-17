@@ -5,7 +5,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { getDb } from "@/lib/db/client"
 import { profiles } from "@/lib/db/schema"
+import { SIGNATURE_BYTES, verifyDeclaredType } from "@/lib/media-signature"
 import { MEDIA_URL_PREFIX, mediaUrl, workMediaDirectory } from "@/lib/media-storage"
+import { LIMITS, checkRateLimit, clientKey, tooManyRequests } from "@/lib/rate-limit"
 import { PROFILE_LIMITS } from "@/types/profile"
 
 export const runtime = "nodejs"
@@ -65,6 +67,11 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const limit = checkRateLimit(clientKey(request, "upload"), LIMITS.upload.limit, LIMITS.upload.window)
+  if (!limit.allowed) {
+    return tooManyRequests(limit.retryAfter, "Demasiadas subidas seguidas. Espera un momento.")
+  }
+
   const session = await currentUser(request)
   if (!session?.user) return NextResponse.json({ error: "Sesión requerida." }, { status: 401 })
   const formData = await request.formData()
@@ -72,11 +79,15 @@ export async function POST(request: NextRequest) {
   if (!(file instanceof File) || !avatarExtensions.has(file.type)) return NextResponse.json({ error: "Usa una imagen JPG, PNG o WebP para el avatar." }, { status: 400 })
   if (file.size === 0 || file.size > PROFILE_LIMITS.AVATAR_MAX_SIZE_BYTES) return NextResponse.json({ error: `El avatar debe pesar como máximo ${PROFILE_LIMITS.AVATAR_MAX_SIZE_MB}MB.` }, { status: 400 })
 
+  const buffer = Buffer.from(await file.arrayBuffer())
+  const signatureError = verifyDeclaredType(buffer.subarray(0, SIGNATURE_BYTES), file.type)
+  if (signatureError) return NextResponse.json({ error: signatureError }, { status: 400 })
+
   const directory = workMediaDirectory(session.user.id, "avatar")
   const filename = `${crypto.randomUUID()}.${avatarExtensions.get(file.type)}`
   try {
     await mkdir(directory, { recursive: true })
-    await writeFile(path.join(/* turbopackIgnore: true */ directory, filename), Buffer.from(await file.arrayBuffer()))
+    await writeFile(path.join(/* turbopackIgnore: true */ directory, filename), buffer)
   } catch (error) {
     console.error("No se pudo guardar el avatar", error)
     return NextResponse.json({ error: "No se pudo guardar el avatar. Revisa el almacenamiento del servidor." }, { status: 500 })

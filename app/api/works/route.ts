@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth"
 import { getDb } from "@/lib/db/client"
 import { profiles, works } from "@/lib/db/schema"
 import { MEDIA_URL_PREFIX } from "@/lib/media-storage"
+import { LIMITS, checkRateLimit, clientKey, tooManyRequests } from "@/lib/rate-limit"
 import { getActiveCategoryNames } from "@/lib/server/actions/taxonomy"
 import { normalizeSlug } from "@/lib/slug"
 import { WORK_LIMITS, type WorkImage } from "@/types/work"
@@ -40,6 +41,11 @@ function invalid(message: string) {
 }
 
 export async function POST(request: NextRequest) {
+  const limit = checkRateLimit(clientKey(request, "publish"), LIMITS.publish.limit, LIMITS.publish.window)
+  if (!limit.allowed) {
+    return tooManyRequests(limit.retryAfter, "Has publicado demasiados proyectos seguidos. Espera un rato.")
+  }
+
   const session = await auth.api.getSession({ headers: request.headers })
   if (!session?.user) {
     return NextResponse.json({ error: "Tu sesión expiró. Inicia sesión de nuevo para publicar." }, { status: 401 })

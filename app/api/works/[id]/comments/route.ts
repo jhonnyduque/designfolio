@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getDb } from "@/lib/db/client"
 import { comments, notifications, profiles, works } from "@/lib/db/schema"
 import { attachVisitorCookie, getActor } from "@/lib/server/actor"
+import { verifyCaptcha } from "@/lib/captcha"
+import { LIMITS, checkRateLimit, clientKey, tooManyRequests } from "@/lib/rate-limit"
 import { COMMENT_CATEGORIES, COMMENT_MIN_LENGTH } from "@/types/comment"
 
 export const runtime = "nodejs"
@@ -48,6 +50,13 @@ export async function GET(request: NextRequest, { params }: Context) {
 }
 
 export async function POST(request: NextRequest, { params }: Context) {
+  // El freno por actor de más abajo se apoya en la cookie de visitante, que se
+  // puede descartar y volver a pedir. Este va por dirección y no se rota igual.
+  const limit = checkRateLimit(clientKey(request, "comment"), LIMITS.comment.limit, LIMITS.comment.window)
+  if (!limit.allowed) {
+    return tooManyRequests(limit.retryAfter, "Demasiados comentarios seguidos. Espera unos minutos.")
+  }
+
   const { id } = await params
   const work = await getApprovedWork(id)
   if (!work) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 })
@@ -55,6 +64,14 @@ export async function POST(request: NextRequest, { params }: Context) {
   let body: unknown
   try { body = await request.json() } catch { body = null }
   const input = body && typeof body === "object" ? body as Record<string, unknown> : {}
+
+  // Solo se exige a quien comenta sin cuenta: es el formulario abierto a
+  // cualquiera y por tanto el que reciben los robots.
+  if (!actor.userId) {
+    const captcha = await verifyCaptcha(input.captchaToken, request.headers.get("x-forwarded-for"))
+    if (!captcha.ok) return NextResponse.json({ error: captcha.error }, { status: 400 })
+  }
+
   const content = typeof input.content === "string" ? input.content.trim() : ""
   const categories = Array.isArray(input.categories) ? input.categories : []
   if (content.length < COMMENT_MIN_LENGTH || content.length > 2000 ||

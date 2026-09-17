@@ -2,6 +2,7 @@ import { and, eq, sql } from "drizzle-orm"
 import { NextRequest, NextResponse } from "next/server"
 import { getDb } from "@/lib/db/client"
 import { likes, notifications, works } from "@/lib/db/schema"
+import { LIMITS, checkRateLimit, clientKey, tooManyRequests } from "@/lib/rate-limit"
 import { attachVisitorCookie, getActor } from "@/lib/server/actor"
 
 export const runtime = "nodejs"
@@ -27,6 +28,13 @@ export async function GET(request: NextRequest, { params }: Context) {
 }
 
 export async function POST(request: NextRequest, { params }: Context) {
+  // Holgado a propósito: dar y quitar like es legítimo y frecuente. Solo corta
+  // el volumen automatizado.
+  const limit = checkRateLimit(clientKey(request, "like"), LIMITS.like.limit, LIMITS.like.window)
+  if (!limit.allowed) {
+    return tooManyRequests(limit.retryAfter, "Demasiadas acciones seguidas. Espera un momento.")
+  }
+
   const { id } = await params
   const work = await getApprovedWork(id)
   if (!work) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 })

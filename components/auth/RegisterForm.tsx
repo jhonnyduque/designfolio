@@ -3,6 +3,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { CaptchaField, useCaptchaEnabled } from "@/components/security/CaptchaField"
 
 export function RegisterForm() {
   const [fullName, setFullName] = useState("")
@@ -11,6 +12,8 @@ export function RegisterForm() {
   const [inviteCode, setInviteCode] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const captchaEnabled = useCaptchaEnabled()
   const [success, setSuccess] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -25,6 +28,12 @@ export function RegisterForm() {
       return
     }
 
+    if (captchaEnabled && !captchaToken) {
+      setError("Completa la verificación de seguridad.")
+      setLoading(false)
+      return
+    }
+
     const name = fullName.trim() || email.split("@")[0]
 
     try {
@@ -34,7 +43,7 @@ export function RegisterForm() {
           "Content-Type": "application/json",
           "x-designfolio-invite": code,
         },
-        body: JSON.stringify({ email, password, name, callbackURL: `${window.location.origin}/login` }),
+        body: JSON.stringify({ email, password, name, captchaToken, callbackURL: `${window.location.origin}/login` }),
       })
       if (!response.ok) {
         throw new Error("Código de invitación inválido, expirado o ya utilizado. Verifica tu código e intenta de nuevo.")
@@ -173,6 +182,8 @@ export function RegisterForm() {
             placeholder="Mínimo 8 caracteres"
           />
         </div>
+
+        <CaptchaField onToken={setCaptchaToken} />
 
         <button
           type="submit"
