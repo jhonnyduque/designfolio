@@ -4,26 +4,23 @@
 import { useState, useRef, useEffect } from "react"
 import { useFeed } from "@/hooks/useFeed"
 import { SortSelector } from "./SortSelector"
-import { FeedCard } from "./FeedCard"
+import { MosaicCell } from "./MosaicCell"
+import { FeedPost } from "./FeedPost"
 
+/**
+ * El feed tiene dos formas, y las decide el ancho de la pantalla:
+ *
+ *   ≥768px · rejilla de tres columnas en 1080×1350, encajonada en 935px.
+ *            Es la pantalla de explorar: muchas piezas de un vistazo.
+ *   <768px · feed vertical a sangre, una publicación a la vez. Es lo que
+ *            funciona con el teléfono en la mano.
+ *
+ * El reparto va con `md:` de Tailwind, no con JavaScript: así no hay salto
+ * entre lo que pinta el servidor y lo que ve el navegador, ni un parpadeo
+ * mientras se decide cuál toca.
+ */
 function Skeleton() {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse">
-      <div className="aspect-[4/5] bg-gray-100" />
-      <div className="p-4 space-y-3">
-        <div className="h-2.5 w-14 bg-gray-100 rounded" />
-        <div className="h-4 w-3/4 bg-gray-100 rounded" />
-        <div className="flex items-center gap-2 pt-1">
-          <div className="w-6 h-6 bg-gray-100 rounded-full" />
-          <div className="h-3 w-20 bg-gray-100 rounded" />
-        </div>
-        <div className="flex gap-3 pt-1">
-          <div className="h-2.5 w-8 bg-gray-100 rounded" />
-          <div className="h-2.5 w-8 bg-gray-100 rounded" />
-        </div>
-      </div>
-    </div>
-  )
+  return <div className="aspect-[1080/1350] animate-pulse bg-gray-200" />
 }
 
 export function Feed() {
@@ -179,22 +176,32 @@ export function Feed() {
         </div>
       )}
 
-      {/* Skeleton loading (initial) */}
+      {/* Carga inicial: la rejilla solo a partir de tablet, como el contenido */}
       {loading && items.length === 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="mx-auto hidden w-full max-w-[935px] grid-cols-3 gap-1 md:grid">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} />
           ))}
         </div>
       )}
 
-      {/* Grid */}
       {items.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {items.map((item) => (
-            <FeedCard key={item.id} item={item} />
-          ))}
-        </div>
+        <>
+          {/* Ordenador y tablet: rejilla de tres, encajonada en 935px */}
+          <div className="mx-auto hidden w-full max-w-[935px] grid-cols-3 gap-1 md:grid">
+            {items.map((item) => (
+              <MosaicCell key={item.id} item={item} />
+            ))}
+          </div>
+
+          {/* Móvil: feed vertical a sangre. El margen negativo cancela el
+              padding lateral de la página para que la foto llegue al borde. */}
+          <div className="-mx-6 flex flex-col gap-5 md:hidden">
+            {items.map((item) => (
+              <FeedPost key={item.id} item={item} />
+            ))}
+          </div>
+        </>
       )}
 
       {/* Empty */}
