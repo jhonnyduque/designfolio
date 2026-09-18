@@ -1,3 +1,4 @@
+import { PublicFooter } from "@/components/layout/PublicFooter"
 import { notFound, redirect } from "next/navigation"
 import { headers } from "next/headers"
 import Image from "next/image"
@@ -75,12 +76,14 @@ export default async function PublicWorkPage({ params }: PageProps) {
             school: author.school,
           }}
           currentUserId={session?.user.id ?? null}
-          backHref="/proyectos"
+          backHref="/"
           profileHref={null}
           prevHref={previous ? `/proyectos/${previous.slug ?? previous.id}` : null}
           nextHref={next ? `/proyectos/${next.slug ?? next.id}` : null}
         />
       </section>
+
+      <PublicFooter />
     </main>
   )
 }

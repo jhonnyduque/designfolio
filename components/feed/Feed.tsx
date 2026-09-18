@@ -38,9 +38,9 @@ export function Feed() {
     refresh,
   } = useFeed()
 
+  const centinela = useRef<HTMLDivElement>(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchInput, setSearchInput] = useState("")
-  const [ctaVisible, setCtaVisible] = useState(true)
   const searchRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -50,6 +50,25 @@ export function Feed() {
       searchRef.current.focus()
     }
   }, [searchOpen])
+
+  /**
+   * Carga la página siguiente cuando el final del listado asoma.
+   *
+   * El margen de 600px la pide antes de que el usuario toque fondo, para que
+   * las obras nuevas ya estén ahí cuando llegue. `loadMore` ignora las
+   * llamadas mientras hay una en curso, así que no hace falta más guardia.
+   */
+  useEffect(() => {
+    const diana = centinela.current
+    if (!diana || !hasMore) return
+
+    const observador = new IntersectionObserver(
+      ([entrada]) => { if (entrada.isIntersecting) loadMore() },
+      { rootMargin: "600px 0px" },
+    )
+    observador.observe(diana)
+    return () => observador.disconnect()
+  }, [hasMore, loadMore])
 
   function handleSearchChange(value: string) {
     setSearchInput(value)
@@ -219,56 +238,25 @@ export function Feed() {
         </div>
       )}
 
-      {/* Load more */}
+      {/* Se carga solo al llegar abajo. El centinela es invisible: quien se
+          desplaza ya está pidiendo más, no hace falta que además lo pulse.
+          Como el catálogo es finito, se llega al final y el pie queda
+          alcanzable —que es lo que rompería un scroll verdaderamente infinito. */}
       {hasMore && items.length > 0 && (
-        <div className="mt-10 flex justify-center">
-          <button
-            onClick={loadMore}
-            disabled={loadingMore}
-            className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {loadingMore ? (
-              <span className="flex items-center gap-2">
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Cargando...
-              </span>
-            ) : (
-              "Cargar más proyectos"
+        <>
+          <div ref={centinela} aria-hidden="true" className="h-px" />
+          <div className="flex h-16 items-center justify-center" role="status" aria-live="polite">
+            {loadingMore && (
+              <svg className="h-5 w-5 animate-spin text-gray-400" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
             )}
-          </button>
-        </div>
-      )}
-
-      {/* End of feed */}
-      {!hasMore && items.length > 0 && (
-        <div
-          className={`mt-12 overflow-hidden rounded-3xl border border-black/10 bg-[#1f2127] px-5 py-10 text-center transition-all duration-700 sm:px-8 sm:py-12 ${
-            ctaVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-          }`}
-        >
-          <p className="cta-gradient-wave font-marcellus text-4xl leading-[0.95] tracking-tight text-transparent sm:text-5xl lg:text-6xl">
-            ¿Tienes un proyecto en mente?
-          </p>
-          <p className="mx-auto mt-4 max-w-2xl text-sm text-white/75 sm:text-base">
-            Si quieres una propuesta visual con este nivel de detalle para tu marca, hablemos.
-          </p>
-
-          <div className="mt-7 flex justify-center">
-            <a
-              href="https://wa.me/34604405615?text=Hola%20Jhonny%2C%20quiero%20hablar%20de%20mi%20proyecto."
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#1f2127] transition-transform hover:scale-[1.02] hover:bg-white/95"
-            >
-              Hablemos
-              <span aria-hidden="true">→</span>
-            </a>
+            <span className="sr-only">{loadingMore ? "Cargando más proyectos" : ""}</span>
           </div>
-        </div>
+        </>
       )}
+
     </section>
   )
 }

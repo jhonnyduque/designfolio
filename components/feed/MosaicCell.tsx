@@ -46,7 +46,7 @@ export function MosaicCell({ item }: { item: FeedItem }) {
       {(tieneVideo || medios.length > 1) && (
         <span
           aria-hidden="true"
-          className="absolute right-2 top-2 leading-none [filter:drop-shadow(0_1px_3px_rgba(0,0,0,.5))]"
+          className="absolute right-2 top-2 leading-none [filter:drop-shadow(0_1px_2px_rgba(0,0,0,.28))]"
         >
           {tieneVideo ? (
             <svg width="19" height="19" viewBox="0 0 24 24">
@@ -63,7 +63,7 @@ export function MosaicCell({ item }: { item: FeedItem }) {
       )}
 
       {item.views_count > 0 && (
-        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 text-[12px] font-semibold leading-none tabular-nums text-white [filter:drop-shadow(0_1px_3px_rgba(0,0,0,.55))]">
+        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 text-[12px] font-semibold leading-none tabular-nums text-white [filter:drop-shadow(0_1px_2px_rgba(0,0,0,.38))]">
           <Ojo />
           {cifra(item.views_count)}
         </span>
