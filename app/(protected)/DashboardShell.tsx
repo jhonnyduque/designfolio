@@ -55,6 +55,29 @@ export function DashboardShell({
   // Al navegar se cierra el cajón: en móvil queda tapando el contenido.
   useEffect(() => { setCajonAbierto(false) }, [pathname])
 
+  /**
+   * Con el cajón abierto, el fondo deja de desplazarse.
+   *
+   * El cajón no tiene scroll propio, así que arrastrar el dedo sobre él movía
+   * la página de detrás. El cajón nunca se movía —es `fixed`—, pero al
+   * deslizarse todo lo demás daba la impresión contraria.
+   */
+  useEffect(() => {
+    if (!cajonAbierto) return
+    const anterior = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+
+    const alPulsarEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setCajonAbierto(false)
+    }
+    document.addEventListener("keydown", alPulsarEscape)
+
+    return () => {
+      document.body.style.overflow = anterior
+      document.removeEventListener("keydown", alPulsarEscape)
+    }
+  }, [cajonAbierto])
+
   const plataforma: Item[] = isFounder
     ? [
         { href: "/dashboard", label: "Inicio", icon: icono(ICONOS.inicio), exact: true },
@@ -165,7 +188,14 @@ export function DashboardShell({
             onClick={() => setCajonAbierto(false)}
             aria-hidden="true"
           />
-          <aside className="absolute left-0 top-0 flex h-full w-[252px] flex-col border-r border-gray-200 bg-white p-3">
+          {/* `dvh` y no `h-full`: dentro de un `fixed inset-0`, el 100% se mide
+              contra el viewport de diseño —el de la barra del navegador
+              escondida—, así que mientras esa barra está visible el borde de
+              abajo cae fuera de la pantalla. `dvh` sí la descuenta.
+              El `overflow-y-auto` es para cuando el menú crezca; el
+              `overscroll-contain` evita que al llegar a su final el gesto pase
+              a la página de detrás. */}
+          <aside className="absolute left-0 top-0 flex h-[100dvh] w-[252px] flex-col overflow-y-auto overscroll-contain border-r border-gray-200 bg-white p-3">
             <button
               onClick={() => setCajonAbierto(false)}
               aria-label="Cerrar menú"
