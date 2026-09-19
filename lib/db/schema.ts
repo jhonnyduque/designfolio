@@ -39,6 +39,7 @@ export const works = mysqlTable("works", {
   images: json("images").$type<WorkImage[]>().notNull(),
   moderationStatus: mysqlEnum("moderation_status", ["draft", "pending_review", "approved", "rejected"]).notNull().default("draft"),
   viewsCount: int("views_count").notNull().default(0),
+  sharesCount: int("shares_count").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   publishedAt: timestamp("published_at"),
@@ -59,6 +60,17 @@ export const workViewReceipts = mysqlTable("work_view_receipts", {
 }, (table) => [
   uniqueIndex("work_view_receipts_work_viewer_key").on(table.workId, table.viewerKey),
   index("work_view_receipts_last_counted_idx").on(table.lastCountedAt),
+])
+
+/** Un compartido contabilizable por obra y sesión de navegador. */
+export const workShareReceipts = mysqlTable("work_share_receipts", {
+  id: id("id").primaryKey(),
+  workId: id("work_id").notNull().references(() => works.id, { onDelete: "cascade" }),
+  sessionId: varchar("session_id", { length: 36 }).notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("work_share_receipts_work_session_key").on(table.workId, table.sessionId),
+  index("work_share_receipts_created_idx").on(table.createdAt),
 ])
 
 export const likes = mysqlTable("likes", {

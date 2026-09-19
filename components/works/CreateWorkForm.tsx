@@ -24,13 +24,10 @@ export function CreateWorkForm() {
 
   const {
     categories,
-    tags,
     selectedCategory,
-    selectedTags,
     loading: taxonomyLoading,
     error: taxonomyError,
     selectCategory,
-    toggleTag,
   } = useTaxonomy()
 
   const { publish, step: publishStep, progress, error, wasAutoApproved, reset } = useCreateWorkMySql()
@@ -55,7 +52,7 @@ export function CreateWorkForm() {
       slug: normalizedSlug,
       description: description.trim(),
       category: selectedCategory,
-      tags: selectedTags,
+      tags: [],
     })
   }
 
@@ -263,19 +260,9 @@ export function CreateWorkForm() {
             onSelect={selectCategory}
           />
 
-          {/* Tags — multi select pills from DB */}
-          <TaxonomySelector
-            label="Tags"
-            hint="(opcional, max 8)"
-            items={tags}
-            selected={selectedTags}
-            mode="multiple"
-            loading={taxonomyLoading}
-            onSelect={toggleTag}
-          />
           {taxonomyError && (
             <p className="text-body-sm text-red-600">
-              Error cargando categorías/tags: {taxonomyError}
+              Error cargando categorías: {taxonomyError}
             </p>
           )}
 
@@ -333,13 +320,6 @@ export function CreateWorkForm() {
               <span className="text-meta font-semibold uppercase tracking-wider text-gray-400">{selectedCategory}</span>
               <h2 className="mt-1 text-section text-gray-900">{title}</h2>
               <p className="mt-2 text-body-sm text-gray-600 whitespace-pre-wrap">{description}</p>
-              {selectedTags.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {selectedTags.map((tag) => (
-                    <span key={tag} className="text-meta bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">#{tag}</span>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 

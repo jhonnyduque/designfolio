@@ -13,6 +13,7 @@ export interface FeedItem {
   likes_count: number
   comments_count: number
   views_count: number
+  shares_count: number
   created_at: string
   published_at: string
   author_username: string

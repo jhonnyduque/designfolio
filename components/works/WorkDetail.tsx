@@ -30,6 +30,7 @@ interface WorkDetailProps {
     likes_count: number
     comments_count: number
     views_count: number
+    shares_count: number
     published_at: string
   }
   author: {
@@ -425,20 +426,6 @@ export function WorkDetail({
               </>
             )}
 
-            {/* Tags */}
-            {work.tags && work.tags.length > 0 && !editing && (
-              <div className="mt-5 flex flex-wrap gap-1.5">
-                {work.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-meta bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-
             {/* Stats bar */}
             <div className="mt-6 hidden items-center gap-5 border-t border-gray-100 pt-6 md:flex">
               <LikeButton
@@ -482,6 +469,9 @@ export function WorkDetail({
                 workId={work.id}
                 pathOverride={`/proyectos/${work.slug ?? work.id}`}
                 size="md"
+                iconOnly
+                initialCount={work.shares_count}
+                showCount
               />
             </div>
 
@@ -642,6 +632,9 @@ export function WorkDetail({
             workId={work.id}
             pathOverride={`/proyectos/${work.slug ?? work.id}`}
             size="sm"
+            iconOnly
+            initialCount={work.shares_count}
+            showCount
           />
         </div>
       </div>

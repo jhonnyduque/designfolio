@@ -93,6 +93,7 @@ export const LIMITS = {
   comment: { limit: 10, window: 300 },
   like: { limit: 60, window: 60 },
   view: { limit: 30, window: 60 },
+  share: { limit: 30, window: 60 },
   upload: { limit: 40, window: 600 },
   publish: { limit: 10, window: 3600 },
 } as const

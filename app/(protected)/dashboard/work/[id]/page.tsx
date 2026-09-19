@@ -31,6 +31,7 @@ export default async function WorkPage({ params }: PageProps) {
         likes_count: likesCount,
         comments_count: commentsCount,
         views_count: work.viewsCount,
+        shares_count: work.sharesCount,
         published_at: (work.publishedAt ?? work.createdAt).toISOString(),
       }}
       author={{

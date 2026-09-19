@@ -2,31 +2,44 @@
 "use client"
 
 import { useState, useCallback } from "react"
+import { trackShare } from "@/lib/client/track-share"
 
 interface ShareButtonProps {
   workId: string
   pathOverride?: string
   size?: "sm" | "md"
+  iconOnly?: boolean
+  initialCount?: number
+  showCount?: boolean
 }
 
 export function ShareButton({
   workId,
   pathOverride,
   size = "md",
+  iconOnly = false,
+  initialCount = 0,
+  showCount = false,
 }: ShareButtonProps) {
   const [copied, setCopied] = useState(false)
+  const [count, setCount] = useState(initialCount)
 
   const handleCopy = useCallback(
-    (e: React.MouseEvent) => {
+    async (e: React.MouseEvent) => {
       e.preventDefault()
       e.stopPropagation()
 
       const path = pathOverride ?? `/proyectos/${workId}`
       const url = `${window.location.origin}${path}`
-      navigator.clipboard.writeText(url).then(() => {
+      try {
+        await navigator.clipboard.writeText(url)
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
-      })
+        const result = await trackShare(workId)
+        if (result) setCount(result.sharesCount)
+      } catch {
+        // Copiar puede fallar cuando el navegador no concede acceso al portapapeles.
+      }
     },
     [workId, pathOverride]
   )
@@ -38,30 +51,31 @@ export function ShareButton({
       onClick={handleCopy}
       className={`inline-flex items-center gap-1.5 transition-colors ${
         isMd ? "text-body-sm" : "text-meta"
-      } ${copied ? "text-green-600" : "text-gray-400 hover:text-gray-600"}`}
-      aria-label="Copiar enlace"
+      } ${copied ? "text-green-600" : showCount ? "text-gray-900 hover:text-gray-700" : iconOnly ? "text-gray-500 hover:text-gray-700" : "text-gray-400 hover:text-gray-600"}`}
+      aria-label={copied ? "Enlace copiado" : "Copiar enlace"}
     >
       {copied ? (
         <>
           <svg
-            className={isMd ? "w-5 h-5" : "w-3.5 h-3.5"}
+            className={isMd ? "w-6 h-6" : "w-3.5 h-3.5"}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
-            strokeWidth={1.5}
+            strokeWidth={isMd ? 1.7 : 1.5}
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
-          <span>Copiado</span>
+          {!iconOnly && <span>Copiado</span>}
+          {showCount && <span className={isMd ? "text-body-sm font-semibold tabular-nums" : "font-medium tabular-nums"}>{count}</span>}
         </>
       ) : (
         <>
           <svg
-            className={isMd ? "w-5 h-5" : "w-3.5 h-3.5"}
+            className={isMd ? "w-6 h-6" : "w-3.5 h-3.5"}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
-            strokeWidth={1.5}
+            strokeWidth={isMd ? 1.7 : 1.5}
           >
             <path
               strokeLinecap="round"
@@ -69,7 +83,8 @@ export function ShareButton({
               d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"
             />
           </svg>
-          <span className={isMd ? "" : "hidden sm:inline"}>Compartir</span>
+          {!iconOnly && <span className={isMd ? "" : "hidden sm:inline"}>Compartir</span>}
+          {showCount && <span className={isMd ? "text-body-sm font-semibold tabular-nums" : "font-medium tabular-nums"}>{count}</span>}
         </>
       )}
     </button>

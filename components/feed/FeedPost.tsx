@@ -89,6 +89,7 @@ export function FeedPost({ item }: { item: FeedItem }) {
               src={actual.url}
               alt={item.title}
               onSwipe={cambiarImagen}
+              enablePinch
               className="h-full w-full object-cover"
             />
           )
@@ -114,6 +115,7 @@ export function FeedPost({ item }: { item: FeedItem }) {
           </svg>
           <span className="text-body-sm font-semibold tabular-nums">{cifra(item.comments_count)}</span>
         </Link>
+        <ShareButton workId={item.id} pathOverride={destino} iconOnly initialCount={item.shares_count} showCount />
         {viewsCount > 0 && (
           <span className="ml-auto text-meta text-gray-500 tabular-nums">{cifra(viewsCount)} vistas</span>
         )}
@@ -128,7 +130,7 @@ export function FeedPost({ item }: { item: FeedItem }) {
           {!expanded && (
           <button
             type="button"
-            className="text-meta font-medium text-gray-500 hover:text-gray-700"
+            className="text-meta font-medium text-gray-500 no-underline hover:text-gray-700 focus:text-gray-700"
             aria-expanded={expanded}
             aria-controls={detailsId}
             onClick={toggleDetails}
@@ -141,31 +143,22 @@ export function FeedPost({ item }: { item: FeedItem }) {
         {expanded && (
           <div id={detailsId} className="mt-3 space-y-3 text-gray-600">
             <div>
-              <p className="whitespace-pre-wrap">{item.description}</p>
-              <button
-                type="button"
-                className="mt-1 text-meta font-medium text-gray-500 hover:text-gray-700"
-                aria-expanded={expanded}
-                aria-controls={detailsId}
-                onClick={toggleDetails}
-              >
-                menos
-              </button>
+              <p className="whitespace-pre-wrap">
+                {item.description}{" "}
+                <button
+                  type="button"
+                  className="text-meta font-medium text-gray-500 no-underline hover:text-gray-700 focus:text-gray-700"
+                  aria-expanded={expanded}
+                  aria-controls={detailsId}
+                  onClick={toggleDetails}
+                >
+                  …menos
+                </button>
+              </p>
             </div>
             <div className="space-y-1 text-meta text-gray-500">
-              <p>{item.category}</p>
               <time dateTime={item.published_at}>Publicado el {fechaPublicacion}</time>
             </div>
-            {item.tags && item.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5" aria-label="Etiquetas">
-                {item.tags.map((tag) => (
-                  <span key={tag} className="rounded-full bg-gray-100 px-2 py-0.5 text-meta text-gray-600">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-            <ShareButton workId={item.id} pathOverride={destino} />
           </div>
         )}
       </div>

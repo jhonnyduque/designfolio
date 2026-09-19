@@ -104,20 +104,6 @@ export function WorkPreview({
           {work.description}
         </p>
 
-        {/* Tags */}
-        {work.tags && work.tags.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {work.tags.map((tag) => (
-              <span
-                key={tag}
-                className="text-meta bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
-        )}
-
         {/* Author */}
         <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-3">
           {work.author_avatar_url ? (
