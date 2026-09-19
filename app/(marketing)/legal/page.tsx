@@ -1,7 +1,4 @@
-import { PublicFooter } from "@/components/layout/PublicFooter";
 import Link from "next/link";
-import Image from "next/image";
-import { PublicMenu } from "@/components/layout/PublicMenu";
 
 export const metadata = { title: "Información legal - Designfolio" };
 
@@ -30,19 +27,8 @@ const enlaces = [
 
 export default function LegalIndexPage() {
   return (
-    <main className="min-h-screen bg-[#f5f7f5] text-[#1e1e1e] flex flex-col">
-      <header className="sticky top-0 z-30 border-b border-black/10 bg-[#f5f7f5]/95 backdrop-blur">
-        <div className="mx-auto w-full max-w-[1500px] px-6 md:px-10">
-          <div className="mx-auto flex h-14 w-full max-w-[935px] items-center justify-between">
-            <Link href="/" aria-label="Designfolio" className="inline-flex items-center">
-              <Image src="/brand/simbolo-logo.webp" alt="Designfolio" width={36} height={36} className="h-9 w-9 object-contain" />
-            </Link>
-            <PublicMenu sesion={null} />
-          </div>
-        </div>
-      </header>
-      <div className="flex-1 w-full flex flex-col justify-center md:justify-center px-6 py-12 md:py-0">
-        <div className="mx-auto w-full max-w-[700px]">
+    <div className="public-container flex h-full flex-col justify-center py-12 md:py-0">
+      <div className="public-measure">
         <h1 className="text-page-title mb-10">Información legal</h1>
         <ul className="flex flex-col">
           {enlaces.map(({ href, texto, descripcion }) => (
@@ -64,9 +50,7 @@ export default function LegalIndexPage() {
             </li>
           ))}
         </ul>
-        </div>
       </div>
-      <PublicFooter />
-    </main>
+    </div>
   );
 }

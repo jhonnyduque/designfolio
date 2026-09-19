@@ -42,6 +42,8 @@ interface WorkDetailProps {
   currentUserId?: string | null
   backHref?: string
   profileHref?: string | null
+  /** Sitio del autor, cuando la obra se ve desde fuera. Sale junto al enlace de volver. */
+  siteHref?: string | null
   prevHref?: string | null
   nextHref?: string | null
 }
@@ -52,6 +54,7 @@ export function WorkDetail({
   currentUserId,
   backHref = "/dashboard",
   profileHref = `/dashboard/profile/${author.username}`,
+  siteHref = null,
   prevHref = null,
   nextHref = null,
 }: WorkDetailProps) {
@@ -207,16 +210,28 @@ export function WorkDetail({
   }, [lightboxOpen])
 
   return (
-    <div className="mx-auto max-w-[1180px] pb-20 md:pb-0">
+    <div className="pb-20 md:pb-0">
       {/* Back link */}
-      <Link
-        href={backHref}
-        className="inline-flex items-center gap-1 text-action text-gray-500 hover:text-gray-700 transition-colors mb-6"
-      >
-        ← Volver al feed
-      </Link>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <Link
+          href={backHref}
+          className="inline-flex items-center gap-1 text-action text-gray-500 transition-colors hover:text-gray-700"
+        >
+          ← Volver al feed
+        </Link>
+        {siteHref && (
+          <a
+            href={siteHref}
+            target="_blank"
+            rel="noreferrer"
+            className="shrink-0 text-action text-gray-500 transition-colors hover:text-gray-700"
+          >
+            Volver a jhonnyduque.com
+          </a>
+        )}
+      </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-6">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">
         {/* Left: Images + Description */}
         <div>
           {/* Main image */}

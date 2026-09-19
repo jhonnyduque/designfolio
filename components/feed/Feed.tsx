@@ -87,7 +87,7 @@ export function Feed() {
   return (
     <section>
       {/* Header */}
-      <div className="mb-5 mx-auto w-full max-w-[935px] flex flex-col gap-4">
+      <div className="mb-5 flex w-full flex-col gap-4">
         {/* Title */}
         <h2 className="font-marcellus text-display text-[#1e1e1e] md:text-display-lg">
           Proyectos
@@ -183,7 +183,7 @@ export function Feed() {
 
       {/* Carga inicial: la rejilla solo a partir de tablet, como el contenido */}
       {loading && items.length === 0 && (
-        <div className="mx-auto hidden w-full max-w-[935px] grid-cols-3 gap-1 md:grid">
+        <div className="hidden w-full grid-cols-3 gap-1 md:grid">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} />
           ))}
@@ -193,7 +193,7 @@ export function Feed() {
       {items.length > 0 && (
         <>
           {/* Ordenador y tablet: rejilla de tres, encajonada en 935px */}
-          <div className="mx-auto hidden w-full max-w-[935px] grid-cols-3 gap-1 md:grid">
+          <div className="hidden w-full grid-cols-3 gap-1 md:grid">
             {items.map((item) => (
               <MosaicCell key={item.id} item={item} />
             ))}

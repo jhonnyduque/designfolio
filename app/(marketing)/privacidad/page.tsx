@@ -1,24 +1,9 @@
-import { PublicFooter } from "@/components/layout/PublicFooter";
-import Link from "next/link";
-import Image from "next/image";
-import { PublicMenu } from "@/components/layout/PublicMenu";
-
 export const metadata = { title: "Política de privacidad - Designfolio" };
 
 export default function LegalPage() {
   return (
-    <main className="min-h-screen bg-[#f5f7f5] text-[#1e1e1e]">
-      <header className="sticky top-0 z-30 border-b border-black/10 bg-[#f5f7f5]/95 backdrop-blur">
-        <div className="mx-auto w-full max-w-[1500px] px-6 md:px-10">
-          <div className="mx-auto flex h-14 w-full max-w-[935px] items-center justify-between">
-            <Link href="/" aria-label="Designfolio" className="inline-flex items-center">
-              <Image src="/brand/simbolo-logo.webp" alt="Designfolio" width={36} height={36} className="h-9 w-9 object-contain" />
-            </Link>
-            <PublicMenu sesion={null} />
-          </div>
-        </div>
-      </header>
-      <div className="mx-auto max-w-[700px] px-6 py-12 md:py-20">
+    <div className="public-container py-12 md:py-20">
+      <div className="public-measure">
         <h1 className="text-page-title mb-8">Política de privacidad</h1>
 <p className="mb-4 text-body text-[#4f4f57]"><strong>Última actualización:</strong> 18 de septiembre de 2026</p>
 <h2 className="text-section mt-10 mb-4">1. Responsable del tratamiento</h2>
@@ -121,7 +106,6 @@ export default function LegalPage() {
 <p className="mb-4 text-body text-[#4f4f57]">Podemos actualizar esta Política de privacidad cuando cambien las funcionalidades, los proveedores o las obligaciones legales aplicables.</p>
 <p className="mb-4 text-body text-[#4f4f57]">La versión vigente mostrará siempre su fecha de última actualización. Cuando un cambio afecte de forma relevante a la manera en que tratamos datos personales, se comunicará de forma adecuada cuando la normativa lo exija.<br/></p>
       </div>
-      <PublicFooter />
-    </main>
+    </div>
   );
 }

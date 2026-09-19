@@ -11,11 +11,14 @@ import Link from "next/link"
  * Aquí solo se dice qué es este sitio y quién lo mantiene. La autoría de la
  * plataforma no es la autoría de lo que se publica en ella, y conviene que se
  * note la diferencia.
+ *
+ * Usa `public-container`, de modo que sus dos extremos caen sobre la misma
+ * vertical que el logotipo de la cabecera y que el contenido de la página.
  */
 export function PublicFooter() {
   return (
     <footer className="border-t border-black/10">
-      <div className="mx-auto w-full max-w-[1500px] px-6 md:px-10">
+      <div className="public-container">
 
         {/* ── MÓVIL (oculto en sm+) ── */}
         <div className="flex flex-col gap-4 py-4 text-body-sm text-[#6b6b70] sm:hidden">
@@ -32,7 +35,7 @@ export function PublicFooter() {
         </div>
 
         {/* ── DESKTOP (visible en sm+) ── */}
-        <div className="mx-auto hidden w-full max-w-[935px] sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-6 py-4 text-body-sm text-[#6b6b70]">
+        <div className="hidden w-full sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-6 py-4 text-body-sm text-[#6b6b70]">
           <p>
             <span className="font-medium text-[#1e1e1e]">Designfolio</span> — Un proyecto de Jhonny Duque
           </p>

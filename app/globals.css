@@ -105,6 +105,53 @@
   --text-metric--letter-spacing: -0.02em;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Geometría horizontal pública. Fuente única de verdad.
+
+   Designfolio tenía una guía distinta por página: el feed en un raíl de 935px
+   dentro de un marco con margen, el detalle de proyecto a 1500px, las legales
+   centradas en 700px por su cuenta. Se notaba al navegar entre ellas —el logo
+   y el texto empezaban en sitios distintos— y parecían productos separados.
+
+   La referencia es el feed, y de ahí salen estos dos valores. El raíl es el
+   ancho útil del contenido; el margen es el aire lateral que lo separa del
+   borde de la ventana. La clase public-container los combina:
+
+     ancho máximo = raíl + dos márgenes
+
+   Así, en pantallas anchas el contenido mide exactamente el raíl, y en las
+   estrechas ocupa lo que haya menos el margen. Un solo elemento, sin
+   envoltorios anidados.
+
+   Es geometría, no decoración: no pinta fondo, ni borde, ni sombra.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --public-rail: 935px;
+  --public-gutter: 24px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --public-gutter: 40px;
+  }
+}
+
+@utility public-container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: var(--public-gutter);
+  max-width: calc(var(--public-rail) + 2 * var(--public-gutter));
+}
+
+/* La columna de lectura de los textos largos. Va ANIDADA dentro del
+   contenedor público y alineada a su borde izquierdo, no centrada: así el
+   título de una legal arranca en la misma vertical que el logo. */
+@utility public-measure {
+  width: 100%;
+  max-width: 700px;
+}
+
 :root {
   --background: #f5f7f5;
   --foreground: #1e1e1e;
@@ -114,6 +161,14 @@
   --pill: #404041;
   --pill-hover: #2f2f31;
   --accent: #111111;
+}
+
+/* Las páginas cortas —el índice legal, por ejemplo— no llegan a tener barra
+   de desplazamiento, y sin ella el contenido se corre unos ocho píxeles a la
+   derecha. Al pasar de una legal larga al índice, la guía saltaba. Reservando
+   el hueco siempre, la vertical no se mueve entre páginas. */
+html {
+  scrollbar-gutter: stable;
 }
 
 body {
