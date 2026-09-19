@@ -16,6 +16,13 @@ const PANEL_COLORS = [
   "#134e4a", // teal deep
 ] as const
 
+const LEGALES = [
+  { href: "/aviso-legal", texto: "Aviso legal" },
+  { href: "/privacidad", texto: "Privacidad" },
+  { href: "/terminos", texto: "Términos" },
+  { href: "/cookies", texto: "Cookies" },
+]
+
 export function AuthLayout({ children }: { children: ReactNode }) {
   // Inicializamos con el primer color para que el servidor y el primer render del cliente coincidan
   const [bgColor, setBgColor] = useState<string>(PANEL_COLORS[0])
@@ -59,7 +66,43 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 
       {/* Right panel — form */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-white">
-        <div className="w-full max-w-md">{children}</div>
+        <div className="flex w-full max-w-md flex-col gap-8">
+
+          {/*
+            La marca, solo en móvil: ahí el panel de la izquierda no se ve, y con
+            él desaparecía la única forma de volver al feed. Quien llegaba a
+            "iniciar sesión" desde un enlace suelto se quedaba sin salida que no
+            fuera el botón atrás del navegador.
+
+            Vive aquí y no en cada formulario porque antes solo la tenía
+            LoginForm; registro, recuperar contraseña y alta no tenían ninguna.
+          */}
+          <Link href="/" aria-label="Volver a Designfolio" className="inline-block lg:hidden">
+            <span className="text-page-title text-gray-900">
+              Design<span className="text-gray-400">folio</span>
+            </span>
+          </Link>
+
+          <div>{children}</div>
+
+          {/*
+            Las políticas, al alcance de quien está a punto de crear una cuenta.
+            No estaban enlazadas en ninguna pantalla de acceso, así que se podía
+            firmar el alta sin haber visto nunca los términos ni el tratamiento
+            de datos.
+          */}
+          <nav aria-label="Información legal" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-meta text-gray-400">
+            {LEGALES.map(({ href, texto }, i) => (
+              <span key={href} className="flex items-center gap-2">
+                {i > 0 && <span aria-hidden="true">·</span>}
+                <Link href={href} className="transition-colors hover:text-gray-600 hover:underline">
+                  {texto}
+                </Link>
+              </span>
+            ))}
+          </nav>
+
+        </div>
       </div>
     </div>
   )

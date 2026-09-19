@@ -46,13 +46,6 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
 
   return (
     <div>
-      {/* Mobile logo */}
-      <div className="lg:hidden mb-8">
-        <span className="text-page-title text-gray-900">
-          Design<span className="text-gray-400">folio</span>
-        </span>
-      </div>
-
       <h2 className="text-page-title text-gray-900">Iniciar sesión</h2>
       <p className="mt-2 text-body-sm text-gray-500">
         Ingresa a tu cuenta para acceder a tu portafolio.
