@@ -4,7 +4,7 @@
 -- Importar UNA sola vez en phpMyAdmin, sobre la base vacia.
 -- Incluye, en este orden:
 --   1. Tablas de Better Auth (user, session, account, verification)
---   2. Tablas de la aplicacion (migraciones drizzle 0000-0003 ya consolidadas)
+--   2. Tablas de la aplicacion (migraciones drizzle 0000-0004 ya consolidadas)
 --   3. Claves foraneas y restricciones
 --   4. Las 9 categorias iniciales, sin las cuales no se puede publicar
 --   5. El registro de migraciones, para que drizzle-kit no reaplique nada
@@ -100,6 +100,8 @@ CREATE TABLE `profiles` (
 	`categories` json,
 	`theme_color` varchar(20) NOT NULL DEFAULT '#111827',
 	`onboarding_completed` boolean NOT NULL DEFAULT false,
+	`terms_accepted_at` timestamp(3),
+	`terms_version` varchar(20),
 	`is_founder` boolean NOT NULL DEFAULT false,
 	`is_active` boolean NOT NULL DEFAULT true,
 	`reputation_level` int NOT NULL DEFAULT 0,
@@ -188,7 +190,7 @@ INSERT INTO `taxonomy` (`id`, `kind`, `name`, `slug`, `active`, `sort_order`) VA
   (UUID(), 'category', 'Otro',        'otro',        1, 8);
 
 -- ---------- 5. Registro de migraciones ----------
--- Marca las cuatro migraciones como ya aplicadas, para que un
+-- Marca las cinco migraciones como ya aplicadas, para que un
 -- `drizzle-kit migrate` posterior no intente recrear estas tablas.
 
 CREATE TABLE IF NOT EXISTS `__drizzle_migrations` (
@@ -202,7 +204,8 @@ INSERT INTO `__drizzle_migrations` (`hash`, `created_at`) VALUES
   ('657f7af8a622f94e83700fe2fd933183ecb8a52a9a9c0e70a3f32c28c9e3bb52', 1789421236893),
   ('eab78f389814923ccdf6996a180e5ca42a6518836bab19bc8bdd0b183234d1fd', 1789422440941),
   ('e14a1b374e3ab18f9daab42d658ab4de77057bdc946ef72b06be321939c2eec3', 1789597428401),
-  ('15eb03dead34647afa9fa1d200e61a2b711131041f239615769838496d8ac9c4', 1789597785909);
+  ('15eb03dead34647afa9fa1d200e61a2b711131041f239615769838496d8ac9c4', 1789597785909),
+  ('d3176a36bfbc427ed749cfd44de62b252d182ce261766fb2569e1a0399e20d09', 1789817439478);
 
 -- Fin. Verifica con:  SHOW TABLES;      -- deben aparecer 13
 --                     SELECT COUNT(*) FROM taxonomy;   -- debe dar 9

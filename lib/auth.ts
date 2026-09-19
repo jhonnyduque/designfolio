@@ -1,4 +1,4 @@
-import { betterAuth } from "better-auth"
+import { APIError, betterAuth } from "better-auth"
 import { and, eq, gt, isNull, or } from "drizzle-orm"
 import { getPool, getDb } from "@/lib/db/client"
 import { invitationCodes, profiles } from "@/lib/db/schema"
@@ -6,6 +6,7 @@ import { sendEmail } from "@/lib/email"
 import { renderAuthEmail } from "@/lib/email-template"
 import { hashInviteCode } from "@/lib/invitations"
 import { INVITE_COOKIE_NAME, unpackInviteCode } from "@/lib/invite-cookie"
+import { readTermsAcceptance, TERMS_REQUIRED_MESSAGE } from "@/lib/terms"
 
 function readGoogleCredentials() {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim()
@@ -107,6 +108,16 @@ export const auth = betterAuth({
           const bootstrapEmail = process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase()
           if (bootstrapEmail && user.email.toLowerCase() === bootstrapEmail) return
 
+          // Sin aceptacion explicita de los Terminos no se crea la cuenta. Si el
+          // servidor no la exige, el registro que guarde despues no prueba nada:
+          // bastaria con saltarse la casilla del navegador.
+          if (!readTermsAcceptance(context?.headers)) {
+            throw APIError.from("BAD_REQUEST", {
+              code: "TERMS_NOT_ACCEPTED",
+              message: TERMS_REQUIRED_MESSAGE,
+            })
+          }
+
           const inviteCode = readInviteCode(context?.headers)
           if (!inviteCode || inviteCode.length > 64) return false
           const now = new Date()
@@ -125,12 +136,19 @@ export const auth = betterAuth({
           const isBootstrap = Boolean(bootstrapEmail) && user.email.toLowerCase() === bootstrapEmail
           const username = `user-${user.id.slice(0, 8)}`
 
+          // La cuenta fundadora esta exenta de la invitacion y tambien de la
+          // casilla, igual que ya lo estaba del codigo. Si aun asi acepto, se
+          // guarda; si no, queda en null antes que inventar una fecha.
+          const versionAceptada = readTermsAcceptance(context?.headers)
+
           await getDb().insert(profiles).values({
             id: user.id,
             username,
             fullName: user.name || username,
             isFounder: isBootstrap,
             onboardingCompleted: isBootstrap,
+            termsAcceptedAt: versionAceptada ? new Date() : null,
+            termsVersion: versionAceptada,
           })
 
           const inviteCode = readInviteCode(context?.headers)

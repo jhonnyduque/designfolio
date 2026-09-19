@@ -63,6 +63,7 @@ export default async function PublicWorkPage({ params }: PageProps) {
         siteHref="https://jhonnyduque.com/proyectos/"
         prevHref={previous ? `/proyectos/${previous.slug ?? previous.id}` : null}
         nextHref={next ? `/proyectos/${next.slug ?? next.id}` : null}
+        trackView
       />
     </div>
   )

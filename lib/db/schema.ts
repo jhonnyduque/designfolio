@@ -16,6 +16,11 @@ export const profiles = mysqlTable("profiles", {
   categories: json("categories").$type<string[]>(),
   themeColor: varchar("theme_color", { length: 20 }).notNull().default("#111827"),
   onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
+  // Cuando y que version de los Terminos acepto esta cuenta al darse de alta.
+  // Nullable porque las cuentas anteriores a este registro no lo declararon:
+  // inventarles una fecha seria fabricar una prueba que nadie dio.
+  termsAcceptedAt: timestamp("terms_accepted_at"),
+  termsVersion: varchar("terms_version", { length: 20 }),
   isFounder: boolean("is_founder").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
   reputationLevel: int("reputation_level").notNull().default(0),
@@ -42,6 +47,18 @@ export const works = mysqlTable("works", {
   uniqueIndex("works_slug_key").on(table.slug),
   index("works_author_created_idx").on(table.authorId, table.createdAt),
   index("works_status_published_idx").on(table.moderationStatus, table.publishedAt),
+])
+
+/** Última vista contabilizada por obra y visitante, con deduplicación de 24 h. */
+export const workViewReceipts = mysqlTable("work_view_receipts", {
+  id: id("id").primaryKey(),
+  workId: id("work_id").notNull().references(() => works.id, { onDelete: "cascade" }),
+  viewerKey: varchar("viewer_key", { length: 80 }).notNull(),
+  lastOrigin: mysqlEnum("last_origin", ["feed_expand", "detail_page", "desktop_overlay"]).notNull(),
+  lastCountedAt: timestamp("last_counted_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("work_view_receipts_work_viewer_key").on(table.workId, table.viewerKey),
+  index("work_view_receipts_last_counted_idx").on(table.lastCountedAt),
 ])
 
 export const likes = mysqlTable("likes", {

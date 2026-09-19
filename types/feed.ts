@@ -6,6 +6,7 @@ export interface FeedItem {
   slug?: string | null
   author_id: string
   title: string
+  description: string
   category: string
   tags: string[] | null
   images: WorkImage[] | null

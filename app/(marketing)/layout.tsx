@@ -1,10 +1,12 @@
 import { headers } from "next/headers"
+import { cookies } from "next/headers"
 import { eq } from "drizzle-orm"
 import { auth } from "@/lib/auth"
 import { getDb } from "@/lib/db/client"
 import { profiles } from "@/lib/db/schema"
 import { PublicShell } from "@/components/layout/PublicShell"
 import type { SesionPublica } from "@/components/layout/PublicMenu"
+import { COOKIE_CONSENT_NAME, readCookieConsent } from "@/lib/cookie-consent"
 
 /**
  * El layout de todo lo público: feed, detalle de proyecto y legales.
@@ -37,5 +39,6 @@ export default async function PublicLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <PublicShell sesion={await sesionActual()}>{children}</PublicShell>
+  const cookieStore = await cookies()
+  return <PublicShell sesion={await sesionActual()} cookieConsent={readCookieConsent(cookieStore.get(COOKIE_CONSENT_NAME)?.value)}>{children}</PublicShell>
 }
