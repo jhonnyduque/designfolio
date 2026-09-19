@@ -4,7 +4,12 @@ import { ANALYTICS_CONSENT_VALUE, COOKIE_CONSENT_NAME } from "@/lib/cookie-conse
 export const runtime = "nodejs"
 
 export async function POST(request: NextRequest) {
-  if (request.headers.get("origin") !== request.nextUrl.origin) {
+  const origin = request.headers.get("origin")
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim()
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim()
+  const forwardedOrigin = forwardedProto && forwardedHost ? `${forwardedProto}://${forwardedHost}` : null
+  const requestOrigin = request.nextUrl.origin
+  if (!origin || ![requestOrigin, forwardedOrigin].includes(origin)) {
     return NextResponse.json({ error: "Origen no permitido." }, { status: 403 })
   }
 
