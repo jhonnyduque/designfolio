@@ -273,7 +273,7 @@ export function WorkDetail({
                   <button
                     type="button"
                     onClick={goPrevImage}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-black/10 bg-white/70 text-black/45 opacity-0 transition-all hover:bg-white hover:text-black/70 group-hover:opacity-100 focus:opacity-100"
+                    className="absolute left-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-black/5 bg-white/70 text-meta leading-none text-black/45 opacity-0 shadow-sm transition-all hover:bg-white hover:text-black/70 group-hover:opacity-100 focus:opacity-100"
                     aria-label="Imagen anterior"
                   >
                     ←
@@ -281,7 +281,7 @@ export function WorkDetail({
                   <button
                     type="button"
                     onClick={goNextImage}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-black/10 bg-white/70 text-black/45 opacity-0 transition-all hover:bg-white hover:text-black/70 group-hover:opacity-100 focus:opacity-100"
+                    className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-black/5 bg-white/70 text-meta leading-none text-black/45 opacity-0 shadow-sm transition-all hover:bg-white hover:text-black/70 group-hover:opacity-100 focus:opacity-100"
                     aria-label="Siguiente imagen"
                   >
                     →
