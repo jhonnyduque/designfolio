@@ -26,7 +26,7 @@ interface UserProfileProps {
     career_year: string | null
     categories: string[] | null
     reputation_level: number
-    /** Columna heredada de Supabase que no existe en MySQL. Sin valor, el badge omite los puntos. */
+    /** Columna heredada del esquema anterior, inexistente en MySQL. Sin valor, el badge omite los puntos. */
     total_points?: number | null
     created_at: string
   }

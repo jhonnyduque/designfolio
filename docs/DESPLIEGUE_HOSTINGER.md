@@ -184,7 +184,6 @@ Cuando el dominio ya sirva desde Hostinger y esté verificado:
 1. Quitar el dominio personalizado del proyecto en Vercel, para que no queden dos
    sitios disputándose el mismo nombre.
 2. Conservar el proyecto de Vercel unos días como vía de vuelta, y luego eliminarlo.
-3. El proyecto de Supabase ya no existe: no hay nada que retirar ahí.
 
 ---
 

@@ -30,16 +30,6 @@ Para revivirlo: devolver los archivos a su ruta original, recrear la carpeta
 `app/(protected)/dashboard/moderation/tags/` y añadir el destino al menú de
 `DashboardShell.tsx`.
 
-## `sql-supabase/`
-
-Migraciones de cuando el proyecto corría sobre Supabase y PostgreSQL. No se
-pueden aplicar a MySQL: usan `jsonb`, `gen_random_uuid()`, políticas de
-seguridad por fila y el almacenamiento de Supabase.
-
-Su contenido ya está incorporado al esquema actual, que vive completo en
-`sql/deploy-completo.sql`. Se guardan como historia de por qué el esquema es
-como es.
-
 ## `scripts/`
 
 | Archivo | Por qué ya no hace falta |

@@ -99,7 +99,7 @@ export async function getDashboardWork(id: string, viewerId: string) {
 /**
  * Perfil público de un usuario dentro del dashboard, con sus proyectos aprobados.
  *
- * `total_points` no existe en MySQL: era una columna de Supabase y ningún proceso
+ * `total_points` no existe en MySQL: era una columna del esquema anterior y ningún proceso
  * la alimentaba aquí, así que el badge de puntos se omite hasta que exista un
  * sistema de reputación real.
  */
