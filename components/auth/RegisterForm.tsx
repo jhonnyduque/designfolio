@@ -15,6 +15,9 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  // Sin marcar no se puede enviar: una casilla de consentimiento que no frena
+  // nada deja constancia de una aceptacion que nadie dio.
+  const [aceptaLegal, setAceptaLegal] = useState(false)
   const captchaEnabled = useCaptchaEnabled()
   const [success, setSuccess] = useState(false)
 
@@ -93,12 +96,6 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
 
   return (
     <div>
-      <div className="lg:hidden mb-8">
-        <span className="text-page-title text-gray-900">
-          Design<span className="text-gray-400">folio</span>
-        </span>
-      </div>
-
       <h2 className="text-page-title text-gray-900">Crear cuenta</h2>
       <p className="mt-2 text-body-sm text-gray-500">
         Únete a la comunidad. Necesitas un código de invitación.
@@ -186,9 +183,28 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
 
         <CaptchaField onToken={setCaptchaToken} />
 
+        <label className="flex cursor-pointer items-start gap-2">
+          <input
+            type="checkbox"
+            checked={aceptaLegal}
+            onChange={(e) => setAceptaLegal(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+          />
+          <span className="text-body-sm text-gray-600">
+            Al crear una cuenta aceptas los{" "}
+            <Link href="/terminos" className="text-gray-900 underline hover:no-underline">
+              Términos
+            </Link>{" "}
+            y la{" "}
+            <Link href="/privacidad" className="text-gray-900 underline hover:no-underline">
+              Política de privacidad
+            </Link>
+          </span>
+        </label>
+
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !aceptaLegal}
           className="w-full py-2.5 px-4 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? "Creando cuenta..." : "Crear cuenta"}

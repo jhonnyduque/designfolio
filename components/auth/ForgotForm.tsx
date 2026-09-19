@@ -51,12 +51,6 @@ export function ForgotForm() {
 
   return (
     <div>
-      <div className="lg:hidden mb-8">
-        <span className="text-page-title text-gray-900">
-          Design<span className="text-gray-400">folio</span>
-        </span>
-      </div>
-
       <h2 className="text-page-title text-gray-900">Recuperar contraseña</h2>
       <p className="mt-2 text-body-sm text-gray-500">
         Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.
