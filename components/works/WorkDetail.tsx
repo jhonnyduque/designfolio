@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation"
 import { LikeButton } from "./LikeButton"
 import { ShareButton } from "./ShareButton"
 import { CommentsSection } from "./CommentsSection"
+import { trackView } from "@/lib/client/track-view"
+import { DETAIL_VIEW_DELAY_MS } from "@/lib/views"
 
 interface WorkImage {
   url: string
@@ -46,6 +48,7 @@ interface WorkDetailProps {
   siteHref?: string | null
   prevHref?: string | null
   nextHref?: string | null
+  trackView?: boolean
 }
 
 export function WorkDetail({
@@ -57,6 +60,7 @@ export function WorkDetail({
   siteHref = null,
   prevHref = null,
   nextHref = null,
+  trackView: shouldTrackView = false,
 }: WorkDetailProps) {
   const [selectedImage, setSelectedImage] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
@@ -69,6 +73,7 @@ export function WorkDetail({
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [viewsCount, setViewsCount] = useState(work.views_count)
 
   const router = useRouter()
   const isOwner = currentUserId === author.id
@@ -77,6 +82,16 @@ export function WorkDetail({
   const touchStartX = useRef<number | null>(null)
   const touchEndX = useRef<number | null>(null)
   const hasMultipleImages = work.images.length > 1
+
+  useEffect(() => {
+    if (!shouldTrackView || document.visibilityState !== "visible") return
+    const timer = window.setTimeout(() => {
+      void trackView(work.id, "detail_page").then((result) => {
+        if (result) setViewsCount(result.viewsCount)
+      })
+    }, DETAIL_VIEW_DELAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [shouldTrackView, work.id])
 
   const publishedDate = new Date(work.published_at).toLocaleDateString(
     "es-ES",
@@ -602,7 +617,7 @@ export function WorkDetail({
         </aside>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-[#f5f7f5]/95 p-3 backdrop-blur md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-canvas/95 p-3 backdrop-blur md:hidden">
         <div className="mx-auto flex max-w-md items-center justify-between rounded-full border border-black/10 bg-white px-4 py-2">
           <LikeButton
             workId={work.id}

@@ -2,6 +2,7 @@
 "use client"
 
 import { useState } from "react"
+import { TERMS_COOKIE_MAX_AGE, TERMS_COOKIE_NAME, TERMS_VERSION } from "@/lib/terms"
 
 /**
  * Acceso con Google.
@@ -15,10 +16,12 @@ type Props = {
   /** En registro se exige código; en inicio de sesión no, porque la cuenta ya existe. */
   inviteCode?: string
   requireInvite?: boolean
+  /** En registro, si la persona ha marcado la casilla de los Términos. */
+  termsAccepted?: boolean
   onError: (message: string) => void
 }
 
-export function GoogleButton({ inviteCode, requireInvite = false, onError }: Props) {
+export function GoogleButton({ inviteCode, requireInvite = false, termsAccepted = false, onError }: Props) {
   const [loading, setLoading] = useState(false)
 
   async function handleClick() {
@@ -26,6 +29,11 @@ export function GoogleButton({ inviteCode, requireInvite = false, onError }: Pro
 
     if (requireInvite && !inviteCode?.trim()) {
       onError("Escribe tu código de invitación antes de continuar con Google.")
+      return
+    }
+
+    if (requireInvite && !termsAccepted) {
+      onError("Acepta los Términos de uso antes de continuar con Google.")
       return
     }
 
@@ -41,6 +49,14 @@ export function GoogleButton({ inviteCode, requireInvite = false, onError }: Pro
           const data = await stored.json().catch(() => null)
           throw new Error(data?.error ?? "No se pudo preparar el registro con Google.")
         }
+      }
+
+      // La aceptación viaja en cookie porque la cabecera que usa el alta por
+      // correo no sobrevive al desvío por Google. El servidor la exige al crear
+      // la cuenta y guarda la fecha y la versión en el perfil.
+      if (requireInvite) {
+        const seguro = window.location.protocol === "https:" ? "; secure" : ""
+        document.cookie = `${TERMS_COOKIE_NAME}=${TERMS_VERSION}; path=/; max-age=${TERMS_COOKIE_MAX_AGE}; samesite=lax${seguro}`
       }
 
       const response = await fetch("/api/auth/sign-in/social", {
@@ -71,7 +87,7 @@ export function GoogleButton({ inviteCode, requireInvite = false, onError }: Pro
           <div className="w-full border-t border-gray-200" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-meta text-gray-400">o</span>
+          <span className="bg-canvas px-3 text-meta text-gray-400">o</span>
         </div>
       </div>
 

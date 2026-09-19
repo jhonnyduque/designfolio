@@ -3,6 +3,8 @@ import type { ReactNode } from "react"
 import { PublicHeader } from "@/components/layout/PublicHeader"
 import { PublicFooter } from "@/components/layout/PublicFooter"
 import type { SesionPublica } from "@/components/layout/PublicMenu"
+import { CookieConsentBanner } from "@/components/legal/CookieConsentBanner"
+import type { CookieConsent } from "@/lib/cookie-consent"
 
 /**
  * El armazón de la parte pública: cabecera, contenido y pie.
@@ -17,16 +19,19 @@ import type { SesionPublica } from "@/components/layout/PublicMenu"
  */
 export function PublicShell({
   sesion,
+  cookieConsent,
   children,
 }: {
   sesion: SesionPublica
+  cookieConsent: CookieConsent
   children: ReactNode
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-[#f5f7f5] text-[#1e1e1e]">
+    <div className="flex min-h-screen flex-col bg-canvas text-[#1e1e1e]">
       <PublicHeader sesion={sesion} />
       <main className="flex-1">{children}</main>
       <PublicFooter />
+      <CookieConsentBanner initialConsent={cookieConsent} />
     </div>
   )
 }

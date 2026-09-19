@@ -1,10 +1,13 @@
 // components/feed/FeedPost.tsx
 "use client"
 
-import { useCallback, useRef, useState, type TouchEvent } from "react"
+import { useCallback, useState } from "react"
 import Link from "next/link"
 import type { FeedItem } from "@/types/feed"
 import { LikeButton } from "@/components/works/LikeButton"
+import { ShareButton } from "@/components/works/ShareButton"
+import { trackView } from "@/lib/client/track-view"
+import { ZoomableMedia } from "@/components/feed/ZoomableMedia"
 
 /**
  * Una publicación del feed vertical, para el móvil.
@@ -22,37 +25,37 @@ const esVideo = (medio: { type?: string | null } | undefined) =>
 
 const cifra = (n: number) => n.toLocaleString("es-ES")
 
-const UMBRAL_DESLIZAMIENTO = 35
-
 export function FeedPost({ item }: { item: FeedItem }) {
   const medios = item.images ?? []
   const [indice, setIndice] = useState(0)
-  const inicioX = useRef<number | null>(null)
-  const finX = useRef<number | null>(null)
-
+  const [expanded, setExpanded] = useState(false)
+  const [viewsCount, setViewsCount] = useState(item.views_count)
   const varios = medios.length > 1
   const actual = medios[indice] ?? null
   const destino = `/proyectos/${item.slug ?? item.id}`
+  const detailsId = `feed-post-details-${item.id}`
+  const fechaPublicacion = new Date(item.published_at).toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
 
-  const alTocar = useCallback((e: TouchEvent<HTMLDivElement>) => {
+  const cambiarImagen = useCallback((direction: "next" | "previous") => {
     if (!varios) return
-    inicioX.current = e.changedTouches[0]?.clientX ?? null
-    finX.current = null
-  }, [varios])
-
-  const alArrastrar = useCallback((e: TouchEvent<HTMLDivElement>) => {
-    if (!varios) return
-    finX.current = e.changedTouches[0]?.clientX ?? null
-  }, [varios])
-
-  const alSoltar = useCallback(() => {
-    if (!varios || inicioX.current == null || finX.current == null) return
-    const recorrido = inicioX.current - finX.current
-    if (recorrido > UMBRAL_DESLIZAMIENTO) setIndice((p) => (p === medios.length - 1 ? 0 : p + 1))
-    if (recorrido < -UMBRAL_DESLIZAMIENTO) setIndice((p) => (p === 0 ? medios.length - 1 : p - 1))
-    inicioX.current = null
-    finX.current = null
+    if (direction === "next") setIndice((p) => (p === medios.length - 1 ? 0 : p + 1))
+    if (direction === "previous") setIndice((p) => (p === 0 ? medios.length - 1 : p - 1))
   }, [varios, medios.length])
+
+  const toggleDetails = useCallback(() => {
+    setExpanded((wasExpanded) => {
+      if (!wasExpanded) {
+        void trackView(item.id, "feed_expand").then((result) => {
+          if (result) setViewsCount(result.viewsCount)
+        })
+      }
+      return !wasExpanded
+    })
+  }, [item.id])
 
   return (
     <article>
@@ -74,19 +77,22 @@ export function FeedPost({ item }: { item: FeedItem }) {
 
       <div
         className="relative aspect-[4/5] bg-gray-200"
-        onTouchStart={alTocar}
-        onTouchMove={alArrastrar}
-        onTouchEnd={alSoltar}
       >
-        <Link href={destino} className="block h-full w-full">
-          {actual ? (
-            esVideo(actual) ? (
+        {actual && (
+          esVideo(actual) ? (
+            <Link href={destino} className="block h-full w-full">
               <video src={actual.url} controls playsInline preload="metadata" className="h-full w-full bg-gray-900 object-contain" />
-            ) : (
-              <img src={actual.url} alt={item.title} loading="lazy" className="h-full w-full object-cover" />
-            )
-          ) : null}
-        </Link>
+            </Link>
+          ) : (
+            <ZoomableMedia
+              href={destino}
+              src={actual.url}
+              alt={item.title}
+              onSwipe={cambiarImagen}
+              className="h-full w-full object-cover"
+            />
+          )
+        )}
 
         {varios && (
           <span className="pointer-events-none absolute inset-x-0 bottom-2.5 flex justify-center gap-1">
@@ -108,15 +114,59 @@ export function FeedPost({ item }: { item: FeedItem }) {
           </svg>
           <span className="text-body-sm font-semibold tabular-nums">{cifra(item.comments_count)}</span>
         </Link>
+        {viewsCount > 0 && (
+          <span className="ml-auto text-meta text-gray-500 tabular-nums">{cifra(viewsCount)} vistas</span>
+        )}
       </div>
 
       <div className="px-3 pb-4 pt-0.5 text-body-sm">
-        <Link href={destino} className="block">
-          <span className="mr-1.5 font-semibold text-gray-900">{item.author_full_name}</span>
-          <span className="text-gray-900">{item.title}</span>
-        </Link>
-        {item.views_count > 0 && (
-          <p className="mt-1 text-meta text-gray-500 tabular-nums">{cifra(item.views_count)} vistas</p>
+        <div>
+          <Link href={destino} className="inline">
+            <span className="mr-1.5 font-semibold text-gray-900">{item.author_full_name}</span>
+            <span className="text-gray-900">{item.title}</span>
+          </Link>{!expanded && " "}
+          {!expanded && (
+          <button
+            type="button"
+            className="text-meta font-medium text-gray-500 hover:text-gray-700"
+            aria-expanded={expanded}
+            aria-controls={detailsId}
+            onClick={toggleDetails}
+          >
+            …más
+          </button>
+          )}
+        </div>
+
+        {expanded && (
+          <div id={detailsId} className="mt-3 space-y-3 text-gray-600">
+            <div>
+              <p className="whitespace-pre-wrap">{item.description}</p>
+              <button
+                type="button"
+                className="mt-1 text-meta font-medium text-gray-500 hover:text-gray-700"
+                aria-expanded={expanded}
+                aria-controls={detailsId}
+                onClick={toggleDetails}
+              >
+                menos
+              </button>
+            </div>
+            <div className="space-y-1 text-meta text-gray-500">
+              <p>{item.category}</p>
+              <time dateTime={item.published_at}>Publicado el {fechaPublicacion}</time>
+            </div>
+            {item.tags && item.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5" aria-label="Etiquetas">
+                {item.tags.map((tag) => (
+                  <span key={tag} className="rounded-full bg-gray-100 px-2 py-0.5 text-meta text-gray-600">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+            <ShareButton workId={item.id} pathOverride={destino} />
+          </div>
         )}
       </div>
     </article>

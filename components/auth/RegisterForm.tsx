@@ -3,6 +3,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { TERMS_HEADER, TERMS_REQUIRED_MESSAGE, TERMS_VERSION } from "@/lib/terms"
 import { GoogleButton } from "@/components/auth/GoogleButton"
 import { PasswordInput } from "@/components/auth/PasswordInput"
 import { CaptchaField, useCaptchaEnabled } from "@/components/security/CaptchaField"
@@ -39,6 +40,12 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
       return
     }
 
+    if (!aceptaLegal) {
+      setError(TERMS_REQUIRED_MESSAGE)
+      setLoading(false)
+      return
+    }
+
     const name = fullName.trim() || email.split("@")[0]
 
     try {
@@ -47,10 +54,17 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
         headers: {
           "Content-Type": "application/json",
           "x-designfolio-invite": code,
+          // El servidor exige esta senal y guarda la fecha y la version en el
+          // perfil. Sin ella no crea la cuenta.
+          [TERMS_HEADER]: TERMS_VERSION,
         },
         body: JSON.stringify({ email, password, name, captchaToken, callbackURL: `${window.location.origin}/login` }),
       })
       if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as { code?: string; message?: string } | null
+        if (data?.code === "TERMS_NOT_ACCEPTED") {
+          throw new Error(data.message ?? TERMS_REQUIRED_MESSAGE)
+        }
         throw new Error("Código de invitación inválido, expirado o ya utilizado. Verifica tu código e intenta de nuevo.")
       }
 
@@ -108,94 +122,98 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
       )}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        <div>
-          <label
-            htmlFor="invite"
-            className="block text-label text-gray-700"
-          >
-            Código de invitación
-          </label>
-          <input
-            id="invite"
-            type="text"
-            required
-            value={inviteCode}
-            onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors font-mono tracking-wider"
-            placeholder="ABCD1234"
-            maxLength={12}
-          />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div>
+            <label
+              htmlFor="invite"
+              className="block text-label text-gray-700"
+            >
+              Código de invitación
+            </label>
+            <input
+              id="invite"
+              type="text"
+              required
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors font-mono tracking-wider"
+              placeholder="ABCD1234"
+              maxLength={12}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="fullName"
+              className="block text-label text-gray-700"
+            >
+              Nombre completo
+              <span className="text-gray-400 font-normal"> (opcional)</span>
+            </label>
+            <input
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+              placeholder="Tu nombre real"
+            />
+          </div>
         </div>
 
-        <div>
-          <label
-            htmlFor="fullName"
-            className="block text-label text-gray-700"
-          >
-            Nombre completo
-            <span className="text-gray-400 font-normal"> (opcional)</span>
-          </label>
-          <input
-            id="fullName"
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
-            placeholder="Tu nombre real"
-          />
-        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div>
+            <label
+              htmlFor="regEmail"
+              className="block text-label text-gray-700"
+            >
+              Email
+            </label>
+            <input
+              id="regEmail"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+              placeholder="tu@email.com"
+            />
+          </div>
 
-        <div>
-          <label
-            htmlFor="regEmail"
-            className="block text-label text-gray-700"
-          >
-            Email
-          </label>
-          <input
-            id="regEmail"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
-            placeholder="tu@email.com"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor="regPassword"
-            className="block text-label text-gray-700"
-          >
-            Contraseña
-          </label>
-          <PasswordInput
-            id="regPassword"
-            required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
-            placeholder="Mínimo 8 caracteres"
-          />
+          <div>
+            <label
+              htmlFor="regPassword"
+              className="block text-label text-gray-700"
+            >
+              Contraseña
+            </label>
+            <PasswordInput
+              id="regPassword"
+              required
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+              placeholder="Mínimo 8 caracteres"
+            />
+          </div>
         </div>
 
         <CaptchaField onToken={setCaptchaToken} />
 
-        <label className="flex cursor-pointer items-start gap-2">
+        <label className="flex cursor-pointer items-center gap-2">
           <input
             type="checkbox"
             checked={aceptaLegal}
             onChange={(e) => setAceptaLegal(e.target.checked)}
-            className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+            className="h-4 w-4 shrink-0 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
           />
-          <span className="text-body-sm text-gray-600">
-            Al crear una cuenta aceptas los{" "}
+          <span className="text-meta text-gray-600">
+            Acepto los{" "}
             <Link href="/terminos" className="text-gray-900 underline hover:no-underline">
-              Términos
-            </Link>{" "}
-            y la{" "}
+              Términos de uso
+            </Link>
+            {" "}y he leído la{" "}
             <Link href="/privacidad" className="text-gray-900 underline hover:no-underline">
               Política de privacidad
             </Link>
@@ -212,7 +230,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
       </form>
 
       {googleEnabled && (
-        <GoogleButton inviteCode={inviteCode} requireInvite onError={setError} />
+        <GoogleButton inviteCode={inviteCode} requireInvite termsAccepted={aceptaLegal} onError={setError} />
       )}
 
       <p className="mt-6 text-center text-body-sm text-gray-500">

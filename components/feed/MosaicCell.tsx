@@ -1,6 +1,6 @@
 // components/feed/MosaicCell.tsx
-import Link from "next/link"
 import type { FeedItem } from "@/types/feed"
+import { ZoomableMedia } from "@/components/feed/ZoomableMedia"
 
 /**
  * Una celda de la rejilla, para ordenador y tablet.
@@ -29,15 +29,12 @@ export function MosaicCell({ item }: { item: FeedItem }) {
   const destino = `/proyectos/${item.slug ?? item.id}`
 
   return (
-    <Link
-      href={destino}
-      className="group relative block aspect-[1080/1350] overflow-hidden bg-gray-200"
-    >
+    <div className="group relative block aspect-[1080/1350] overflow-hidden bg-gray-200">
       {portada ? (
         esVideo(portada) ? (
           <video src={portada.url} muted playsInline preload="metadata" className="h-full w-full object-cover" />
         ) : (
-          <img src={portada.url} alt="" loading="lazy" className="h-full w-full object-cover" />
+          <ZoomableMedia href={destino} src={portada.url} alt="" className="h-full w-full object-cover" />
         )
       ) : null}
 
@@ -79,7 +76,7 @@ export function MosaicCell({ item }: { item: FeedItem }) {
           {cifra(item.comments_count)}
         </span>
       </span>
-    </Link>
+    </div>
   )
 }
 
