@@ -88,7 +88,7 @@ export function WorkPreview({
       {/* Content */}
       <div className="p-5">
         {/* Meta */}
-        <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
+        <div className="flex items-center gap-2 text-meta text-gray-400 mb-3">
           <span className="uppercase font-semibold tracking-wider">
             {work.category}
           </span>
@@ -98,9 +98,9 @@ export function WorkPreview({
           <span>{work.images.length} {work.images.length === 1 ? "archivo" : "archivos"}</span>
         </div>
 
-        <h2 className="text-xl font-bold text-gray-900">{work.title}</h2>
+        <h2 className="text-section text-gray-900">{work.title}</h2>
 
-        <p className="mt-2 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+        <p className="mt-2 text-body-sm text-gray-600 whitespace-pre-wrap">
           {work.description}
         </p>
 
@@ -110,7 +110,7 @@ export function WorkPreview({
             {work.tags.map((tag) => (
               <span
                 key={tag}
-                className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full"
+                className="text-meta bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full"
               >
                 #{tag}
               </span>
@@ -128,16 +128,16 @@ export function WorkPreview({
             />
           ) : (
             <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-              <span className="text-xs font-bold text-gray-500">
+              <span className="text-meta font-bold text-gray-500">
                 {work.author_full_name.charAt(0)}
               </span>
             </div>
           )}
           <div>
-            <p className="text-sm font-medium text-gray-900">
+            <p className="text-body-sm font-medium text-gray-900">
               {work.author_full_name}
             </p>
-            <p className="text-xs text-gray-400">
+            <p className="text-meta text-gray-400">
               @{work.author_username} · Nivel {work.author_reputation_level}
             </p>
           </div>
@@ -151,21 +151,21 @@ export function WorkPreview({
             <button
               onClick={onApprove}
               disabled={loading}
-              className="flex-1 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+              className="flex-1 py-2.5 bg-green-600 text-white text-action rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
             >
               {loading ? "Procesando..." : "✓ Aprobar"}
             </button>
             <button
               onClick={() => setShowReject(true)}
               disabled={loading}
-              className="flex-1 py-2.5 bg-white text-red-600 text-sm font-medium rounded-lg border border-red-200 hover:bg-red-50 disabled:opacity-50 transition-colors"
+              className="flex-1 py-2.5 bg-white text-red-600 text-action rounded-lg border border-red-200 hover:bg-red-50 disabled:opacity-50 transition-colors"
             >
               ✗ Rechazar
             </button>
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm font-medium text-gray-700">
+            <p className="text-body-sm font-medium text-gray-700">
               Motivo del rechazo
             </p>
             <textarea
@@ -173,16 +173,16 @@ export function WorkPreview({
               onChange={(e) => setRejectNote(e.target.value)}
               rows={3}
               placeholder="Explica al autor por qué se rechaza esta obra (mín. 10 caracteres)..."
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none resize-none"
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none resize-none"
             />
             {rejectError && (
-              <p className="text-xs text-red-600">{rejectError}</p>
+              <p className="text-meta text-red-600">{rejectError}</p>
             )}
             <div className="flex gap-2">
               <button
                 onClick={handleReject}
                 disabled={loading}
-                className="flex-1 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+                className="flex-1 py-2 bg-red-600 text-white text-action rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
               >
                 {loading ? "Procesando..." : "Confirmar rechazo"}
               </button>
@@ -193,7 +193,7 @@ export function WorkPreview({
                   setRejectError("")
                 }}
                 disabled={loading}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                className="px-4 py-2 text-action text-gray-600 hover:text-gray-900 transition-colors"
               >
                 Cancelar
               </button>

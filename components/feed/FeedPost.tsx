@@ -60,15 +60,15 @@ export function FeedPost({ item }: { item: FeedItem }) {
         {item.author_avatar_url ? (
           <img src={item.author_avatar_url} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
         ) : (
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gray-200 text-[12px] font-bold text-gray-500">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gray-200 text-meta font-bold text-gray-500">
             {item.author_full_name?.charAt(0) ?? "?"}
           </span>
         )}
         <Link href={`/dashboard/profile/${item.author_username}`} className="min-w-0 leading-tight">
-          <span className="block truncate text-[13.5px] font-semibold text-gray-900">
+          <span className="block truncate text-body-sm font-semibold text-gray-900">
             {item.author_full_name}
           </span>
-          <span className="block truncate text-[12px] text-gray-500">{item.category}</span>
+          <span className="block truncate text-meta text-gray-500">{item.category}</span>
         </Link>
       </header>
 
@@ -106,17 +106,17 @@ export function FeedPost({ item }: { item: FeedItem }) {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
             <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 20.5l1.6-4.9A8.3 8.3 0 0 1 3.6 11.5a8.4 8.4 0 0 1 8.9-8.4 8.4 8.4 0 0 1 8.5 8.4z" />
           </svg>
-          <span className="text-[13.5px] font-semibold tabular-nums">{cifra(item.comments_count)}</span>
+          <span className="text-body-sm font-semibold tabular-nums">{cifra(item.comments_count)}</span>
         </Link>
       </div>
 
-      <div className="px-3 pb-4 pt-0.5 text-[13.5px] leading-normal">
+      <div className="px-3 pb-4 pt-0.5 text-body-sm">
         <Link href={destino} className="block">
           <span className="mr-1.5 font-semibold text-gray-900">{item.author_full_name}</span>
           <span className="text-gray-900">{item.title}</span>
         </Link>
         {item.views_count > 0 && (
-          <p className="mt-1 text-[13px] text-gray-500 tabular-nums">{cifra(item.views_count)} vistas</p>
+          <p className="mt-1 text-meta text-gray-500 tabular-nums">{cifra(item.views_count)} vistas</p>
         )}
       </div>
     </article>

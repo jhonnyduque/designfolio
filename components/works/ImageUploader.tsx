@@ -125,13 +125,13 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
               d="M12 16v-8m0 0l-3 3m3-3l3 3M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"
             />
           </svg>
-          <p className="text-sm text-gray-500">
+          <p className="text-body-sm text-gray-500">
             <span className="font-medium text-gray-700">
               Arrastra imágenes o videos aquí
             </span>{" "}
             o haz click para seleccionar
           </p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-meta text-gray-400 mt-1">
             JPG, PNG, WebP, GIF, MP4, WebM, MOV · Imágenes máx {WORK_LIMITS.IMAGE_MAX_SIZE_MB}MB · Videos máx {WORK_LIMITS.VIDEO_MAX_SIZE_MB}MB ·
             Hasta {WORK_LIMITS.IMAGES_MAX} archivos
           </p>
@@ -222,7 +222,7 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
 
       {/* Counter */}
       {files.length > 0 && (
-        <p className="text-xs text-gray-400">
+        <p className="text-meta text-gray-400">
           {files.length} de {WORK_LIMITS.IMAGES_MAX} archivos
           {files.length < WORK_LIMITS.IMAGES_MIN &&
             ` · Mínimo ${WORK_LIMITS.IMAGES_MIN}`}
@@ -231,12 +231,12 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
 
       {validationErrors.length > 0 && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-          <p className="text-xs font-semibold text-amber-700">
+          <p className="text-meta font-semibold text-amber-700">
             Algunos archivos no se añadieron:
           </p>
           <ul className="mt-1 space-y-1">
             {validationErrors.slice(0, 4).map((msg, index) => (
-              <li key={`${msg}-${index}`} className="text-xs text-amber-700">
+              <li key={`${msg}-${index}`} className="text-meta text-amber-700">
                 - {msg}
               </li>
             ))}

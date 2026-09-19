@@ -43,15 +43,15 @@ export default function LegalIndexPage() {
       </header>
       <div className="flex-1 w-full flex flex-col justify-center md:justify-center px-6 py-12 md:py-0">
         <div className="mx-auto w-full max-w-[700px]">
-        <h1 className="text-3xl font-marcellus mb-10">Información legal</h1>
+        <h1 className="text-page-title mb-10">Información legal</h1>
         <ul className="flex flex-col">
           {enlaces.map(({ href, texto, descripcion }) => (
             <li key={href}>
               <div className="py-3">
-                <span className="block text-[15px] font-semibold text-[#1e1e1e] mb-1">
+                <span className="block text-subsection text-[#1e1e1e] mb-1">
                   {texto}
                 </span>
-                <span className="text-[13.5px] leading-relaxed text-[#6b6b70]">
+                <span className="text-body-sm text-[#6b6b70]">
                   {descripcion}{" "}
                   <Link
                     href={href}

@@ -127,7 +127,7 @@ export function CreateWorkForm() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-page-title text-gray-900">
           {wasAutoApproved ? "¡Proyecto publicado!" : "¡Proyecto enviado!"}
         </h2>
         <p className="mt-2 text-gray-500">
@@ -135,7 +135,7 @@ export function CreateWorkForm() {
             ? "Tu proyecto ya está visible en el feed."
             : "Revisamos la primera publicación de cada cuenta. En cuanto la aprobemos, las siguientes se publicarán al instante."}
         </p>
-        <Link href="/dashboard" className="mt-6 inline-block px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
+        <Link href="/dashboard" className="mt-6 inline-block px-5 py-2.5 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 transition-colors">
           Volver al feed
         </Link>
       </div>
@@ -146,9 +146,9 @@ export function CreateWorkForm() {
     <div className="max-w-2xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <Link href="/dashboard" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">← Volver al feed</Link>
-        <h1 className="mt-3 text-2xl font-bold text-gray-900">Nueva publicación</h1>
-        <p className="mt-1 text-sm text-gray-500">Comparte tu proyecto con la comunidad.</p>
+        <Link href="/dashboard" className="text-action text-gray-500 hover:text-gray-700 transition-colors">← Volver al feed</Link>
+        <h1 className="mt-3 text-page-title text-gray-900">Nueva publicación</h1>
+        <p className="mt-1 text-body-sm text-gray-500">Comparte tu proyecto con la comunidad.</p>
       </div>
 
       {/* Steps */}
@@ -161,8 +161,8 @@ export function CreateWorkForm() {
             (s === "details" && step === "preview")
           return (
             <button key={s} type="button" onClick={() => isPast && setStep(s)} disabled={!isPast && !isCurrent}
-              className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${isCurrent ? "text-gray-900" : isPast ? "text-gray-500 hover:text-gray-700 cursor-pointer" : "text-gray-300 cursor-default"}`}>
-              <span className={`w-6 h-6 rounded-full text-xs flex items-center justify-center font-bold ${isCurrent ? "bg-gray-900 text-white" : isPast ? "bg-gray-200 text-gray-600" : "bg-gray-100 text-gray-300"}`}>
+              className={`flex items-center gap-1.5 text-action transition-colors ${isCurrent ? "text-gray-900" : isPast ? "text-gray-500 hover:text-gray-700 cursor-pointer" : "text-gray-300 cursor-default"}`}>
+              <span className={`w-6 h-6 rounded-full text-meta flex items-center justify-center font-bold ${isCurrent ? "bg-gray-900 text-white" : isPast ? "bg-gray-200 text-gray-600" : "bg-gray-100 text-gray-300"}`}>
                 {isPast ? "✓" : i + 1}
               </span>
               <span className="hidden sm:inline">{labels[i]}</span>
@@ -174,8 +174,8 @@ export function CreateWorkForm() {
       {/* Error */}
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-          <p className="text-sm text-red-700 whitespace-pre-line">{error}</p>
-          <button onClick={reset} className="mt-1 text-sm font-medium text-red-600 hover:text-red-800 underline">Reintentar</button>
+          <p className="text-body-sm text-red-700 whitespace-pre-line">{error}</p>
+          <button onClick={reset} className="mt-1 text-action text-red-600 hover:text-red-800 underline">Reintentar</button>
         </div>
       )}
 
@@ -185,7 +185,7 @@ export function CreateWorkForm() {
           <ImageUploader files={files} onChange={setFiles} />
           <div className="mt-8 flex justify-end">
             <button type="button" onClick={() => setStep("details")} disabled={!canGoToDetails}
-              className="px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              className="px-5 py-2.5 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               Siguiente: Detalles
             </button>
           </div>
@@ -197,16 +197,16 @@ export function CreateWorkForm() {
         <div className="space-y-5">
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Título</label>
+            <label className="block text-label text-gray-700">Título</label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={WORK_LIMITS.TITLE_MAX}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
               placeholder="Dale un nombre a tu proyecto" />
-            <p className="mt-1 text-xs text-gray-400 text-right">{title.length}/{WORK_LIMITS.TITLE_MAX}</p>
+            <p className="mt-1 text-meta text-gray-400 text-right">{title.length}/{WORK_LIMITS.TITLE_MAX}</p>
           </div>
 
           {/* Slug */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Slug</label>
+            <label className="block text-label text-gray-700">Slug</label>
             <input
               type="text"
               value={slug}
@@ -215,11 +215,11 @@ export function CreateWorkForm() {
                 setSlug(normalizeSlug(e.target.value))
               }}
               maxLength={120}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
               placeholder="mi-proyecto"
             />
             <div className="mt-1 flex items-center justify-between gap-3">
-              <p className="text-xs text-gray-500 break-all">
+              <p className="text-meta text-gray-500 break-all">
                 URL final: <span className="font-medium text-gray-700">designfolio.jhonnyduque.com/proyectos/{finalSlugPreview}</span>
               </p>
               <button
@@ -228,20 +228,14 @@ export function CreateWorkForm() {
                   setSlugTouched(false)
                   setSlug(normalizeSlug(title))
                 }}
-                className="text-xs font-medium text-gray-600 hover:text-gray-900"
+                className="text-action text-gray-600 hover:text-gray-900"
               >
                 Regenerar
               </button>
             </div>
             {slugCheckMessage && (
               <p
-                className={`mt-1 text-xs ${
-                  slugStatus === "taken"
-                    ? "text-red-600"
-                    : slugStatus === "available"
-                      ? "text-green-600"
-                      : "text-gray-500"
-                }`}
+                className={`mt-1 text-meta ${ slugStatus === "taken" ? "text-red-600" : slugStatus === "available" ? "text-green-600" : "text-gray-500" }`}
               >
                 {slugCheckMessage}
               </p>
@@ -250,11 +244,11 @@ export function CreateWorkForm() {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Descripción</label>
+            <label className="block text-label text-gray-700">Descripción</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={5}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors resize-none"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors resize-none"
               placeholder={`Describe tu proceso, concepto y decisiones de diseño. Mínimo ${WORK_LIMITS.DESCRIPTION_MIN} caracteres.`} />
-            <p className={`mt-1 text-xs text-right ${descriptionLen >= WORK_LIMITS.DESCRIPTION_MIN ? "text-green-600" : descriptionLen > 80 ? "text-amber-500" : "text-gray-400"}`}>
+            <p className={`mt-1 text-meta text-right ${descriptionLen >= WORK_LIMITS.DESCRIPTION_MIN ? "text-green-600" : descriptionLen > 80 ? "text-amber-500" : "text-gray-400"}`}>
               {descriptionLen}/{WORK_LIMITS.DESCRIPTION_MIN} caracteres mínimos
             </p>
           </div>
@@ -280,18 +274,18 @@ export function CreateWorkForm() {
             onSelect={toggleTag}
           />
           {taxonomyError && (
-            <p className="text-sm text-red-600">
+            <p className="text-body-sm text-red-600">
               Error cargando categorías/tags: {taxonomyError}
             </p>
           )}
 
           {/* Nav */}
           <div className="flex justify-between pt-4">
-            <button type="button" onClick={() => setStep("images")} className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+            <button type="button" onClick={() => setStep("images")} className="px-4 py-2.5 text-action text-gray-600 hover:text-gray-900 transition-colors">
               ← Medios
             </button>
             <button type="button" onClick={() => setStep("preview")} disabled={!canGoToPreview}
-              className="px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              className="px-5 py-2.5 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               Vista previa
             </button>
           </div>
@@ -336,13 +330,13 @@ export function CreateWorkForm() {
               </div>
             )}
             <div className="p-5">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">{selectedCategory}</span>
-              <h2 className="mt-1 text-xl font-bold text-gray-900">{title}</h2>
-              <p className="mt-2 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{description}</p>
+              <span className="text-meta font-semibold uppercase tracking-wider text-gray-400">{selectedCategory}</span>
+              <h2 className="mt-1 text-section text-gray-900">{title}</h2>
+              <p className="mt-2 text-body-sm text-gray-600 whitespace-pre-wrap">{description}</p>
               {selectedTags.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {selectedTags.map((tag) => (
-                    <span key={tag} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">#{tag}</span>
+                    <span key={tag} className="text-meta bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">#{tag}</span>
                   ))}
                 </div>
               )}
@@ -350,7 +344,7 @@ export function CreateWorkForm() {
           </div>
 
           <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-sm text-amber-700">
+            <p className="text-body-sm text-amber-700">
               Si es tu primera publicación, pasará por una revisión rápida. A partir de la segunda se publican directamente.
             </p>
           </div>
@@ -361,17 +355,17 @@ export function CreateWorkForm() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              <span className="text-sm text-gray-600 font-medium">{progress}</span>
+              <span className="text-body-sm text-gray-600 font-medium">{progress}</span>
             </div>
           )}
 
           <div className="flex justify-between pt-6">
             <button type="button" onClick={() => setStep("details")} disabled={isPublishing}
-              className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 disabled:opacity-40 transition-colors">
+              className="px-4 py-2.5 text-action text-gray-600 hover:text-gray-900 disabled:opacity-40 transition-colors">
               ← Editar
             </button>
             <button type="button" onClick={handlePublish} disabled={isPublishing}
-              className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              className="px-6 py-2.5 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               {isPublishing ? "Publicando..." : "Publicar proyecto"}
             </button>
           </div>

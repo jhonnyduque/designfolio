@@ -65,13 +65,13 @@ export function UsersManager() {
         value={busqueda}
         onChange={(e) => setBusqueda(e.target.value)}
         placeholder="Buscar por nombre, usuario, correo o escuela"
-        className="mb-4 w-full max-w-sm rounded-md border border-gray-300 px-3 py-1.5 text-[13px] text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-gray-900"
+        className="mb-4 w-full max-w-sm rounded-md border border-gray-300 px-3 py-1.5 text-body-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-gray-900"
       />
 
-      {error && <p className="mb-4 text-[13px] text-red-700">{error}</p>}
+      {error && <p className="mb-4 text-body-sm text-red-700">{error}</p>}
 
       {cargando ? (
-        <p className="py-8 text-[13px] text-gray-500">Cargando…</p>
+        <p className="py-8 text-body-sm text-gray-500">Cargando…</p>
       ) : visibles.length === 0 ? (
         <EmptyState
           title={busqueda ? "Sin resultados" : "Todavía no hay miembros"}
@@ -81,7 +81,7 @@ export function UsersManager() {
         <Scroller>
           <table className="w-full min-w-[720px] border-collapse">
             <thead>
-              <tr className="border-b border-gray-200 text-left text-[11.5px] font-normal text-gray-400">
+              <tr className="border-b border-gray-200 text-left text-meta text-gray-400">
                 <th className="py-2.5 pr-3 font-normal">Miembro</th>
                 <th className="w-[180px] py-2.5 pr-3 font-normal">Escuela</th>
                 <th className="w-[140px] py-2.5 pr-3 font-normal">Publicaciones</th>
@@ -92,7 +92,7 @@ export function UsersManager() {
             <tbody>
               {visibles.map((u) => (
                 <tr key={u.id} className="border-b border-gray-200 transition-colors last:border-0 hover:bg-gray-50/60">
-                  <td className="max-w-0 py-2.5 pr-3 text-[13px]">
+                  <td className="max-w-0 py-2.5 pr-3 text-body-sm">
                     <div className="flex items-center gap-2.5">
                       <span
                         className="h-7 w-7 shrink-0 rounded-full bg-gray-200 bg-cover bg-center"
@@ -102,26 +102,26 @@ export function UsersManager() {
                       <span className="min-w-0">
                         <Link href={`/dashboard/profile/${u.username}`} className="block truncate font-medium text-gray-900 hover:underline">
                           {u.full_name}
-                          {u.is_founder && <span className="ml-1.5 text-[11.5px] font-normal text-gray-400">fundador</span>}
-                          {!u.is_active && <span className="ml-1.5 text-[11.5px] font-normal text-gray-400">desactivado</span>}
+                          {u.is_founder && <span className="ml-1.5 text-meta text-gray-400">fundador</span>}
+                          {!u.is_active && <span className="ml-1.5 text-meta text-gray-400">desactivado</span>}
                         </Link>
-                        <span className="mt-0.5 block truncate text-[12px] text-gray-500">
+                        <span className="mt-0.5 block truncate text-meta text-gray-500">
                           {u.email_from_auth ?? `@${u.username}`}
                         </span>
                       </span>
                     </div>
                   </td>
-                  <td className="py-2.5 pr-3 text-[13px] text-gray-500">
+                  <td className="py-2.5 pr-3 text-body-sm text-gray-500">
                     <span className="block truncate">{u.school ?? "—"}</span>
                   </td>
-                  <td className="py-2.5 pr-3 text-[13px] tabular-nums text-gray-500">
+                  <td className="py-2.5 pr-3 text-body-sm tabular-nums text-gray-500">
                     {u.approved_count}
                     {u.pending_count > 0 && (
                       <span className="text-gray-900"> · {u.pending_count} sin verificar</span>
                     )}
                     {u.rejected_count > 0 && <span> · {u.rejected_count} rech.</span>}
                   </td>
-                  <td className="py-2.5 pr-3 text-[13px] tabular-nums text-gray-500">
+                  <td className="py-2.5 pr-3 text-body-sm tabular-nums text-gray-500">
                     {new Date(u.created_at).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "2-digit" })}
                   </td>
                   <td className="py-2.5">
@@ -146,10 +146,10 @@ export function UsersManager() {
       {confirmar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/20 p-4">
           <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5">
-            <p className="text-[14px] font-medium text-gray-900">
+            <p className="text-body-sm font-medium text-gray-900">
               {confirmar.activar ? "Reactivar" : "Desactivar"} a {confirmar.nombre}
             </p>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-gray-500">
+            <p className="mt-1.5 text-body-sm text-gray-500">
               {confirmar.activar
                 ? "Volverá a poder entrar y publicar."
                 : "No podrá entrar ni publicar. Lo que ya compartió sigue visible; para retirarlo, archívalo desde Publicaciones."}

@@ -123,13 +123,13 @@ export function WorksManager() {
         value={busqueda}
         onChange={(e) => setBusqueda(e.target.value)}
         placeholder="Buscar por título, autor o categoría"
-        className="mb-4 w-full max-w-sm rounded-md border border-gray-300 px-3 py-1.5 text-[13px] text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-gray-900"
+        className="mb-4 w-full max-w-sm rounded-md border border-gray-300 px-3 py-1.5 text-body-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-gray-900"
       />
 
-      {error && <p className="mb-4 text-[13px] text-red-700">{error}</p>}
+      {error && <p className="mb-4 text-body-sm text-red-700">{error}</p>}
 
       {cargando ? (
-        <p className="py-8 text-[13px] text-gray-500">Cargando…</p>
+        <p className="py-8 text-body-sm text-gray-500">Cargando…</p>
       ) : visibles.length === 0 ? (
         <EmptyState
           title={busqueda ? "Sin resultados" : "Nada por aquí"}
@@ -142,7 +142,7 @@ export function WorksManager() {
               <tr className="border-b border-gray-200 text-left">
                 <th className="w-[52px] py-2.5" />
                 {COLUMNAS.map((c) => (
-                  <th key={c.key} className={`py-2.5 pr-3 text-[11.5px] font-normal ${c.ancho ?? ""}`}>
+                  <th key={c.key} className={`py-2.5 pr-3 text-meta ${c.ancho ?? ""}`}>
                     <button
                       type="button"
                       onClick={() => ordenarPor(c.key)}
@@ -176,24 +176,24 @@ export function WorksManager() {
                       {soloVideo(w.images) && "VIDEO"}
                     </span>
                   </td>
-                  <td className="max-w-0 py-2.5 pr-3 text-[13px]">
+                  <td className="max-w-0 py-2.5 pr-3 text-body-sm">
                     <Link href={`/dashboard/work/${w.id}`} className="block truncate font-medium text-gray-900 hover:underline">
                       {w.title}
                     </Link>
-                    <span className="mt-0.5 block truncate text-[12px] text-gray-500">
+                    <span className="mt-0.5 block truncate text-meta text-gray-500">
                       {w.category}
                       {w.archived && " · archivada"}
                       {w.moderation_status === "pending_review" && " · en verificación"}
                       {w.moderation_status === "rejected" && " · rechazada"}
                     </span>
                   </td>
-                  <td className="py-2.5 pr-3 text-[13px] text-gray-500">
+                  <td className="py-2.5 pr-3 text-body-sm text-gray-500">
                     <span className="block truncate">{w.author_name}</span>
                   </td>
-                  <td className="py-2.5 pr-3 text-[13px] tabular-nums text-gray-500">{w.views_count}</td>
-                  <td className="py-2.5 pr-3 text-[13px] tabular-nums text-gray-500">{w.likes_count}</td>
-                  <td className="py-2.5 pr-3 text-[13px] tabular-nums text-gray-500">{w.comments_count}</td>
-                  <td className="py-2.5 pr-3 text-[13px] tabular-nums text-gray-500">
+                  <td className="py-2.5 pr-3 text-body-sm tabular-nums text-gray-500">{w.views_count}</td>
+                  <td className="py-2.5 pr-3 text-body-sm tabular-nums text-gray-500">{w.likes_count}</td>
+                  <td className="py-2.5 pr-3 text-body-sm tabular-nums text-gray-500">{w.comments_count}</td>
+                  <td className="py-2.5 pr-3 text-body-sm tabular-nums text-gray-500">
                     {new Date(w.created_at).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "2-digit" })}
                   </td>
                   <td className="py-2.5">
@@ -224,8 +224,8 @@ export function WorksManager() {
       {confirmar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/20 p-4">
           <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5">
-            <p className="text-[14px] font-medium text-gray-900">Eliminar «{confirmar.title}»</p>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-gray-500">
+            <p className="text-body-sm font-medium text-gray-900">Eliminar «{confirmar.title}»</p>
+            <p className="mt-1.5 text-body-sm text-gray-500">
               Se borra junto con sus likes y comentarios, y no se puede deshacer. La decisión queda registrada
               en el historial.
             </p>

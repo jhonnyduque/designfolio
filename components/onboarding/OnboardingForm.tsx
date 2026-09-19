@@ -139,7 +139,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
             />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">¡Bienvenido!</h2>
+        <h2 className="text-page-title text-gray-900">¡Bienvenido!</h2>
         <p className="mt-2 text-gray-500">
           Tu perfil está listo. Redirigiendo al dashboard...
         </p>
@@ -153,7 +153,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
       <div className="flex justify-end mb-4">
         <button
           onClick={signOut}
-          className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          className="text-action text-gray-400 hover:text-gray-600 transition-colors"
         >
           Cerrar sesión
         </button>
@@ -161,10 +161,10 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
 
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-page-title text-gray-900">
           Completa tu perfil
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-body-sm text-gray-500">
           Paso {step} de 3 · Solo toma un minuto
         </p>
       </div>
@@ -183,7 +183,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
 
       {/* Error */}
       {error && (
-        <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+        <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-body-sm text-red-700">
           {error}
         </div>
       )}
@@ -222,7 +222,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
                 </div>
               )}
             </button>
-            <p className="text-xs text-gray-400">
+            <p className="text-meta text-gray-400">
               JPG, PNG o WebP · Máx {PROFILE_LIMITS.AVATAR_MAX_SIZE_MB}MB
             </p>
             <input
@@ -236,25 +236,25 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
 
           {/* Full name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-label text-gray-700">
               Nombre completo
             </label>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
               placeholder="Tu nombre real"
             />
           </div>
 
           {/* Username */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-label text-gray-700">
               Nombre de usuario
             </label>
             <div className="mt-1 relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-body-sm text-gray-400">
                 @
               </span>
               <input
@@ -262,7 +262,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
                 value={username}
                 onChange={(e) => handleUsernameChange(e.target.value)}
                 maxLength={PROFILE_LIMITS.USERNAME_MAX}
-                className="block w-full rounded-lg border border-gray-300 pl-7 pr-10 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+                className="block w-full rounded-lg border border-gray-300 pl-7 pr-10 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
                 placeholder="tu_username"
               />
               {/* Status indicator */}
@@ -321,13 +321,13 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
               </span>
             </div>
             {usernameStatus === "taken" && (
-              <p className="mt-1 text-xs text-red-500">
+              <p className="mt-1 text-helper text-red-500">
                 Ese usuario ya está en uso
               </p>
             )}
             {username.length > 0 &&
               username.length < PROFILE_LIMITS.USERNAME_MIN && (
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-1 text-meta text-gray-400">
                   Mínimo {PROFILE_LIMITS.USERNAME_MIN} caracteres
                 </p>
               )}
@@ -337,7 +337,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
             type="button"
             onClick={() => setStep(2)}
             disabled={!canStep2}
-            className="w-full py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-2.5 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Siguiente
           </button>
@@ -349,7 +349,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
         <div className="space-y-5">
           {/* Bio */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-label text-gray-700">
               Bio
             </label>
             <textarea
@@ -357,17 +357,11 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
               onChange={(e) => setBio(e.target.value)}
               rows={4}
               maxLength={PROFILE_LIMITS.BIO_MAX}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors resize-none"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors resize-none"
               placeholder="Cuéntale a la comunidad quién eres, qué te inspira y qué tipo de diseño te apasiona..."
             />
             <p
-              className={`mt-1 text-xs text-right ${
-                bioLen >= PROFILE_LIMITS.BIO_MIN && bioLen <= PROFILE_LIMITS.BIO_MAX
-                  ? "text-green-600"
-                  : bioLen > 50
-                    ? "text-amber-500"
-                    : "text-gray-400"
-              }`}
+              className={`mt-1 text-meta text-right ${ bioLen >= PROFILE_LIMITS.BIO_MIN && bioLen <= PROFILE_LIMITS.BIO_MAX ? "text-green-600" : bioLen > 50 ? "text-amber-500" : "text-gray-400" }`}
             >
               {bioLen}/{PROFILE_LIMITS.BIO_MIN}–{PROFILE_LIMITS.BIO_MAX}
             </p>
@@ -375,21 +369,21 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
 
           {/* School */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-label text-gray-700">
               Universidad / Escuela
             </label>
             <input
               type="text"
               value={school}
               onChange={(e) => setSchool(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
               placeholder="Universidad de Buenos Aires, etc."
             />
           </div>
 
           {/* Career year */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-label text-gray-700">
               Año / Etapa
             </label>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -398,11 +392,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
                   key={year}
                   type="button"
                   onClick={() => setCareerYear(year)}
-                  className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
-                    careerYear === year
-                      ? "border-gray-900 bg-gray-900 text-white"
-                      : "border-gray-300 text-gray-600 hover:border-gray-400"
-                  }`}
+                  className={`px-3 py-1.5 text-action rounded-full border transition-colors ${ careerYear === year ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 text-gray-600 hover:border-gray-400" }`}
                 >
                   {year}
                 </button>
@@ -415,7 +405,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              className="px-4 py-2.5 text-action text-gray-600 hover:text-gray-900 transition-colors"
             >
               ← Atrás
             </button>
@@ -423,7 +413,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
               type="button"
               onClick={() => setStep(3)}
               disabled={!canStep3}
-              className="px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-5 py-2.5 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               Siguiente
             </button>
@@ -435,10 +425,10 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
       {step === 3 && (
         <div className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-label text-gray-700 mb-1">
               ¿En qué te especializas?
             </label>
-            <p className="text-xs text-gray-400 mb-3">
+            <p className="text-meta text-gray-400 mb-3">
               Elige {PROFILE_LIMITS.CATEGORIES_MIN}–
               {PROFILE_LIMITS.CATEGORIES_MAX} categorías
             </p>
@@ -454,13 +444,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
                     type="button"
                     onClick={() => toggleCategory(cat)}
                     disabled={disabled}
-                    className={`px-4 py-2 text-sm rounded-full border transition-colors ${
-                      selected
-                        ? "border-gray-900 bg-gray-900 text-white"
-                        : disabled
-                          ? "border-gray-200 text-gray-300 cursor-not-allowed"
-                          : "border-gray-300 text-gray-600 hover:border-gray-400"
-                    }`}
+                    className={`px-4 py-2 text-action rounded-full border transition-colors ${ selected ? "border-gray-900 bg-gray-900 text-white" : disabled ? "border-gray-200 text-gray-300 cursor-not-allowed" : "border-gray-300 text-gray-600 hover:border-gray-400" }`}
                   >
                     {cat}
                   </button>
@@ -480,18 +464,18 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
                 />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-sm font-bold text-gray-500">
+                  <span className="text-body-sm font-bold text-gray-500">
                     {fullName.charAt(0)}
                   </span>
                 </div>
               )}
               <div>
-                <p className="text-sm font-medium text-gray-900">{fullName}</p>
-                <p className="text-xs text-gray-500">@{username}</p>
+                <p className="text-body-sm font-medium text-gray-900">{fullName}</p>
+                <p className="text-meta text-gray-500">@{username}</p>
               </div>
             </div>
-            <p className="text-xs text-gray-500">{school} · {careerYear}</p>
-            <p className="text-xs text-gray-500 italic line-clamp-2">
+            <p className="text-meta text-gray-500">{school} · {careerYear}</p>
+            <p className="text-meta text-gray-500 italic line-clamp-2">
               {bio}
             </p>
           </div>
@@ -518,7 +502,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              <span className="text-sm text-gray-600">{progress}</span>
+              <span className="text-body-sm text-gray-600">{progress}</span>
             </div>
           )}
 
@@ -528,7 +512,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
               type="button"
               onClick={() => setStep(2)}
               disabled={isSaving}
-              className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 disabled:opacity-40 transition-colors"
+              className="px-4 py-2.5 text-action text-gray-600 hover:text-gray-900 disabled:opacity-40 transition-colors"
             >
               ← Atrás
             </button>
@@ -536,7 +520,7 @@ export function OnboardingForm({ currentName }: { currentName: string }) {
               type="button"
               onClick={handleSubmit}
               disabled={!canSubmit || isSaving}
-              className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-2.5 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               {isSaving ? "Guardando..." : "Completar perfil"}
             </button>

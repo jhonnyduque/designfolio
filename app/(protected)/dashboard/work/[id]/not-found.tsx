@@ -19,13 +19,13 @@ export default function WorkNotFound() {
           />
         </svg>
       </div>
-      <h2 className="text-xl font-bold text-gray-900">Proyecto no encontrado</h2>
-      <p className="mt-2 text-sm text-gray-500">
+      <h2 className="text-section text-gray-900">Proyecto no encontrado</h2>
+      <p className="mt-2 text-body-sm text-gray-500">
         Este proyecto no existe o no está disponible.
       </p>
       <Link
         href="/dashboard"
-        className="mt-6 inline-block px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+        className="mt-6 inline-block px-5 py-2.5 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 transition-colors"
       >
         Volver al feed
       </Link>

@@ -48,25 +48,25 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
     <div>
       {/* Mobile logo */}
       <div className="lg:hidden mb-8">
-        <span className="text-2xl font-bold tracking-tight text-gray-900">
+        <span className="text-page-title text-gray-900">
           Design<span className="text-gray-400">folio</span>
         </span>
       </div>
 
-      <h2 className="text-2xl font-bold text-gray-900">Iniciar sesión</h2>
-      <p className="mt-2 text-sm text-gray-500">
+      <h2 className="text-page-title text-gray-900">Iniciar sesión</h2>
+      <p className="mt-2 text-body-sm text-gray-500">
         Ingresa a tu cuenta para acceder a tu portafolio.
       </p>
 
       {error && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-body-sm text-red-700">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-label text-gray-700">
             Email
           </label>
           <input
@@ -75,13 +75,13 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
             placeholder="tu@email.com"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password" className="block text-label text-gray-700">
             Contraseña
           </label>
           <PasswordInput
@@ -89,7 +89,7 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
             placeholder="••••••••"
           />
         </div>
@@ -102,11 +102,11 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
               onChange={(e) => setRemember(e.target.checked)}
               className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
             />
-            <span className="text-sm text-gray-600">Recordarme</span>
+            <span className="text-body-sm text-gray-600">Recordarme</span>
           </label>
           <Link
             href="/forgot"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            className="text-action text-gray-600 hover:text-gray-900 transition-colors"
           >
             ¿Olvidaste tu contraseña?
           </Link>
@@ -115,7 +115,7 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 px-4 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full py-2.5 px-4 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? "Ingresando..." : "Iniciar sesión"}
         </button>
@@ -123,7 +123,7 @@ export function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }
 
       {googleEnabled && <GoogleButton onError={setError} />}
 
-      <p className="mt-6 text-center text-sm text-gray-500">
+      <p className="mt-6 text-center text-body-sm text-gray-500">
         ¿No tienes cuenta?{" "}
         <Link
           href="/register"

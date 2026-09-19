@@ -124,13 +124,13 @@ export function NotificationBell() {
         <div className="absolute right-0 mt-1 w-80 bg-white border border-gray-200 rounded-xl shadow-lg z-30 overflow-hidden">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-900">
+            <h3 className="text-subsection text-gray-900">
               Notificaciones
             </h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllRead}
-                className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-action text-gray-500 hover:text-gray-700 transition-colors"
               >
                 Marcar todo leído
               </button>
@@ -155,7 +155,7 @@ export function NotificationBell() {
 
             {!loading && notifications.length === 0 && (
               <div className="p-8 text-center">
-                <p className="text-sm text-gray-400">
+                <p className="text-body-sm text-gray-400">
                   No tienes notificaciones aún.
                 </p>
               </div>
@@ -175,7 +175,7 @@ export function NotificationBell() {
                     <span className="text-lg flex-shrink-0 mt-0.5">{icon}</span>
                     <div className="flex-1 min-w-0">
                       <p
-                        className={`text-sm leading-snug ${
+                        className={`text-body-sm ${
                           isUnread
                             ? "text-gray-900 font-medium"
                             : "text-gray-600"
@@ -183,7 +183,7 @@ export function NotificationBell() {
                       >
                         {text}
                       </p>
-                      <p className="text-[11px] text-gray-400 mt-0.5">
+                      <p className="text-meta text-gray-400 mt-0.5">
                         {getTimeAgo(n.created_at)}
                       </p>
                     </div>

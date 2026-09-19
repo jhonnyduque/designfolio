@@ -89,7 +89,7 @@ export function Feed() {
       {/* Header */}
       <div className="mb-5 mx-auto w-full max-w-[935px] flex flex-col gap-4">
         {/* Title */}
-        <h2 className="font-marcellus text-3xl leading-none text-[#1e1e1e] md:text-4xl">
+        <h2 className="font-marcellus text-display text-[#1e1e1e] md:text-display-lg">
           Proyectos
         </h2>
 
@@ -98,10 +98,10 @@ export function Feed() {
           
           {/* Tabs */}
           <div className={`items-center gap-4 sm:gap-6 ${searchOpen || search ? 'hidden sm:flex' : 'flex'}`}>
-            <button className="text-[15px] font-medium text-[#1e1e1e] border-b-2 border-black pb-2">
+            <button className="text-nav text-[#1e1e1e] border-b-2 border-black pb-2">
               Para ti
             </button>
-            <button className="text-[15px] font-medium text-[#8c8c95] hover:text-[#1e1e1e] pb-2 transition-colors border-b-2 border-transparent">
+            <button className="text-nav text-[#8c8c95] hover:text-[#1e1e1e] pb-2 transition-colors border-b-2 border-transparent">
               Siguiendo
             </button>
           </div>
@@ -134,7 +134,7 @@ export function Feed() {
                   onChange={(e) => handleSearchChange(e.target.value)}
                   onBlur={() => { if (!searchInput) setSearchOpen(false) }}
                   placeholder="Buscar proyectos..."
-                  className="w-full sm:w-[260px] pl-9 pr-8 py-2 text-sm font-medium bg-white border border-black/10 rounded-full text-[#2a2a30] placeholder:text-[#8c8c95] focus:border-black/25 focus:ring-0 outline-none transition-all"
+                  className="w-full sm:w-[260px] pl-9 pr-8 py-2 text-body-sm bg-white border border-black/10 rounded-full text-[#2a2a30] placeholder:text-[#8c8c95] focus:border-black/25 focus:ring-0 outline-none transition-all"
                 />
                 <button
                   onClick={handleClearSearch}
@@ -158,7 +158,7 @@ export function Feed() {
         {search && (
           <button
             onClick={handleClearSearch}
-            className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
+            className="text-action text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
           >
             Resultados para &ldquo;{search}&rdquo;
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -171,10 +171,10 @@ export function Feed() {
       {/* Error */}
       {error && (
         <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-xl">
-          <p className="text-sm text-red-700">{error}</p>
+          <p className="text-body-sm text-red-700">{error}</p>
           <button
             onClick={refresh}
-            className="mt-2 text-sm font-medium text-red-600 hover:text-red-800 underline"
+            className="mt-2 text-action text-red-600 hover:text-red-800 underline"
           >
             Reintentar
           </button>
@@ -217,8 +217,8 @@ export function Feed() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
             </svg>
           </div>
-          <p className="text-gray-500 font-medium">Aún no hay proyectos publicados</p>
-          <p className="text-gray-400 text-sm mt-1">
+          <p className="text-subsection text-gray-500">Aún no hay proyectos publicados</p>
+          <p className="text-body-sm text-gray-400 mt-1">
             Sé el primero en compartir tu trabajo con la comunidad.
           </p>
         </div>

@@ -79,7 +79,7 @@ export function CaptchaField({ onToken }: { onToken: (token: string | null) => v
     <div>
       <div ref={container} />
       {failed && (
-        <p role="alert" className="mt-2 text-sm text-red-600">
+        <p role="alert" className="mt-2 text-body-sm text-red-600">
           No se pudo cargar la verificación. Recarga la página e inténtalo de nuevo.
         </p>
       )}

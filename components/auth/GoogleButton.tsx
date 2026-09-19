@@ -71,7 +71,7 @@ export function GoogleButton({ inviteCode, requireInvite = false, onError }: Pro
           <div className="w-full border-t border-gray-200" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-xs text-gray-400">o</span>
+          <span className="bg-white px-3 text-meta text-gray-400">o</span>
         </div>
       </div>
 
@@ -79,7 +79,7 @@ export function GoogleButton({ inviteCode, requireInvite = false, onError }: Pro
         type="button"
         onClick={handleClick}
         disabled={loading}
-        className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-action text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" aria-hidden="true">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.76h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

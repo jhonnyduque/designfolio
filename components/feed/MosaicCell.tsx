@@ -63,13 +63,13 @@ export function MosaicCell({ item }: { item: FeedItem }) {
       )}
 
       {item.views_count > 0 && (
-        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 text-[12px] font-semibold leading-none tabular-nums text-white [filter:drop-shadow(0_1px_2px_rgba(0,0,0,.38))]">
+        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 text-meta font-semibold leading-none tabular-nums text-white [filter:drop-shadow(0_1px_2px_rgba(0,0,0,.38))]">
           <Ojo />
           {cifra(item.views_count)}
         </span>
       )}
 
-      <span className="absolute inset-0 flex items-center justify-center gap-6 bg-black/40 text-[15px] font-bold text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
+      <span className="absolute inset-0 flex items-center justify-center gap-6 bg-black/40 text-body font-bold text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
         <span className="inline-flex items-center gap-1.5">
           <Corazon />
           {cifra(item.likes_count)}

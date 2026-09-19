@@ -45,20 +45,20 @@ export function ResetPasswordForm() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900">Nueva contraseña</h2>
-      <p className="mt-2 text-sm text-gray-500">
+      <h2 className="text-page-title text-gray-900">Nueva contraseña</h2>
+      <p className="mt-2 text-body-sm text-gray-500">
         Ingresa tu nueva contraseña.
       </p>
 
       {error && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-body-sm text-red-700">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
-          <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="newPassword" className="block text-label text-gray-700">
             Nueva contraseña
           </label>
           <PasswordInput
@@ -67,13 +67,13 @@ export function ResetPasswordForm() {
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
             placeholder="Mínimo 8 caracteres"
           />
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="confirmPassword" className="block text-label text-gray-700">
             Confirmar contraseña
           </label>
           <PasswordInput
@@ -81,7 +81,7 @@ export function ResetPasswordForm() {
             required
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
             placeholder="Repite la contraseña"
           />
         </div>
@@ -89,7 +89,7 @@ export function ResetPasswordForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 px-4 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full py-2.5 px-4 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? "Actualizando..." : "Establecer contraseña"}
         </button>

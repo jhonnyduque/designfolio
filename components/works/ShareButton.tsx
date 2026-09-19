@@ -37,7 +37,7 @@ export function ShareButton({
     <button
       onClick={handleCopy}
       className={`inline-flex items-center gap-1.5 transition-colors ${
-        isMd ? "text-sm" : "text-xs"
+        isMd ? "text-body-sm" : "text-meta"
       } ${copied ? "text-green-600" : "text-gray-400 hover:text-gray-600"}`}
       aria-label="Copiar enlace"
     >

@@ -46,13 +46,13 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             <br />
             habla por ti.
           </h1>
-          <p className="text-base opacity-70 max-w-sm leading-relaxed">
+          <p className="text-body opacity-70 max-w-sm">
             La comunidad de portafolio para diseñadores emergentes que valora
             la calidad, el feedback profesional y el crecimiento real.
           </p>
         </div>
 
-        <p className="text-xs opacity-40">
+        <p className="text-meta opacity-40">
           © {new Date().getFullYear()} Designfolio. Beta cerrada.
         </p>
       </div>

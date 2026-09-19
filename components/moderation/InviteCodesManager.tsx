@@ -104,14 +104,14 @@ export function InviteCodesManager() {
   return (
     <div>
       {error && (
-        <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-body-sm text-red-700">
           {error}
         </p>
       )}
 
       {/* Generador */}
       <div className="mb-7 border-b border-gray-200 pb-6">
-        <h3 className="mb-3 text-[14px] font-semibold text-gray-900">Generar códigos</h3>
+        <h3 className="mb-3 text-body-sm font-semibold text-gray-900">Generar códigos</h3>
 
         <div className="flex flex-wrap items-center gap-2 mb-3">
           {QUANTITIES.map((n) => (
@@ -119,16 +119,12 @@ export function InviteCodesManager() {
               key={n}
               type="button"
               onClick={() => setQuantity(n)}
-              className={`w-9 h-9 text-sm rounded-lg border transition-colors ${
-                quantity === n
-                  ? "border-gray-900 bg-gray-900 text-white"
-                  : "border-gray-300 text-gray-600 hover:border-gray-400"
-              }`}
+              className={`w-9 h-9 text-action rounded-lg border transition-colors ${ quantity === n ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 text-gray-600 hover:border-gray-400" }`}
             >
               {n}
             </button>
           ))}
-          <span className="text-xs text-gray-400 ml-1">
+          <span className="text-meta text-gray-400 ml-1">
             {quantity === 1 ? "código" : "códigos"}
           </span>
         </div>
@@ -139,11 +135,7 @@ export function InviteCodesManager() {
               key={label}
               type="button"
               onClick={() => setExpiresInDays(days)}
-              className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                expiresInDays === days
-                  ? "border-gray-900 bg-gray-900 text-white"
-                  : "border-gray-300 text-gray-600 hover:border-gray-400"
-              }`}
+              className={`px-3 py-1.5 text-action rounded-lg border transition-colors ${ expiresInDays === days ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 text-gray-600 hover:border-gray-400" }`}
             >
               {label}
             </button>
@@ -160,10 +152,10 @@ export function InviteCodesManager() {
         <div className="bg-amber-50 rounded-xl border border-amber-200 p-5 mb-6">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div>
-              <h3 className="text-sm font-semibold text-amber-900">
+              <h3 className="text-body-sm font-semibold text-amber-900">
                 Copia estos códigos ahora
               </h3>
-              <p className="text-xs text-amber-800 mt-0.5">
+              <p className="text-helper text-amber-800 mt-0.5">
                 En la base de datos solo se guarda su huella. Si cierras esta vista,
                 no hay forma de recuperarlos.
               </p>
@@ -171,7 +163,7 @@ export function InviteCodesManager() {
             <button
               type="button"
               onClick={() => setFreshCodes([])}
-              className="text-xs text-amber-800 hover:underline shrink-0"
+              className="text-action text-amber-800 hover:underline shrink-0"
             >
               Ya los copié
             </button>
@@ -183,11 +175,11 @@ export function InviteCodesManager() {
                 key={code}
                 className="flex items-center justify-between gap-3 bg-white rounded-lg border border-amber-200 px-3 py-2"
               >
-                <code className="text-sm font-mono text-gray-900 break-all">{code}</code>
+                <code className="text-body-sm font-mono text-gray-900 break-all">{code}</code>
                 <button
                   type="button"
                   onClick={() => handleCopy(code)}
-                  className="text-xs text-gray-600 hover:text-gray-900 shrink-0"
+                  className="text-action text-gray-600 hover:text-gray-900 shrink-0"
                 >
                   {copied === code ? "Copiado" : "Copiar"}
                 </button>
@@ -199,7 +191,7 @@ export function InviteCodesManager() {
             <button
               type="button"
               onClick={() => handleCopy(freshCodes.join("\n"))}
-              className="mt-3 text-xs text-amber-900 hover:underline"
+              className="mt-3 text-action text-amber-900 hover:underline"
             >
               Copiar los {freshCodes.length} juntos
             </button>
@@ -214,7 +206,7 @@ export function InviteCodesManager() {
       </StatLine>
 
       {loading ? (
-        <p className="text-sm text-gray-400 py-8 text-center">Cargando...</p>
+        <p className="text-body-sm text-gray-400 py-8 text-center">Cargando...</p>
       ) : codes.length === 0 ? (
         <EmptyState
           title="Sin invitaciones"
@@ -226,16 +218,16 @@ export function InviteCodesManager() {
             <div key={code.id} className="flex items-center justify-between gap-3 border-b border-gray-200 py-3 last:border-0">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className={`text-[13px] ${STATUS_STYLES[code.status]}`}>
+                  <span className={`text-body-sm ${STATUS_STYLES[code.status]}`}>
                     {STATUS_LABELS[code.status]}
                   </span>
                   {code.used_by_name && (
-                    <span className="text-sm text-gray-900 truncate">
+                    <span className="text-body-sm text-gray-900 truncate">
                       {code.used_by_name}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-meta text-gray-500 mt-1">
                   Creado el {formatDate(code.created_at)}
                   {code.expires_at && ` · caduca el ${formatDate(code.expires_at)}`}
                   {code.used_at && ` · canjeado el ${formatDate(code.used_at)}`}
@@ -246,7 +238,7 @@ export function InviteCodesManager() {
                 <button
                   type="button"
                   onClick={() => handleRevoke(code.id)}
-                  className="text-xs text-gray-400 hover:text-red-600 transition-colors shrink-0"
+                  className="text-action text-gray-400 hover:text-red-600 transition-colors shrink-0"
                 >
                   Revocar
                 </button>

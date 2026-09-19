@@ -65,7 +65,7 @@ export function ModerationPanel() {
       {aviso && (
         <p
           role="status"
-          className={`mb-5 text-[13px] ${aviso.tipo === "ok" ? "text-gray-900" : "text-red-700"}`}
+          className={`mb-5 text-body-sm ${aviso.tipo === "ok" ? "text-gray-900" : "text-red-700"}`}
         >
           {aviso.texto}
         </p>
@@ -80,9 +80,9 @@ export function ModerationPanel() {
         ]}
       />
 
-      {error && <p className="py-8 text-[13px] text-red-700">{error}</p>}
+      {error && <p className="py-8 text-body-sm text-red-700">{error}</p>}
 
-      {!error && loading && <p className="py-8 text-[13px] text-gray-500">Cargando…</p>}
+      {!error && loading && <p className="py-8 text-body-sm text-gray-500">Cargando…</p>}
 
       {!error && !loading && vista === "cola" && (
         queue.length === 0 ? (
@@ -116,24 +116,24 @@ export function ModerationPanel() {
             <table className="w-full min-w-[560px] border-collapse">
               <thead>
                 <tr className="border-b border-gray-200 text-left">
-                  <th className="w-[110px] py-2.5 pr-3 text-[11.5px] font-normal text-gray-400">Acción</th>
-                  <th className="py-2.5 pr-3 text-[11.5px] font-normal text-gray-400">Proyecto</th>
-                  <th className="w-[150px] py-2.5 pr-3 text-[11.5px] font-normal text-gray-400">Responsable</th>
-                  <th className="w-[110px] py-2.5 text-[11.5px] font-normal text-gray-400">Fecha</th>
+                  <th className="w-[110px] py-2.5 pr-3 text-meta text-gray-400">Acción</th>
+                  <th className="py-2.5 pr-3 text-meta text-gray-400">Proyecto</th>
+                  <th className="w-[150px] py-2.5 pr-3 text-meta text-gray-400">Responsable</th>
+                  <th className="w-[110px] py-2.5 text-meta text-gray-400">Fecha</th>
                 </tr>
               </thead>
               <tbody>
                 {history.map((entrada) => (
                   <tr key={entrada.id} className="border-b border-gray-200 last:border-0">
-                    <td className={`py-3 pr-3 align-top text-[13px] ${DESTACADAS.has(entrada.action) ? "font-medium text-gray-900" : "text-gray-500"}`}>
+                    <td className={`py-3 pr-3 align-top text-body-sm ${DESTACADAS.has(entrada.action) ? "font-medium text-gray-900" : "text-gray-500"}`}>
                       {ACCIONES[entrada.action] ?? entrada.action}
                     </td>
-                    <td className="py-3 pr-3 align-top text-[13px]">
+                    <td className="py-3 pr-3 align-top text-body-sm">
                       {entrada.work_title}
-                      {entrada.note && <p className="mt-0.5 text-[12px] text-gray-500">{entrada.note}</p>}
+                      {entrada.note && <p className="mt-0.5 text-meta text-gray-500">{entrada.note}</p>}
                     </td>
-                    <td className="py-3 pr-3 align-top text-[13px] text-gray-500">{entrada.actor_name}</td>
-                    <td className="py-3 align-top text-[13px] tabular-nums text-gray-500">{fecha(entrada.created_at)}</td>
+                    <td className="py-3 pr-3 align-top text-body-sm text-gray-500">{entrada.actor_name}</td>
+                    <td className="py-3 align-top text-body-sm tabular-nums text-gray-500">{fecha(entrada.created_at)}</td>
                   </tr>
                 ))}
               </tbody>

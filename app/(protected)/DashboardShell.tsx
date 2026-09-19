@@ -101,16 +101,16 @@ export function DashboardShell({
     <Link
       href={item.href}
       aria-current={activo(item) ? "page" : undefined}
-      className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13.5px] transition-colors ${
+      className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-nav transition-colors ${
         activo(item)
-          ? "bg-gray-100 font-medium text-gray-900"
+          ? "bg-gray-100 text-gray-900"
           : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
       }`}
     >
       <span className="shrink-0 opacity-75">{item.icon}</span>
       <span className="truncate">{item.label}</span>
       {item.badge ? (
-        <span className="ml-auto rounded-full bg-gray-900 px-1.5 text-[11px] leading-[1.5] tabular-nums text-white">
+        <span className="ml-auto rounded-full bg-gray-900 px-1.5 text-meta leading-[1.5] tabular-nums text-white">
           {item.badge}
         </span>
       ) : null}
@@ -120,7 +120,7 @@ export function DashboardShell({
   const contenidoLateral = (
     <>
       <Link href="/dashboard" className="flex items-baseline gap-2 px-2.5 pb-5 pt-1">
-        <span className="text-base font-bold tracking-tight text-gray-900">
+        <span className="text-subsection font-bold tracking-tight text-gray-900">
           Design<span className="text-gray-400">folio</span>
         </span>
         <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
@@ -130,13 +130,13 @@ export function DashboardShell({
 
       <Link
         href="/dashboard/new"
-        className="mb-4 flex items-center justify-center gap-1.5 rounded-lg bg-gray-900 px-3 py-2 text-[13.5px] font-medium text-white transition-colors hover:bg-gray-800"
+        className="mb-4 flex items-center justify-center gap-1.5 rounded-lg bg-gray-900 px-3 py-2 text-action text-white transition-colors hover:bg-gray-800"
       >
         {icono(ICONOS.nuevo)} Nuevo proyecto
       </Link>
 
       {isFounder && (
-        <p className="px-2.5 pb-1.5 pt-1 text-[11px] uppercase tracking-[0.06em] text-gray-400">
+        <p className="px-2.5 pb-1.5 pt-1 text-meta uppercase tracking-[0.06em] text-gray-400">
           Plataforma
         </p>
       )}
@@ -144,7 +144,7 @@ export function DashboardShell({
         {plataforma.map((item) => <Enlace key={item.href} item={item} />)}
       </nav>
 
-      <p className="px-2.5 pb-1.5 pt-4 text-[11px] uppercase tracking-[0.06em] text-gray-400">
+      <p className="px-2.5 pb-1.5 pt-4 text-meta uppercase tracking-[0.06em] text-gray-400">
         Mi cuenta
       </p>
       <nav className="flex flex-col gap-0.5">
@@ -152,10 +152,10 @@ export function DashboardShell({
       </nav>
 
       <div className="mt-auto border-t border-gray-200 pt-3">
-        <p className="truncate px-2.5 text-[12.5px] text-gray-500" title={email}>{email}</p>
+        <p className="truncate px-2.5 text-meta text-gray-500" title={email}>{email}</p>
         <button
           onClick={signOut}
-          className="mt-1 w-full rounded-lg px-2.5 py-1.5 text-left text-[13px] text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
+          className="mt-1 w-full rounded-lg px-2.5 py-1.5 text-left text-action text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
         >
           Cerrar sesión
         </button>
@@ -174,7 +174,7 @@ export function DashboardShell({
         >
           {icono(ICONOS.menu)}
         </button>
-        <Link href="/dashboard" className="text-base font-bold tracking-tight text-gray-900">
+        <Link href="/dashboard" className="text-subsection font-bold tracking-tight text-gray-900">
           Design<span className="text-gray-400">folio</span>
         </Link>
         <NotificationBell />

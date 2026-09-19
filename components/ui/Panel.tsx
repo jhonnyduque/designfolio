@@ -26,8 +26,8 @@ export function PageHeader({
   return (
     <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h1 className="text-[21px] font-semibold tracking-[-0.02em] text-gray-900">{title}</h1>
-        {subtitle && <p className="mt-1 max-w-[62ch] text-[13px] leading-relaxed text-gray-500">{subtitle}</p>}
+        <h1 className="text-page-title text-gray-900">{title}</h1>
+        {subtitle && <p className="mt-1 max-w-[62ch] text-body-sm text-gray-500">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -48,10 +48,10 @@ export function Stat({ value, label }: { value: number; label: string }) {
   return (
     <span className="flex items-baseline gap-1.5">
       {/* Un cero no merece el mismo peso visual que un número real. */}
-      <b className={`text-[17px] font-semibold tabular-nums tracking-[-0.01em] ${value === 0 ? "text-gray-400" : "text-gray-900"}`}>
+      <b className={`text-metric tabular-nums ${value === 0 ? "text-gray-400" : "text-gray-900"}`}>
         {value}
       </b>
-      <span className="text-[13px] text-gray-500">{label}</span>
+      <span className="text-meta text-gray-500">{label}</span>
     </span>
   )
 }
@@ -79,13 +79,13 @@ export function Tabs({
               onClick={() => onChange(item.value)}
               aria-selected={activo}
               role="tab"
-              className={`relative shrink-0 whitespace-nowrap px-3.5 pb-3 pt-2.5 text-[13.5px] transition-colors ${
-                activo ? "font-medium text-gray-900" : "text-gray-500 hover:text-gray-900"
+              className={`relative shrink-0 whitespace-nowrap px-3.5 pb-3 pt-2.5 text-nav transition-colors ${
+                activo ? "text-gray-900" : "text-gray-500 hover:text-gray-900"
               }`}
             >
               {item.label}
               {item.count !== undefined && item.count > 0 && (
-                <span className="ml-1.5 text-[11.5px] tabular-nums text-gray-400">{item.count}</span>
+                <span className="ml-1.5 text-meta tabular-nums text-gray-400">{item.count}</span>
               )}
               {activo && <span className="absolute inset-x-3.5 -bottom-px h-[1.5px] bg-gray-900" />}
             </button>
@@ -99,8 +99,8 @@ export function Tabs({
 export function EmptyState({ title, text }: { title: string; text: string }) {
   return (
     <div className="px-5 py-16 text-center">
-      <p className="text-[14px] font-medium text-gray-900">{title}</p>
-      <p className="mx-auto mt-1.5 max-w-[42ch] text-[13px] leading-relaxed text-gray-500">{text}</p>
+      <p className="text-subsection text-gray-900">{title}</p>
+      <p className="mx-auto mt-1.5 max-w-[42ch] text-body-sm text-gray-500">{text}</p>
     </div>
   )
 }
@@ -178,9 +178,7 @@ export function RowMenu({ acciones, label = "Acciones" }: { acciones: AccionFila
         aria-expanded={abierto}
         aria-haspopup="menu"
         onClick={() => (abierto ? setPosicion(null) : abrir())}
-        className={`flex h-[26px] w-[26px] items-center justify-center rounded-md text-[15px] leading-none transition-colors ${
-          abierto ? "bg-gray-100 text-gray-900" : "text-gray-400 hover:bg-gray-100 hover:text-gray-900"
-        }`}
+        className={`flex h-[26px] w-[26px] items-center justify-center rounded-md text-body leading-none transition-colors ${ abierto ? "bg-gray-100 text-gray-900" : "text-gray-400 hover:bg-gray-100 hover:text-gray-900" }`}
       >
         ⋮
       </button>
@@ -203,7 +201,7 @@ export function RowMenu({ acciones, label = "Acciones" }: { acciones: AccionFila
                   setPosicion(null)
                   accion.onClick()
                 }}
-                className={`block w-full px-3 py-1.5 text-left text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`block w-full px-3 py-1.5 text-left text-action transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                   accion.destructiva
                     ? "text-red-600 hover:bg-red-50"
                     : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
@@ -225,7 +223,7 @@ export function Button({
   variant = "secondary",
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" }) {
-  const base = "h-[30px] shrink-0 rounded-md px-3 text-[12.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+  const base = "h-[30px] shrink-0 rounded-md px-3 text-action transition-colors disabled:cursor-not-allowed disabled:opacity-50"
   const estilo =
     variant === "primary"
       ? "bg-gray-900 text-white hover:bg-gray-800"

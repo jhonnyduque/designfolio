@@ -32,7 +32,7 @@ export function TaxonomySelector({
   if (loading) {
     return (
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-label text-gray-700">
           {label}{" "}
           {hint && <span className="font-normal text-gray-400">{hint}</span>}
         </label>
@@ -47,7 +47,7 @@ export function TaxonomySelector({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-label text-gray-700">
         {label}{" "}
         {hint && <span className="font-normal text-gray-400">{hint}</span>}
       </label>
@@ -67,13 +67,7 @@ export function TaxonomySelector({
                 if (!isDisabled) onSelect(item.name)
               }}
               disabled={isDisabled}
-              className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
-                isSelected
-                  ? "border-gray-900 bg-gray-900 text-white"
-                  : isDisabled
-                    ? "border-gray-200 text-gray-300 cursor-not-allowed"
-                    : "border-gray-300 text-gray-600 hover:border-gray-400"
-              }`}
+              className={`px-3 py-1.5 text-action rounded-full border transition-colors ${ isSelected ? "border-gray-900 bg-gray-900 text-white" : isDisabled ? "border-gray-200 text-gray-300 cursor-not-allowed" : "border-gray-300 text-gray-600 hover:border-gray-400" }`}
             >
               {item.name}
             </button>
@@ -81,12 +75,12 @@ export function TaxonomySelector({
         })}
 
         {items.length === 0 && (
-          <p className="text-sm text-gray-400">No hay opciones disponibles.</p>
+          <p className="text-body-sm text-gray-400">No hay opciones disponibles.</p>
         )}
       </div>
 
       {mode === "multiple" && (
-        <p className="mt-1.5 text-xs text-gray-400 text-right">
+        <p className="mt-1.5 text-meta text-gray-400 text-right">
           {selectedArray.length}/{max}
         </p>
       )}

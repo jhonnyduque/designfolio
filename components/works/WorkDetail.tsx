@@ -211,7 +211,7 @@ export function WorkDetail({
       {/* Back link */}
       <Link
         href={backHref}
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors mb-6"
+        className="inline-flex items-center gap-1 text-action text-gray-500 hover:text-gray-700 transition-colors mb-6"
       >
         ← Volver al feed
       </Link>
@@ -240,7 +240,7 @@ export function WorkDetail({
                   <button
                     type="button"
                     onClick={openVideoFullscreen}
-                    className="absolute bottom-3 right-3 rounded-full border border-black/10 bg-white/80 px-3 py-1 text-xs font-medium text-gray-800 backdrop-blur hover:bg-white"
+                    className="absolute bottom-3 right-3 rounded-full border border-black/10 bg-white/80 px-3 py-1 text-action text-gray-800 backdrop-blur hover:bg-white"
                   >
                     Pantalla completa
                   </button>
@@ -330,32 +330,32 @@ export function WorkDetail({
               /* Edit mode */
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
+                  <label className="block text-label text-gray-500 mb-1">
                     Título
                   </label>
                   <input
                     type="text"
                     value={editTitle}
                     onChange={(e) => setEditTitle(e.target.value)}
-                    className="w-full px-3 py-2 text-lg font-bold text-gray-900 bg-white border border-gray-300 rounded-lg focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+                    className="w-full px-3 py-2 text-section text-gray-900 bg-white border border-gray-300 rounded-lg focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
+                  <label className="block text-label text-gray-500 mb-1">
                     Descripción
                   </label>
                   <textarea
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
                     rows={5}
-                    className="w-full px-3 py-2 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors resize-none"
+                    className="w-full px-3 py-2 text-body-sm text-gray-900 bg-white border border-gray-300 rounded-lg focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors resize-none"
                   />
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={handleSaveEdit}
                     disabled={saving || !editTitle.trim()}
-                    className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                    className="px-4 py-2 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
                   >
                     {saving ? "Guardando..." : "Guardar"}
                   </button>
@@ -365,13 +365,13 @@ export function WorkDetail({
                       setEditTitle(title)
                       setEditDescription(description)
                     }}
-                    className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="px-4 py-2 text-action text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                   >
                     Cancelar
                   </button>
                 </div>
                 {actionError && (
-                  <p role="alert" className="text-sm text-red-600">
+                  <p role="alert" className="text-body-sm text-red-600">
                     {actionError}
                   </p>
                 )}
@@ -379,17 +379,17 @@ export function WorkDetail({
             ) : (
               /* View mode */
               <>
-                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+                <h1 className="text-page-title text-gray-900">{title}</h1>
 
-                <div className="mt-2 flex items-center gap-3 text-sm text-gray-400">
-                  <span className="uppercase text-xs font-semibold tracking-wider">
+                <div className="mt-2 flex items-center gap-3 text-meta text-gray-400">
+                  <span className="uppercase font-semibold tracking-wider">
                     {work.category}
                   </span>
                   <span>·</span>
                   <span>{publishedDate}</span>
                 </div>
 
-                <p className="mt-5 text-[15px] text-gray-600 leading-relaxed whitespace-pre-wrap">
+                <p className="mt-5 text-body text-gray-600 whitespace-pre-wrap">
                   {description}
                 </p>
               </>
@@ -401,7 +401,7 @@ export function WorkDetail({
                 {work.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full"
+                    className="text-meta bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full"
                   >
                     #{tag}
                   </span>
@@ -416,7 +416,7 @@ export function WorkDetail({
                 initialCount={work.likes_count}
                 size="md"
               />
-              <span className="flex items-center gap-1.5 text-sm text-gray-500">
+              <span className="flex items-center gap-1.5 text-body-sm text-gray-500">
                 <svg
                   className="w-4 h-4"
                   fill="currentColor"
@@ -432,7 +432,7 @@ export function WorkDetail({
                 {work.comments_count === 1 ? "comentario" : "comentarios"}
               </span>
               {work.views_count > 0 && (
-                <span className="flex items-center gap-1.5 text-sm text-gray-500">
+                <span className="flex items-center gap-1.5 text-body-sm text-gray-500">
                   <svg
                     className="w-4 h-4"
                     fill="currentColor"
@@ -457,7 +457,7 @@ export function WorkDetail({
 
             {/* Owner actions */}
             {isOwner && !editing && actionError && (
-              <p role="alert" className="mt-4 text-sm text-red-600">
+              <p role="alert" className="mt-4 text-body-sm text-red-600">
                 {actionError}
               </p>
             )}
@@ -511,7 +511,7 @@ export function WorkDetail({
                 {prevHref ? (
                   <Link
                     href={prevHref}
-                    className="inline-flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-gray-800"
+                    className="inline-flex items-center gap-2 text-action text-gray-500 transition-colors hover:text-gray-800"
                   >
                     <span className="text-black/45">←</span>
                     <span>Anterior</span>
@@ -522,7 +522,7 @@ export function WorkDetail({
                 {nextHref ? (
                   <Link
                     href={nextHref}
-                    className="inline-flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-gray-800"
+                    className="inline-flex items-center gap-2 text-action text-gray-500 transition-colors hover:text-gray-800"
                   >
                     <span>Siguiente</span>
                     <span className="text-black/45">→</span>
@@ -537,7 +537,7 @@ export function WorkDetail({
 
         {/* Right: Author sidebar */}
         <aside className="lg:pt-0">
-          <div className="bg-white rounded-xl border border-gray-200 p-5 lg:sticky lg:top-20">
+          <div className="lg:sticky lg:top-20">
             <div className="flex items-center gap-3">
               {author.avatar_url ? (
                 <img
@@ -547,27 +547,27 @@ export function WorkDetail({
                 />
               ) : (
                 <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-lg font-bold text-gray-500">
+                  <span className="text-section text-gray-500">
                     {author.full_name?.charAt(0) ?? "?"}
                   </span>
                 </div>
               )}
               <div>
-                <p className="font-semibold text-gray-900">
+                <p className="text-subsection text-gray-900">
                   {author.full_name}
                 </p>
-                <p className="text-sm text-gray-500">@{author.username}</p>
+                <p className="text-meta text-gray-500">@{author.username}</p>
               </div>
             </div>
 
             {author.bio && (
-              <p className="mt-3 text-sm text-gray-600 leading-relaxed">
+              <p className="mt-3 text-body-sm text-gray-600">
                 {author.bio}
               </p>
             )}
 
             {author.school && (
-              <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-400">
+              <p className="mt-2 flex items-center gap-1.5 text-meta text-gray-400">
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M4 17h16M7 17l1.5-6h7L17 17M10 11l1-4h2l1 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -578,7 +578,7 @@ export function WorkDetail({
             {profileHref && (
               <Link
                 href={profileHref}
-                className="block mt-4 text-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                className="block mt-4 text-center text-action text-gray-500 hover:text-gray-700 transition-colors"
               >
                 Ver perfil completo →
               </Link>
@@ -601,7 +601,7 @@ export function WorkDetail({
                 .getElementById("comments-section")
                 ?.scrollIntoView({ behavior: "smooth", block: "start" })
             }
-            className="inline-flex items-center gap-1.5 text-xs text-gray-500"
+            className="inline-flex items-center gap-1.5 text-meta text-gray-500"
           >
             <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
@@ -620,24 +620,24 @@ export function WorkDetail({
       {confirmDelete && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
-            <h3 className="text-lg font-bold text-gray-900">
+            <h3 className="text-section text-gray-900">
               ¿Eliminar este proyecto?
             </h3>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-body-sm text-gray-500">
               Se eliminarán también todos sus likes y comentarios. Esta acción no
               se puede deshacer.
             </p>
             <div className="mt-4 flex gap-2 justify-end">
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-action text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleDelete}
                 disabled={actionLoading}
-                className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-action bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
               >
                 Eliminar
               </button>
@@ -654,7 +654,7 @@ export function WorkDetail({
           <button
             type="button"
             onClick={() => setLightboxOpen(false)}
-            className="absolute right-4 top-4 z-[71] rounded-full bg-white/90 px-3 py-1 text-sm font-semibold text-gray-900"
+            className="absolute right-4 top-4 z-[71] rounded-full bg-white/90 px-3 py-1 text-action text-gray-900"
           >
             Cerrar
           </button>

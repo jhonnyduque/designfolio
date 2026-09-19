@@ -74,16 +74,16 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
   return (
     <div className="mt-8 pt-8 border-t border-gray-100">
       <div className="flex items-center justify-between mb-5">
-        <h3 className="text-lg font-bold text-gray-900">
+        <h3 className="text-section text-gray-900">
           Comentarios{" "}
-          <span className="text-gray-400 font-normal text-sm">
+          <span className="text-gray-400 text-body-sm">
             ({comments.length || initialCount})
           </span>
         </h3>
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="px-3.5 py-1.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+            className="px-3.5 py-1.5 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 transition-colors"
           >
             Comentar
           </button>
@@ -98,23 +98,17 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
             onChange={(e) => setContent(e.target.value)}
             rows={4}
             placeholder="Escribe feedback constructivo sobre esta obra. ¿Qué funciona? ¿Qué mejorarías? (mín. 100 caracteres)"
-            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none resize-none bg-white"
+            className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none resize-none bg-white"
           />
           <p
-            className={`text-xs text-right ${
-              contentLen >= COMMENT_MIN_LENGTH
-                ? "text-green-600"
-                : contentLen > 60
-                  ? "text-amber-500"
-                  : "text-gray-400"
-            }`}
+            className={`text-meta text-right ${ contentLen >= COMMENT_MIN_LENGTH ? "text-green-600" : contentLen > 60 ? "text-amber-500" : "text-gray-400" }`}
           >
             {contentLen}/{COMMENT_MIN_LENGTH} mín.
           </p>
 
           {/* Category chips */}
           <div>
-            <p className="text-xs text-gray-500 mb-2">
+            <p className="text-meta text-gray-500 mb-2">
               ¿Sobre qué aspectos es tu feedback? (mín. 1)
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -123,11 +117,7 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
                   key={cat}
                   type="button"
                   onClick={() => toggleCategory(cat)}
-                  className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
-                    categories.includes(cat)
-                      ? "border-gray-900 bg-gray-900 text-white"
-                      : "border-gray-300 text-gray-500 hover:border-gray-400"
-                  }`}
+                  className={`px-2.5 py-1 text-action rounded-full border transition-colors ${ categories.includes(cat) ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 text-gray-500 hover:border-gray-400" }`}
                 >
                   {cat}
                 </button>
@@ -137,11 +127,11 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
 
           {!isAuthenticated && (
             <div className="space-y-2">
-              <p className="text-xs text-gray-500">
+              <p className="text-meta text-gray-500">
                 Verificación anti-spam: resuelve la suma para publicar.
               </p>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-body-sm font-medium text-gray-700">
                   ¿{captchaA} + {captchaB}?
                 </label>
                 <input
@@ -149,25 +139,25 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
                   inputMode="numeric"
                   value={captchaInput}
                   onChange={(e) => setCaptchaInput(e.target.value)}
-                  className="w-24 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
+                  className="w-24 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-body-sm text-gray-900 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none"
                   placeholder="Respuesta"
                 />
                 <button
                   type="button"
                   onClick={refreshCaptcha}
-                  className="text-xs text-gray-500 hover:text-gray-700"
+                  className="text-action text-gray-500 hover:text-gray-700"
                 >
                   Cambiar
                 </button>
               </div>
               {captchaInput && !isCaptchaValid && (
-                <p className="text-xs text-red-600">Respuesta incorrecta.</p>
+                <p className="text-meta text-red-600">Respuesta incorrecta.</p>
               )}
             </div>
           )}
 
           {!isValid && (
-            <p className="text-xs text-amber-600">
+            <p className="text-meta text-amber-600">
               Para publicar:{" "}
               {contentLen < COMMENT_MIN_LENGTH
                 ? `escribe al menos ${COMMENT_MIN_LENGTH} caracteres`
@@ -183,12 +173,12 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
             </p>
           )}
           {cooldownSeconds > 0 && (
-            <p className="text-xs text-amber-600">
+            <p className="text-meta text-amber-600">
               Espera {cooldownSeconds}s antes de publicar otro comentario.
             </p>
           )}
 
-          {error && <p className="text-xs text-red-600">{error}</p>}
+          {error && <p className="text-meta text-red-600">{error}</p>}
 
           <div className="flex gap-2 justify-end">
             <button
@@ -198,14 +188,14 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
                 setCategories([])
                 setCaptchaInput("")
               }}
-              className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="px-3 py-1.5 text-action text-gray-500 hover:text-gray-700 transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleSubmit}
               disabled={isDisabled}
-              className="px-4 py-1.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-1.5 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               {posting
                 ? "Publicando..."
@@ -234,7 +224,7 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
 
       {/* Comments list */}
       {!loading && comments.length === 0 && (
-        <p className="text-sm text-gray-400 text-center py-6">
+        <p className="text-body-sm text-gray-400 text-center py-6">
           Aún no hay comentarios. Sé el primero en dar feedback.
         </p>
       )}
@@ -251,7 +241,7 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
               />
             ) : (
               <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-bold text-gray-500">
+                <span className="text-meta font-bold text-gray-500">
                   {comment.author_full_name.charAt(0)}
                 </span>
               </div>
@@ -260,10 +250,10 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
             <div className="flex-1 min-w-0">
               {/* Header */}
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-body-sm font-medium text-gray-900">
                   {comment.author_full_name}
                 </span>
-                <span className="text-xs text-gray-400">
+                <span className="text-meta text-gray-400">
                   {getTimeAgo(comment.created_at)}
                 </span>
               </div>
@@ -281,7 +271,7 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
               </div>
 
               {/* Content */}
-              <p className="mt-1.5 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+              <p className="mt-1.5 text-body-sm text-gray-600 whitespace-pre-wrap">
                 {comment.content}
               </p>
             </div>

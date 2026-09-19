@@ -86,14 +86,14 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mis proyectos</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-page-title text-gray-900">Mis proyectos</h1>
+          <p className="mt-1 text-body-sm text-gray-500">
             {works.filter((w) => !w.archived).length} proyectos · {archived.length} archivados
           </p>
         </div>
         <Link
           href="/dashboard/new"
-          className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+          className="px-4 py-2 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 transition-colors"
         >
           + Nuevo proyecto
         </Link>
@@ -102,20 +102,20 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3 mb-6">
         <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
-          <p className="text-xl font-bold text-green-600">{approved.length}</p>
-          <p className="text-xs text-gray-500">Publicadas</p>
+          <p className="text-metric text-green-600">{approved.length}</p>
+          <p className="text-meta text-gray-500">Publicadas</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
-          <p className="text-xl font-bold text-amber-600">{pending.length}</p>
-          <p className="text-xs text-gray-500">En revisión</p>
+          <p className="text-metric text-amber-600">{pending.length}</p>
+          <p className="text-meta text-gray-500">En revisión</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
-          <p className="text-xl font-bold text-red-500">{rejected.length}</p>
-          <p className="text-xs text-gray-500">Rechazadas</p>
+          <p className="text-metric text-red-500">{rejected.length}</p>
+          <p className="text-meta text-gray-500">Rechazadas</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
-          <p className="text-xl font-bold text-gray-400">{archived.length}</p>
-          <p className="text-xs text-gray-500">Archivadas</p>
+          <p className="text-metric text-gray-400">{archived.length}</p>
+          <p className="text-meta text-gray-500">Archivadas</p>
         </div>
       </div>
 
@@ -123,7 +123,7 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => setShowArchived(false)}
-          className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+          className={`px-3 py-1.5 text-action rounded-lg border transition-colors ${
             !showArchived
               ? "border-gray-900 bg-gray-900 text-white"
               : "border-gray-300 text-gray-600 hover:border-gray-400"
@@ -133,7 +133,7 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
         </button>
         <button
           onClick={() => setShowArchived(true)}
-          className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+          className={`px-3 py-1.5 text-action rounded-lg border transition-colors ${
             showArchived
               ? "border-gray-900 bg-gray-900 text-white"
               : "border-gray-300 text-gray-600 hover:border-gray-400"
@@ -145,12 +145,12 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
 
       {works.length === 0 && (
         <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <p className="text-gray-500 font-medium">
+          <p className="text-subsection text-gray-500">
             No has publicado ningún proyecto aún.
           </p>
           <Link
             href="/dashboard/new"
-            className="mt-4 inline-block px-5 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+            className="mt-4 inline-block px-5 py-2 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 transition-colors"
           >
             Crear tu primer proyecto
           </Link>
@@ -205,7 +205,7 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
                       </div>
                     )}
                     <span
-                      className={`absolute top-2 right-2 text-[11px] font-medium px-2 py-0.5 rounded-full ${status.style}`}
+                      className={`absolute top-2 right-2 text-meta font-medium px-2 py-0.5 rounded-full ${status.style}`}
                     >
                       {status.label}
                     </span>
@@ -236,7 +236,7 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
                     </div>
                   )}
                   <span
-                    className={`absolute top-2 right-2 text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                    className={`absolute top-2 right-2 text-meta font-medium px-2 py-0.5 rounded-full ${
                       work.archived
                         ? "bg-gray-100 text-gray-500"
                         : status.style
@@ -248,13 +248,13 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
               )}
 
               <div className="p-4">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                <span className="text-meta font-semibold uppercase tracking-wider text-gray-400">
                   {work.category}
                 </span>
-                <h3 className="mt-1 text-[15px] font-semibold text-gray-900 leading-snug line-clamp-2">
+                <h3 className="mt-1 text-subsection text-gray-900 line-clamp-2">
                   {work.title}
                 </h3>
-                <div className="mt-2 flex items-center justify-between text-xs text-gray-400">
+                <div className="mt-2 flex items-center justify-between text-meta text-gray-400">
                   <span>{date}</span>
                   {isApproved && !work.archived && (
                     <span className="flex items-center gap-2">
@@ -270,7 +270,7 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
                     <button
                       onClick={() => handleArchive(work.id, false)}
                       disabled={actionLoading === work.id}
-                      className="text-xs text-green-600 hover:text-green-700 px-2 py-1 rounded hover:bg-green-50 transition-colors"
+                      className="text-action text-green-600 hover:text-green-700 px-2 py-1 rounded hover:bg-green-50 transition-colors"
                     >
                       Restaurar
                     </button>
@@ -278,7 +278,7 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
                     <button
                       onClick={() => handleArchive(work.id, true)}
                       disabled={actionLoading === work.id}
-                      className="text-xs text-amber-600 hover:text-amber-700 px-2 py-1 rounded hover:bg-amber-50 transition-colors"
+                      className="text-action text-amber-600 hover:text-amber-700 px-2 py-1 rounded hover:bg-amber-50 transition-colors"
                     >
                       Archivar
                     </button>
@@ -288,7 +288,7 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
                       setConfirmDelete({ id: work.id, title: work.title })
                     }
                     disabled={actionLoading === work.id}
-                    className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                    className="text-action text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50 transition-colors"
                   >
                     Eliminar
                   </button>
@@ -301,7 +301,7 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
 
       {visibleWorks.length === 0 && works.length > 0 && (
         <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-          <p className="text-sm text-gray-400">
+          <p className="text-body-sm text-gray-400">
             {showArchived
               ? "No tienes proyectos archivados"
               : "Todos tus proyectos están archivados"}
@@ -313,23 +313,23 @@ export function MyWorks({ works: initialWorks }: { works: MyWork[] }) {
       {confirmDelete && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
-            <h3 className="text-lg font-bold text-gray-900">
+            <h3 className="text-section text-gray-900">
               ¿Eliminar &ldquo;{confirmDelete.title}&rdquo;?
             </h3>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-body-sm text-gray-500">
               Esta acción no se puede deshacer. Se eliminarán también sus likes y
               comentarios.
             </p>
             <div className="mt-4 flex gap-2 justify-end">
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-action text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => handleDelete(confirmDelete.id)}
-                className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="px-4 py-2 text-action bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 Eliminar
               </button>

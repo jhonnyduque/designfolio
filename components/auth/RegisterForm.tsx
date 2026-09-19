@@ -77,13 +77,13 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
             />
           </svg>
         </div>
-        <h2 className="text-xl font-bold text-gray-900">Revisa tu email</h2>
-        <p className="mt-2 text-sm text-gray-500">
+        <h2 className="text-section text-gray-900">Revisa tu email</h2>
+        <p className="mt-2 text-body-sm text-gray-500">
           Te enviamos un enlace de confirmación a <strong>{email}</strong>.
         </p>
         <Link
           href="/login"
-          className="mt-4 inline-block text-sm font-medium text-gray-900 hover:underline"
+          className="mt-4 inline-block text-action text-gray-900 hover:underline"
         >
           Volver al login
         </Link>
@@ -94,18 +94,18 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
   return (
     <div>
       <div className="lg:hidden mb-8">
-        <span className="text-2xl font-bold tracking-tight text-gray-900">
+        <span className="text-page-title text-gray-900">
           Design<span className="text-gray-400">folio</span>
         </span>
       </div>
 
-      <h2 className="text-2xl font-bold text-gray-900">Crear cuenta</h2>
-      <p className="mt-2 text-sm text-gray-500">
+      <h2 className="text-page-title text-gray-900">Crear cuenta</h2>
+      <p className="mt-2 text-body-sm text-gray-500">
         Únete a la comunidad. Necesitas un código de invitación.
       </p>
 
       {error && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-body-sm text-red-700">
           {error}
         </div>
       )}
@@ -114,7 +114,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
         <div>
           <label
             htmlFor="invite"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-label text-gray-700"
           >
             Código de invitación
           </label>
@@ -124,7 +124,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
             required
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors font-mono tracking-wider"
+            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors font-mono tracking-wider"
             placeholder="ABCD1234"
             maxLength={12}
           />
@@ -133,7 +133,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
         <div>
           <label
             htmlFor="fullName"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-label text-gray-700"
           >
             Nombre completo
             <span className="text-gray-400 font-normal"> (opcional)</span>
@@ -143,7 +143,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
             placeholder="Tu nombre real"
           />
         </div>
@@ -151,7 +151,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
         <div>
           <label
             htmlFor="regEmail"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-label text-gray-700"
           >
             Email
           </label>
@@ -161,7 +161,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
             placeholder="tu@email.com"
           />
         </div>
@@ -169,7 +169,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
         <div>
           <label
             htmlFor="regPassword"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-label text-gray-700"
           >
             Contraseña
           </label>
@@ -179,7 +179,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
+            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
             placeholder="Mínimo 8 caracteres"
           />
         </div>
@@ -189,7 +189,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 px-4 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full py-2.5 px-4 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? "Creando cuenta..." : "Crear cuenta"}
         </button>
@@ -199,7 +199,7 @@ export function RegisterForm({ googleEnabled = false }: { googleEnabled?: boolea
         <GoogleButton inviteCode={inviteCode} requireInvite onError={setError} />
       )}
 
-      <p className="mt-6 text-center text-sm text-gray-500">
+      <p className="mt-6 text-center text-body-sm text-gray-500">
         ¿Ya tienes cuenta?{" "}
         <Link
           href="/login"

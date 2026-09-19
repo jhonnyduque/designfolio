@@ -28,7 +28,7 @@ export function LikeButton({
         }}
         disabled={loading}
         className={`inline-flex items-center gap-1.5 transition-all ${
-          isMd ? "text-sm" : "text-xs"
+          isMd ? "text-body-sm" : "text-meta"
         } ${
           // Negro hasta que hay like. El rojo significa "le he dado", así que
           // no se enciende por pasar el ratón por encima.
@@ -55,11 +55,11 @@ export function LikeButton({
         </svg>
         {/* La cifra también tiene que emparejar con la del icono vecino, o el
             corazón queda en negrita junto a un número desvaído. */}
-        <span className={isMd ? "text-[13.5px] font-semibold tabular-nums" : liked ? "font-medium" : ""}>
+        <span className={isMd ? "text-body-sm font-semibold tabular-nums" : liked ? "font-medium" : ""}>
           {count}
         </span>
       </button>
-      {error && <span className="mt-1 text-[10px] text-red-500">{error}</span>}
+      {error && <span className="mt-1 text-helper text-red-500">{error}</span>}
     </div>
   )
 }

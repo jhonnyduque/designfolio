@@ -51,7 +51,7 @@ export function UserProfile({ profile, works }: UserProfileProps) {
     <div className="max-w-4xl mx-auto">
       <Link
         href="/dashboard"
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors mb-6"
+        className="inline-flex items-center gap-1 text-action text-gray-500 hover:text-gray-700 transition-colors mb-6"
       >
         ← Volver al feed
       </Link>
@@ -68,24 +68,24 @@ export function UserProfile({ profile, works }: UserProfileProps) {
             />
           ) : (
             <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
-              <span className="text-2xl font-bold text-gray-500">
+              <span className="text-page-title text-gray-500">
                 {profile.full_name.charAt(0)}
               </span>
             </div>
           )}
 
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-page-title text-gray-900">
               {profile.full_name}
             </h1>
-            <p className="text-sm text-gray-400 mt-0.5">
+            <p className="text-meta text-gray-400 mt-0.5">
               @{profile.username}
             </p>
 
             {/* Badges */}
             <div className="mt-3 flex flex-wrap gap-2">
               <span
-                className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                className={`text-meta px-2.5 py-1 rounded-full font-medium ${
                   LEVEL_STYLES[profile.reputation_level] ?? LEVEL_STYLES[0]
                 }`}
               >
@@ -95,7 +95,7 @@ export function UserProfile({ profile, works }: UserProfileProps) {
               {profile.categories?.map((cat) => (
                 <span
                   key={cat}
-                  className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full"
+                  className="text-meta bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full"
                 >
                   {cat}
                 </span>
@@ -104,13 +104,13 @@ export function UserProfile({ profile, works }: UserProfileProps) {
 
             {/* Bio */}
             {profile.bio && (
-              <p className="mt-4 text-sm text-gray-600 leading-relaxed max-w-lg">
+              <p className="mt-4 text-body-sm text-gray-600 max-w-lg">
                 {profile.bio}
               </p>
             )}
 
             {/* Meta */}
-            <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-400">
+            <div className="mt-3 flex flex-wrap gap-4 text-meta text-gray-400">
               {profile.school && <span>🎓 {profile.school}</span>}
               {profile.career_year && <span>{profile.career_year}</span>}
               <span>Miembro desde {joinDate}</span>
@@ -122,11 +122,11 @@ export function UserProfile({ profile, works }: UserProfileProps) {
 
       {/* Works grid */}
       <div className="mt-8">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Obras</h2>
+        <h2 className="text-section text-gray-900 mb-4">Obras</h2>
 
         {works.length === 0 && (
           <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-            <p className="text-gray-400 text-sm">
+            <p className="text-body-sm text-gray-400">
               Este usuario aún no ha publicado obras.
             </p>
           </div>
@@ -153,7 +153,7 @@ export function UserProfile({ profile, works }: UserProfileProps) {
                       />
                     ) : esVideo ? (
                       <div className="w-full h-full flex items-center justify-center bg-gray-900">
-                        <span className="text-[11px] uppercase tracking-wider text-gray-400">
+                        <span className="text-meta uppercase tracking-wider text-gray-400">
                           Video
                         </span>
                       </div>
@@ -176,13 +176,13 @@ export function UserProfile({ profile, works }: UserProfileProps) {
                     )}
                   </div>
                   <div className="p-4">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                    <span className="text-meta font-semibold uppercase tracking-wider text-gray-400">
                       {work.category}
                     </span>
-                    <h3 className="mt-1 text-[15px] font-semibold text-gray-900 leading-snug line-clamp-2">
+                    <h3 className="mt-1 text-subsection text-gray-900 line-clamp-2">
                       {work.title}
                     </h3>
-                    <div className="mt-3 flex items-center gap-3 text-xs text-gray-400">
+                    <div className="mt-3 flex items-center gap-3 text-meta text-gray-400">
                       <LikeButton
                         workId={work.id}
                         initialCount={work.likes_count}

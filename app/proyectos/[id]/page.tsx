@@ -44,7 +44,7 @@ export default async function PublicWorkPage({ params }: PageProps) {
             href="https://jhonnyduque.com/proyectos/"
             target="_blank"
             rel="noreferrer"
-            className="brand-pill inline-flex items-center px-4 py-1.5 text-xs font-semibold text-white hover:opacity-95"
+            className="brand-pill inline-flex items-center px-4 py-1.5 text-action text-white hover:opacity-95"
           >
             Volver a jhonnyduque.com
           </Link>

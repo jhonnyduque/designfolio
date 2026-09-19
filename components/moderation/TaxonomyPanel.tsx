@@ -92,7 +92,7 @@ export function TaxonomyPanel() {
     }
   }
 
-  if (loading) return <p className="py-8 text-[13px] text-gray-500">Cargando…</p>
+  if (loading) return <p className="py-8 text-body-sm text-gray-500">Cargando…</p>
 
   return (
     <div>
@@ -123,12 +123,12 @@ export function TaxonomyPanel() {
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           placeholder={`Buscar ${plural}`}
-          className="w-full max-w-xs rounded-md border border-gray-300 px-3 py-1.5 text-[13px] text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-gray-900"
+          className="w-full max-w-xs rounded-md border border-gray-300 px-3 py-1.5 text-body-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-gray-900"
         />
         <select
           value={filtro}
           onChange={(e) => setFiltro(e.target.value as Filtro)}
-          className="h-[34px] rounded-md border border-gray-300 bg-white px-2 text-[13px] text-gray-900 outline-none transition-colors focus:border-gray-900"
+          className="h-[34px] rounded-md border border-gray-300 bg-white px-2 text-body-sm text-gray-900 outline-none transition-colors focus:border-gray-900"
         >
           {FILTROS.map(([valor, rotulo]) => (
             <option key={valor} value={valor}>
@@ -149,9 +149,9 @@ export function TaxonomyPanel() {
       </div>
 
       {aviso && (
-        <p role="status" className="mb-4 flex items-center justify-between gap-3 text-[13px] text-gray-700">
+        <p role="status" className="mb-4 flex items-center justify-between gap-3 text-body-sm text-gray-700">
           <span>{aviso}</span>
-          <button type="button" onClick={() => setAviso(null)} className="text-[12px] text-gray-400 hover:text-gray-900">
+          <button type="button" onClick={() => setAviso(null)} className="text-action text-gray-400 hover:text-gray-900">
             Cerrar
           </button>
         </p>
@@ -170,7 +170,7 @@ export function TaxonomyPanel() {
         <Scroller>
           <table className="w-full min-w-[600px] border-collapse">
             <thead>
-              <tr className="border-b border-gray-200 text-left text-[11.5px] font-normal text-gray-400">
+              <tr className="border-b border-gray-200 text-left text-meta text-gray-400">
                 {tipo === "category" && <th className="w-[58px] py-2.5 pr-3 font-normal">Orden</th>}
                 <th className="py-2.5 pr-3 font-normal">Nombre</th>
                 <th className="w-[76px] py-2.5 pr-3 font-normal">Obras</th>
@@ -184,21 +184,21 @@ export function TaxonomyPanel() {
                 return (
                   <tr key={item.id} className="border-b border-gray-200 transition-colors last:border-0 hover:bg-gray-50/60">
                     {tipo === "category" && (
-                      <td className="py-2.5 pr-3 text-[13px] tabular-nums text-gray-500">
+                      <td className="py-2.5 pr-3 text-body-sm tabular-nums text-gray-500">
                         {item.is_archived ? "—" : item.sort_order}
                       </td>
                     )}
-                    <td className="max-w-0 py-2.5 pr-3 text-[13px]">
+                    <td className="max-w-0 py-2.5 pr-3 text-body-sm">
                       <span className={`block truncate ${item.is_archived ? "text-gray-400" : "font-medium text-gray-900"}`}>
                         {item.name}
                       </span>
-                      <span className="mt-0.5 block truncate text-[12px] text-gray-500">
+                      <span className="mt-0.5 block truncate text-meta text-gray-500">
                         {item.slug}
                         {item.created_by_name && ` · la creó ${item.created_by_name}`}
                       </span>
                     </td>
-                    <td className="py-2.5 pr-3 text-[13px] tabular-nums text-gray-500">{item.usage_count}</td>
-                    <td className={`py-2.5 pr-3 text-[13px] ${estado.clase}`}>{estado.texto}</td>
+                    <td className="py-2.5 pr-3 text-body-sm tabular-nums text-gray-500">{item.usage_count}</td>
+                    <td className={`py-2.5 pr-3 text-body-sm ${estado.clase}`}>{estado.texto}</td>
                     <td className="py-2.5">
                       <RowMenu
                         label={`Acciones de ${item.name}`}
@@ -276,8 +276,8 @@ export function TaxonomyPanel() {
           <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5">
             {dialogo.tipo === "crear" && (
               <>
-                <p className="text-[14px] font-medium text-gray-900">Nueva {singular}</p>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-gray-500">
+                <p className="text-body-sm font-medium text-gray-900">Nueva {singular}</p>
+                <p className="mt-1.5 text-body-sm text-gray-500">
                   Quedará disponible de inmediato en el formulario de publicación.
                 </p>
                 <input
@@ -292,7 +292,7 @@ export function TaxonomyPanel() {
                       ejecutar(() => create(tipo, texto.trim()), `«${texto.trim()}» creada`)
                     }
                   }}
-                  className="mt-4 w-full rounded-md border border-gray-300 px-3 py-1.5 text-[13px] text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-gray-900"
+                  className="mt-4 w-full rounded-md border border-gray-300 px-3 py-1.5 text-body-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-gray-900"
                 />
                 <div className="mt-5 flex justify-end gap-2">
                   <Button onClick={() => setDialogo(null)}>Cancelar</Button>
@@ -309,8 +309,8 @@ export function TaxonomyPanel() {
 
             {dialogo.tipo === "renombrar" && (
               <>
-                <p className="text-[14px] font-medium text-gray-900">Renombrar «{dialogo.item.name}»</p>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-gray-500">
+                <p className="text-body-sm font-medium text-gray-900">Renombrar «{dialogo.item.name}»</p>
+                <p className="mt-1.5 text-body-sm text-gray-500">
                   Las {dialogo.item.usage_count} obras que la usan pasan al nombre nuevo.
                 </p>
                 <input
@@ -324,7 +324,7 @@ export function TaxonomyPanel() {
                       ejecutar(() => rename(dialogo.item.id, texto.trim()), `Ahora se llama «${texto.trim()}»`)
                     }
                   }}
-                  className="mt-4 w-full rounded-md border border-gray-300 px-3 py-1.5 text-[13px] text-gray-900 outline-none transition-colors focus:border-gray-900"
+                  className="mt-4 w-full rounded-md border border-gray-300 px-3 py-1.5 text-body-sm text-gray-900 outline-none transition-colors focus:border-gray-900"
                 />
                 <div className="mt-5 flex justify-end gap-2">
                   <Button onClick={() => setDialogo(null)}>Cancelar</Button>
@@ -341,15 +341,15 @@ export function TaxonomyPanel() {
 
             {dialogo.tipo === "fusionar" && (
               <>
-                <p className="text-[14px] font-medium text-gray-900">Fusionar «{dialogo.origen.name}»</p>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-gray-500">
+                <p className="text-body-sm font-medium text-gray-900">Fusionar «{dialogo.origen.name}»</p>
+                <p className="mt-1.5 text-body-sm text-gray-500">
                   Sus {dialogo.origen.usage_count} obras se mueven al destino y esta {singular} desaparece. No se puede
                   deshacer.
                 </p>
                 <select
                   value={destino}
                   onChange={(e) => setDestino(e.target.value)}
-                  className="mt-4 w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-[13px] text-gray-900 outline-none transition-colors focus:border-gray-900"
+                  className="mt-4 w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-body-sm text-gray-900 outline-none transition-colors focus:border-gray-900"
                 >
                   <option value="">Elige el destino</option>
                   {candidatas.map((c) => (
@@ -378,8 +378,8 @@ export function TaxonomyPanel() {
 
             {dialogo.tipo === "archivar" && (
               <>
-                <p className="text-[14px] font-medium text-gray-900">Archivar «{dialogo.item.name}»</p>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-gray-500">
+                <p className="text-body-sm font-medium text-gray-900">Archivar «{dialogo.item.name}»</p>
+                <p className="mt-1.5 text-body-sm text-gray-500">
                   Deja de ofrecerse al publicar. Las {dialogo.item.usage_count} obras que ya la usan la conservan, y
                   puedes restaurarla cuando quieras.
                 </p>

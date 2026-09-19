@@ -51,14 +51,14 @@ export function AuthorDashboard({ profile, works }: AuthorDashboardProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mi Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-page-title text-gray-900">Mi Dashboard</h1>
+          <p className="text-body-sm text-gray-500 mt-0.5">
             Resumen de tu actividad en Designfolio
           </p>
         </div>
         <Link
           href="/dashboard/new"
-          className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+          className="px-4 py-2 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 transition-colors"
         >
           + Nueva Obra
         </Link>
@@ -67,14 +67,14 @@ export function AuthorDashboard({ profile, works }: AuthorDashboardProps) {
       {/* Profile summary */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6 flex items-center justify-between">
         <div>
-          <p className="text-lg font-bold text-gray-900">{profile.full_name}</p>
-          <p className="text-sm text-gray-500">@{profile.username}</p>
+          <p className="text-section text-gray-900">{profile.full_name}</p>
+          <p className="text-body-sm text-gray-500">@{profile.username}</p>
         </div>
         <div className="text-right">
-          <span className="inline-block px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">
+          <span className="inline-block px-2.5 py-1 bg-gray-100 text-gray-700 text-meta font-semibold rounded-full">
             {LEVEL_LABELS[profile.reputation_level] ?? "Novato"}
           </span>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-meta text-gray-400 mt-1">
             {profile.reputation_points} pts de reputación
           </p>
         </div>
@@ -83,20 +83,20 @@ export function AuthorDashboard({ profile, works }: AuthorDashboardProps) {
       {/* Big numbers */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-gray-900">{approved.length}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Obras publicadas</p>
+          <p className="text-page-title text-gray-900">{approved.length}</p>
+          <p className="text-meta text-gray-500 mt-0.5">Obras publicadas</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-red-500">{totalLikes}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Likes recibidos</p>
+          <p className="text-page-title text-red-500">{totalLikes}</p>
+          <p className="text-meta text-gray-500 mt-0.5">Likes recibidos</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-blue-600">{totalComments}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Comentarios</p>
+          <p className="text-page-title text-blue-600">{totalComments}</p>
+          <p className="text-meta text-gray-500 mt-0.5">Comentarios</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-gray-700">{totalViews}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Vistas totales</p>
+          <p className="text-page-title text-gray-700">{totalViews}</p>
+          <p className="text-meta text-gray-500 mt-0.5">Vistas totales</p>
         </div>
       </div>
 
@@ -106,7 +106,7 @@ export function AuthorDashboard({ profile, works }: AuthorDashboardProps) {
           {pending.length > 0 && (
             <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
               <span className="w-2 h-2 bg-amber-400 rounded-full" />
-              <span className="text-sm text-amber-700">
+              <span className="text-body-sm text-amber-700">
                 {pending.length} en revisión
               </span>
             </div>
@@ -114,7 +114,7 @@ export function AuthorDashboard({ profile, works }: AuthorDashboardProps) {
           {rejected.length > 0 && (
             <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
               <span className="w-2 h-2 bg-red-400 rounded-full" />
-              <span className="text-sm text-red-600">
+              <span className="text-body-sm text-red-600">
                 {rejected.length}{" "}
                 {rejected.length === 1 ? "rechazada" : "rechazadas"}
               </span>
@@ -127,7 +127,7 @@ export function AuthorDashboard({ profile, works }: AuthorDashboardProps) {
       {topWorks.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-900">
+            <h2 className="text-body-sm font-semibold text-gray-900">
               Rendimiento por obra
             </h2>
           </div>
@@ -160,14 +160,14 @@ export function AuthorDashboard({ profile, works }: AuthorDashboardProps) {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-body-sm font-medium text-gray-900 truncate">
                       {work.title}
                     </p>
-                    <p className="text-xs text-gray-400">{work.category}</p>
+                    <p className="text-meta text-gray-400">{work.category}</p>
                   </div>
 
                   {/* Stats */}
-                  <div className="flex items-center gap-4 text-xs text-gray-500 flex-shrink-0">
+                  <div className="flex items-center gap-4 text-meta text-gray-500 flex-shrink-0">
                     <span className="flex items-center gap-1">
                       <span className="text-red-400">♥</span>
                       {work.likes_count}
@@ -189,7 +189,7 @@ export function AuthorDashboard({ profile, works }: AuthorDashboardProps) {
             <div className="px-5 py-3 border-t border-gray-100">
               <Link
                 href="/dashboard/my-works"
-                className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-action text-gray-500 hover:text-gray-700 transition-colors"
               >
                 Ver todas las obras →
               </Link>
@@ -204,12 +204,12 @@ export function AuthorDashboard({ profile, works }: AuthorDashboardProps) {
           <p className="text-gray-500 font-medium">
             Aún no tienes obras publicadas.
           </p>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-body-sm text-gray-400 mt-1">
             Publica tu primera obra para ver tus estadísticas aquí.
           </p>
           <Link
             href="/dashboard/new"
-            className="mt-4 inline-block px-5 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+            className="mt-4 inline-block px-5 py-2 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 transition-colors"
           >
             Crear mi primera obra
           </Link>

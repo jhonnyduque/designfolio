@@ -30,7 +30,7 @@ export function SortSelector({ current, onChange }: SortSelectorProps) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 py-2 px-2 text-sm font-semibold text-[#2a2a30] transition-colors hover:text-black whitespace-nowrap"
+        className="flex items-center gap-1.5 py-2 px-2 text-action text-[#2a2a30] transition-colors hover:text-black whitespace-nowrap"
       >
         {SORT_OPTIONS[current].label}
         <svg
@@ -45,7 +45,7 @@ export function SortSelector({ current, onChange }: SortSelectorProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-48 rounded-2xl border border-black/10 bg-white py-1 shadow-lg">
+        <div className="absolute right-0 z-20 mt-2 w-max max-w-[calc(100vw-2rem)] rounded-lg border border-black/10 bg-white py-1 shadow-lg">
           {sortKeys.map((key) => (
             <button
               key={key}
@@ -53,10 +53,8 @@ export function SortSelector({ current, onChange }: SortSelectorProps) {
                 onChange(key)
                 setOpen(false)
               }}
-              className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-black/5 ${
-                key === current
-                  ? "font-semibold text-[#1e1e1e]"
-                  : "text-[#4f4f57]"
+              className={`block w-full whitespace-nowrap px-4 py-2 text-left text-nav transition-colors hover:bg-black/5 ${
+                key === current ? "text-[#1e1e1e]" : "text-[#4f4f57]"
               }`}
             >
               {SORT_OPTIONS[key].label}

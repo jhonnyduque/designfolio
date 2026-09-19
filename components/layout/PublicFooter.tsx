@@ -18,7 +18,7 @@ export function PublicFooter() {
       <div className="mx-auto w-full max-w-[1500px] px-6 md:px-10">
 
         {/* ── MÓVIL (oculto en sm+) ── */}
-        <div className="flex flex-col gap-4 py-4 text-[13px] leading-relaxed text-[#6b6b70] sm:hidden">
+        <div className="flex flex-col gap-4 py-4 text-body-sm text-[#6b6b70] sm:hidden">
           <div className="flex flex-col gap-0.5">
             <span className="font-medium text-[#1e1e1e]">Designfolio</span>
             <span>Un proyecto de Jhonny Duque</span>
@@ -32,7 +32,7 @@ export function PublicFooter() {
         </div>
 
         {/* ── DESKTOP (visible en sm+) ── */}
-        <div className="mx-auto hidden w-full max-w-[935px] sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-6 py-4 text-[13px] leading-relaxed text-[#6b6b70]">
+        <div className="mx-auto hidden w-full max-w-[935px] sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-6 py-4 text-body-sm text-[#6b6b70]">
           <p>
             <span className="font-medium text-[#1e1e1e]">Designfolio</span> — Un proyecto de Jhonny Duque
           </p>

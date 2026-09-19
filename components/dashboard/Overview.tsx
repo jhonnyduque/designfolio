@@ -43,14 +43,14 @@ function Metrica({
 }) {
   return (
     <div className="bg-white p-4 sm:px-[18px]">
-      <p className="text-[12.5px] text-gray-500">{label}</p>
+      <p className="text-meta text-gray-500">{label}</p>
       <div className="mt-1.5 flex items-baseline gap-2.5">
-        <span className="text-[25px] font-semibold leading-none tracking-[-0.025em] tabular-nums text-gray-900">
+        <span className="text-metric tabular-nums text-gray-900">
           {valor}
         </span>
-        {delta && <span className={`text-[12px] tabular-nums ${TONOS[delta.tono]}`}>{delta.texto}</span>}
+        {delta && <span className={`text-meta tabular-nums ${TONOS[delta.tono]}`}>{delta.texto}</span>}
       </div>
-      <p className="mt-1.5 text-[11.5px] text-gray-400">{pie}</p>
+      <p className="mt-1.5 text-helper text-gray-400">{pie}</p>
     </div>
   )
 }
@@ -68,10 +68,10 @@ export function Overview({ resumen }: { resumen: Resumen }) {
     <div>
       <div className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <h1 className="text-[21px] font-semibold tracking-[-0.02em] text-gray-900">Inicio</h1>
-          <p className="mt-1 text-[13px] text-gray-500">Resumen de la actividad de Designfolio.</p>
+          <h1 className="text-page-title text-gray-900">Inicio</h1>
+          <p className="mt-1 text-body-sm text-gray-500">Resumen de la actividad de Designfolio.</p>
         </div>
-        <span className="text-[12.5px] text-gray-500">Últimos 7 días</span>
+        <span className="text-meta text-gray-500">Últimos 7 días</span>
       </div>
 
       <div className="mb-8 grid grid-cols-2 gap-px overflow-hidden rounded-[10px] border border-gray-200 bg-gray-200 lg:grid-cols-4">
@@ -105,13 +105,13 @@ export function Overview({ resumen }: { resumen: Resumen }) {
         <section>
           <div className="mb-2.5 flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900">
+              <h2 className="text-section text-gray-900">
                 Esperando verificación
                 {pendientes.total > 0 && (
                   <span className="ml-1 font-normal tabular-nums text-gray-400">{pendientes.total}</span>
                 )}
               </h2>
-              <p className="mt-0.5 text-[12.5px] text-gray-500">
+              <p className="mt-0.5 text-meta text-gray-500">
                 Primera publicación de cada cuenta.
                 {pendientes.esperaMaxima > 0 && ` La más antigua lleva ${espera(pendientes.esperaMaxima)}.`}
               </p>
@@ -119,7 +119,7 @@ export function Overview({ resumen }: { resumen: Resumen }) {
             {pendientes.total > 0 && (
               <Link
                 href="/dashboard/moderation"
-                className="shrink-0 whitespace-nowrap border-b border-gray-300 pb-px text-[13px] text-gray-900 transition-colors hover:border-gray-900"
+                className="shrink-0 whitespace-nowrap border-b border-gray-300 pb-px text-action text-gray-900 transition-colors hover:border-gray-900"
               >
                 Ver todas
               </Link>
@@ -127,7 +127,7 @@ export function Overview({ resumen }: { resumen: Resumen }) {
           </div>
 
           {pendientes.items.length === 0 ? (
-            <p className="border-t border-gray-200 py-8 text-[13px] text-gray-500">
+            <p className="border-t border-gray-200 py-8 text-body-sm text-gray-500">
               Nada pendiente. Cuando alguien publique por primera vez, aparecerá aquí.
             </p>
           ) : (
@@ -144,12 +144,12 @@ export function Overview({ resumen }: { resumen: Resumen }) {
                     aria-hidden="true"
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13.5px] font-medium text-gray-900">{item.titulo}</span>
-                    <span className="mt-0.5 block truncate text-[12px] text-gray-500">
+                    <span className="block truncate text-body-sm font-medium text-gray-900">{item.titulo}</span>
+                    <span className="mt-0.5 block truncate text-meta text-gray-500">
                       {item.autor} · {item.categoria}
                     </span>
                   </span>
-                  <span className="shrink-0 text-[11.5px] tabular-nums text-gray-400">{espera(item.horas)}</span>
+                  <span className="shrink-0 text-helper tabular-nums text-gray-400">{espera(item.horas)}</span>
                 </Link>
               ))}
             </div>
@@ -158,11 +158,11 @@ export function Overview({ resumen }: { resumen: Resumen }) {
 
         <section>
           <div className="mb-2.5 flex items-start justify-between gap-4">
-            <h2 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900">Últimas decisiones</h2>
+            <h2 className="text-section text-gray-900">Últimas decisiones</h2>
             {decisiones.length > 0 && (
               <Link
                 href="/dashboard/moderation"
-                className="shrink-0 whitespace-nowrap border-b border-gray-300 pb-px text-[13px] text-gray-900 transition-colors hover:border-gray-900"
+                className="shrink-0 whitespace-nowrap border-b border-gray-300 pb-px text-action text-gray-900 transition-colors hover:border-gray-900"
               >
                 Historial
               </Link>
@@ -170,13 +170,13 @@ export function Overview({ resumen }: { resumen: Resumen }) {
           </div>
 
           {decisiones.length === 0 ? (
-            <p className="border-t border-gray-200 py-8 text-[13px] text-gray-500">
+            <p className="border-t border-gray-200 py-8 text-body-sm text-gray-500">
               Aquí quedará el registro de cada decisión que tomes.
             </p>
           ) : (
             <div className="border-t border-gray-200">
               {decisiones.map((d) => (
-                <div key={d.id} className="border-b border-gray-200 py-2.5 text-[13px]">
+                <div key={d.id} className="border-b border-gray-200 py-2.5 text-body-sm">
                   <p>
                     <span className={d.accion === "approve" ? "font-medium text-gray-900" : "text-gray-500"}>
                       {ACCIONES[d.accion] ?? d.accion}
@@ -184,7 +184,7 @@ export function Overview({ resumen }: { resumen: Resumen }) {
                     <span className="text-gray-400"> · </span>
                     {d.proyecto}
                   </p>
-                  <p className="mt-0.5 text-[12px] text-gray-500">
+                  <p className="mt-0.5 text-meta text-gray-500">
                     {d.responsable} ·{" "}
                     {new Date(d.fecha).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}
                     {d.nota && ` · ${d.nota}`}

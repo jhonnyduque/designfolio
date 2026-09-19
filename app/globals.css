@@ -8,6 +8,103 @@
   font-display: swap;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Roles tipográficos. Fuente única de verdad.
+
+   Cada rol describe una FUNCIÓN, no un tamaño: un texto se marca por lo que es
+   —un título de página, un dato secundario, una acción— y el sistema decide
+   cómo se ve. Antes esa decisión se tomaba archivo por archivo, y el resultado
+   fueron trece tamaños sueltos que nadie podía mantener a la vez.
+
+   Se declaran en el espacio `--text-*` de Tailwind v4, así que cada uno genera
+   una utilidad (`text-body`, `text-page-title`…) que aplica de golpe tamaño,
+   interlineado, peso y tracking. No hacen falta clases propias ni un
+   componente por párrafo.
+
+   Dos reglas al usarlos:
+
+   - Se elige por función semántica, nunca por la etiqueta HTML. Un `h2` puede
+     ser Section o Subsection según lo que haga en la página.
+   - El peso del rol es su valor por defecto, no una cárcel: añadir
+     `font-semibold` sobre un rol sigue funcionando, y es lo previsto para los
+     énfasis puntuales (el nombre de un autor dentro de un texto pequeño).
+
+   La familia visual NO se toca aquí. Sigue siendo la pila declarada en `body`.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Display editorial. Uso excepcional y ya aprobado —"Proyectos"—, siempre
+     acompañado de `.font-marcellus`. No es el rol por defecto de los H1. */
+  --text-display: 30px;
+  --text-display--line-height: 1;
+  --text-display--font-weight: 400;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-display-lg: 36px;
+  --text-display-lg--line-height: 1;
+  --text-display-lg--font-weight: 400;
+  --text-display-lg--letter-spacing: -0.02em;
+
+  /* Título de página de interfaz. El H1 real de casi todas las pantallas. */
+  --text-page-title: 22px;
+  --text-page-title--line-height: 1.2;
+  --text-page-title--font-weight: 600;
+  --text-page-title--letter-spacing: -0.015em;
+
+  /* Título de sección dentro de una página. */
+  --text-section: 18px;
+  --text-section--line-height: 1.3;
+  --text-section--font-weight: 600;
+  --text-section--letter-spacing: -0.01em;
+
+  /* Subsección, y título de una tarjeta u obra. */
+  --text-subsection: 16px;
+  --text-subsection--line-height: 1.35;
+  --text-subsection--font-weight: 600;
+
+  /* Texto corrido. */
+  --text-body: 15px;
+  --text-body--line-height: 1.62;
+  --text-body--font-weight: 400;
+
+  /* Texto corrido secundario: pies, bios, celdas de tabla. Admite 500/600
+     cuando el contenido pide énfasis real. */
+  --text-body-sm: 13.5px;
+  --text-body-sm--line-height: 1.5;
+  --text-body-sm--font-weight: 400;
+
+  /* Dato accesorio: fechas, contadores, categorías, @usuario. */
+  --text-meta: 12px;
+  --text-meta--line-height: 1.4;
+  --text-meta--font-weight: 400;
+
+  /* Navegación: menús, pestañas, barra lateral. */
+  --text-nav: 13px;
+  --text-nav--line-height: 1.35;
+  --text-nav--font-weight: 500;
+
+  /* Etiqueta de un campo de formulario. */
+  --text-label: 13px;
+  --text-label--line-height: 1.35;
+  --text-label--font-weight: 500;
+
+  /* Acción: botones y enlaces que hacen algo. */
+  --text-action: 13px;
+  --text-action--line-height: 1.35;
+  --text-action--font-weight: 500;
+
+  /* Ayuda bajo un campo, y avisos de apoyo. */
+  --text-helper: 12px;
+  --text-helper--line-height: 1.45;
+  --text-helper--font-weight: 400;
+
+  /* Cifra de una métrica. Lleva `tabular-nums` cuando el número cambia. */
+  --text-metric: 20px;
+  --text-metric--line-height: 1.1;
+  --text-metric--font-weight: 600;
+  --text-metric--letter-spacing: -0.02em;
+}
+
 :root {
   --background: #f5f7f5;
   --foreground: #1e1e1e;

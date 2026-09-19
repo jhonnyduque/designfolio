@@ -50,16 +50,16 @@ export function DemoData() {
 
   return (
     <section className="mt-10 border-t border-gray-200 pt-6">
-      <h2 className="text-[14px] font-medium text-gray-900">Datos de demostración</h2>
-      <p className="mt-1.5 max-w-[62ch] text-[13px] leading-relaxed text-gray-500">
+      <h2 className="text-body-sm font-medium text-gray-900">Datos de demostración</h2>
+      <p className="mt-1.5 max-w-[62ch] text-body-sm text-gray-500">
         {cargados
           ? `Hay ${estado?.perfiles} perfiles y ${estado?.obras} publicaciones de mentira en la plataforma. Son visibles para cualquiera que entre a Proyectos, así que conviene retirarlos antes de enseñarle el sitio a alguien.`
           : "Carga 14 perfiles y 100 publicaciones ficticias para ver el panel con la parrilla llena en lugar de con la pantalla vacía. Se pueden retirar en cualquier momento sin tocar lo real."}
       </p>
 
-      {mensaje && <p className="mt-3 text-[13px] text-gray-900">{mensaje}</p>}
+      {mensaje && <p className="mt-3 text-body-sm text-gray-900">{mensaje}</p>}
       {error && (
-        <p role="alert" className="mt-3 text-[13px] text-red-700">
+        <p role="alert" className="mt-3 text-body-sm text-red-700">
           {error}
         </p>
       )}
