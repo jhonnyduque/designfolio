@@ -87,86 +87,72 @@ export function Feed() {
   return (
     <section>
       {/* Header */}
-      <div className="mb-4 space-y-2">
-        {/* Row 1: Title + Search + Sort */}
-        <div className="flex items-start sm:items-center justify-between gap-3">
-          <div className="flex-shrink-0">
-            <h2 className="font-marcellus text-3xl leading-none text-[#1e1e1e] md:text-4xl">
-              Proyectos
-            </h2>
+      <div className="mb-5 mx-auto w-full max-w-[935px] flex flex-col gap-4">
+        {/* Title */}
+        <h2 className="font-marcellus text-3xl leading-none text-[#1e1e1e] md:text-4xl">
+          Proyectos
+        </h2>
+
+        {/* Tabs and Actions Row */}
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
+          
+          {/* Tabs */}
+          <div className={`items-center gap-4 sm:gap-6 ${searchOpen || search ? 'hidden sm:flex' : 'flex'}`}>
+            <button className="text-[15px] font-medium text-[#1e1e1e] border-b-2 border-black pb-2">
+              Para ti
+            </button>
+            <button className="text-[15px] font-medium text-[#8c8c95] hover:text-[#1e1e1e] pb-2 transition-colors border-b-2 border-transparent">
+              Siguiendo
+            </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Search toggle (mobile) */}
-            <button
-              onClick={() => setSearchOpen(!searchOpen)}
-              className={`sm:hidden p-2 rounded-lg transition-colors ${
-                searchOpen || search
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-              }`}
-              aria-label="Buscar"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-            </button>
+          {/* Actions (Search + Sort) */}
+          <div className={`flex items-center gap-1 h-[40px] ${searchOpen || search ? 'w-full sm:w-auto' : ''}`}>
+            {/* Collapsed Search Icon */}
+            {!searchOpen && !search && (
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-[#1e1e1e] hover:bg-black/5 transition-colors shrink-0 [.menu-open_&]:invisible"
+                aria-label="Buscar"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+              </button>
+            )}
 
-            {/* Search bar (desktop) */}
-            <div className="hidden sm:flex items-center relative">
-              <svg className="w-4 h-4 text-gray-400 absolute left-3 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Buscar proyectos, categorías, autores..."
-                className="w-52 lg:w-72 pl-9 pr-8 py-2 text-sm font-medium bg-white border border-black/10 rounded-full text-[#2a2a30] placeholder:text-[#8c8c95] focus:border-black/25 focus:ring-0 outline-none transition-all"
-              />
-              {searchInput && (
+            {/* Expanded Search bar */}
+            {(searchOpen || search) && (
+              <div className="flex w-full sm:w-auto items-center relative animate-in fade-in slide-in-from-right-4 duration-200">
+                <svg className="w-4 h-4 text-gray-400 absolute left-3 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={searchInput}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onBlur={() => { if (!searchInput) setSearchOpen(false) }}
+                  placeholder="Buscar proyectos..."
+                  className="w-full sm:w-[260px] pl-9 pr-8 py-2 text-sm font-medium bg-white border border-black/10 rounded-full text-[#2a2a30] placeholder:text-[#8c8c95] focus:border-black/25 focus:ring-0 outline-none transition-all"
+                />
                 <button
                   onClick={handleClearSearch}
-                  className="absolute right-2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-2 text-gray-400 hover:text-gray-600 p-1"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Sort dropdown */}
-            <SortSelector current={sortBy} onChange={setSortBy} />
+            <div className={`${searchOpen || search ? 'hidden sm:block' : 'block'}`}>
+              <SortSelector current={sortBy} onChange={setSortBy} />
+            </div>
           </div>
         </div>
-
-        {/* Mobile search bar (expandable) */}
-        {searchOpen && (
-          <div className="sm:hidden relative">
-            <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-            </svg>
-            <input
-              ref={searchRef}
-              type="text"
-              value={searchInput}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Buscar proyectos, categorías, autores..."
-              className="w-full pl-9 pr-8 py-2.5 text-sm font-medium bg-white border border-black/10 rounded-full text-[#2a2a30] placeholder:text-[#8c8c95] focus:border-black/25 focus:ring-0 outline-none transition-all"
-            />
-            {searchInput && (
-              <button
-                onClick={handleClearSearch}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-          </div>
-        )}
 
         {/* Active search indicator */}
         {search && (

@@ -30,7 +30,7 @@ export function SortSelector({ current, onChange }: SortSelectorProps) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-[#2a2a30] transition-colors hover:bg-black/5 whitespace-nowrap"
+        className="flex items-center gap-1.5 py-2 px-2 text-sm font-semibold text-[#2a2a30] transition-colors hover:text-black whitespace-nowrap"
       >
         {SORT_OPTIONS[current].label}
         <svg
@@ -53,10 +53,10 @@ export function SortSelector({ current, onChange }: SortSelectorProps) {
                 onChange(key)
                 setOpen(false)
               }}
-              className={`block w-full px-4 py-2 text-left text-sm transition-colors ${
+              className={`block w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-black/5 ${
                 key === current
-                  ? "bg-black/5 font-semibold text-[#1e1e1e]"
-                  : "text-[#4f4f57] hover:bg-black/5"
+                  ? "font-semibold text-[#1e1e1e]"
+                  : "text-[#4f4f57]"
               }`}
             >
               {SORT_OPTIONS[key].label}

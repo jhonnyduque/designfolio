@@ -14,25 +14,39 @@ import Link from "next/link"
  */
 export function PublicFooter() {
   return (
-    <footer className="mt-16 border-t border-black/10">
-      <div className="mx-auto flex w-full max-w-[935px] flex-col gap-2 px-6 py-8 text-[13px] leading-relaxed text-[#6b6b70] sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-        <p>
-          <Link href="/" className="font-medium text-[#1e1e1e] hover:underline">
-            Designfolio
-          </Link>{" "}
-          — portafolios de diseñadores emergentes. Cada proyecto pertenece a quien lo firma.
-        </p>
-        <p className="shrink-0">
-          Un proyecto de{" "}
-          <a
-            href="https://jhonnyduque.com"
-            target="_blank"
-            rel="noreferrer"
-            className="text-[#1e1e1e] hover:underline"
-          >
-            Jhonny Duque
-          </a>
-        </p>
+    <footer className="border-t border-black/10">
+      <div className="mx-auto w-full max-w-[1500px] px-6 md:px-10">
+
+        {/* ── MÓVIL (oculto en sm+) ── */}
+        <div className="flex flex-col gap-4 py-4 text-[13px] leading-relaxed text-[#6b6b70] sm:hidden">
+          <div className="flex flex-col gap-0.5">
+            <span className="font-medium text-[#1e1e1e]">Designfolio</span>
+            <span>Un proyecto de Jhonny Duque</span>
+          </div>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+            <Link href="/aviso-legal" className="hover:text-[#1e1e1e] hover:underline transition-colors">Aviso legal</Link>
+            <Link href="/privacidad" className="hover:text-[#1e1e1e] hover:underline transition-colors">Privacidad</Link>
+            <Link href="/terminos" className="hover:text-[#1e1e1e] hover:underline transition-colors">Términos</Link>
+            <Link href="/cookies" className="hover:text-[#1e1e1e] hover:underline transition-colors">Cookies</Link>
+          </div>
+        </div>
+
+        {/* ── DESKTOP (visible en sm+) ── */}
+        <div className="mx-auto hidden w-full max-w-[935px] sm:flex sm:flex-row sm:items-center sm:justify-between sm:gap-6 py-4 text-[13px] leading-relaxed text-[#6b6b70]">
+          <p>
+            <span className="font-medium text-[#1e1e1e]">Designfolio</span> — Un proyecto de Jhonny Duque
+          </p>
+          <p className="shrink-0 flex items-center gap-2">
+            <Link href="/aviso-legal" className="hover:text-[#1e1e1e] hover:underline transition-colors">Aviso legal</Link>
+            <span aria-hidden="true">·</span>
+            <Link href="/privacidad" className="hover:text-[#1e1e1e] hover:underline transition-colors">Privacidad</Link>
+            <span aria-hidden="true">·</span>
+            <Link href="/terminos" className="hover:text-[#1e1e1e] hover:underline transition-colors">Términos</Link>
+            <span aria-hidden="true">·</span>
+            <Link href="/cookies" className="hover:text-[#1e1e1e] hover:underline transition-colors">Cookies</Link>
+          </p>
+        </div>
+
       </div>
     </footer>
   )
