@@ -8,6 +8,9 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import crypto from "crypto"
 
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : "No se pudo completar la moderación."
+
 async function requireAdmin() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) throw new Error("No autenticado")
@@ -156,7 +159,7 @@ export async function moderateWorkAction(workId: string, action: "approve" | "re
     })
     
     return { success: true }
-  } catch (err: any) {
-    return { success: false, error: err.message }
+  } catch (error) {
+    return { success: false, error: getErrorMessage(error) }
   }
 }

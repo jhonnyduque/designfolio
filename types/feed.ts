@@ -1,6 +1,8 @@
 // types/feed.ts
 
-/** Matches v_feed_scores materialized view columns exactly */
+import type { WorkImage } from "@/types/work"
+
+/** Contrato de presentación consumido por el feed público. */
 export interface FeedItem {
   id: string
   slug?: string | null
@@ -8,7 +10,6 @@ export interface FeedItem {
   title: string
   description: string
   category: string
-  tags: string[] | null
   images: WorkImage[] | null
   likes_count: number
   comments_count: number
@@ -20,15 +21,6 @@ export interface FeedItem {
   author_full_name: string
   author_avatar_url: string | null
   author_reputation_level: number
-  trending_score: number
-}
-
-export interface WorkImage {
-  url: string
-  width: number
-  height: number
-  type: string
-  order: number
 }
 
 export type SortOption = "recent" | "most_voted" | "most_commented"

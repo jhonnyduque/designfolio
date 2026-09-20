@@ -50,10 +50,11 @@ export function DashboardShell({
 }) {
   const { signOut } = useAuth()
   const pathname = usePathname()
-  const [cajonAbierto, setCajonAbierto] = useState(false)
-
-  // Al navegar se cierra el cajón: en móvil queda tapando el contenido.
-  useEffect(() => { setCajonAbierto(false) }, [pathname])
+  const [rutaDelCajon, setRutaDelCajon] = useState<string | null>(null)
+  // Si cambia la ruta, el cajón deja de corresponder a la pantalla actual y se cierra sin un efecto extra.
+  const cajonAbierto = rutaDelCajon === pathname
+  const abrirCajon = () => setRutaDelCajon(pathname)
+  const cerrarCajon = () => setRutaDelCajon(null)
 
   /**
    * Con el cajón abierto, el fondo deja de desplazarse.
@@ -68,7 +69,7 @@ export function DashboardShell({
     document.body.style.overflow = "hidden"
 
     const alPulsarEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setCajonAbierto(false)
+      if (e.key === "Escape") cerrarCajon()
     }
     document.addEventListener("keydown", alPulsarEscape)
 
@@ -168,7 +169,7 @@ export function DashboardShell({
       {/* Cabecera solo en móvil, donde la lateral no cabe */}
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 lg:hidden">
         <button
-          onClick={() => setCajonAbierto(true)}
+          onClick={abrirCajon}
           aria-label="Abrir menú"
           className="-ml-2 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
         >
@@ -185,7 +186,7 @@ export function DashboardShell({
         <div className="fixed inset-0 z-40 lg:hidden">
           <div
             className="absolute inset-0 bg-gray-900/20"
-            onClick={() => setCajonAbierto(false)}
+            onClick={cerrarCajon}
             aria-hidden="true"
           />
           {/* `dvh` y no `h-full`: dentro de un `fixed inset-0`, el 100% se mide
@@ -197,7 +198,7 @@ export function DashboardShell({
               a la página de detrás. */}
           <aside className="absolute left-0 top-0 flex h-[100dvh] w-[252px] flex-col overflow-y-auto overscroll-contain border-r border-gray-200 bg-white p-3">
             <button
-              onClick={() => setCajonAbierto(false)}
+              onClick={cerrarCajon}
               aria-label="Cerrar menú"
               className="absolute right-3 top-3 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900"
             >

@@ -37,13 +37,14 @@ export function Scroller({ children, className = "" }: { children: ReactNode; cl
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    actualizar()
+    const frame = window.requestAnimationFrame(actualizar)
     const observador = new ResizeObserver(actualizar)
     observador.observe(el)
     // También cuando cambia el contenido, no solo el tamaño del contenedor.
     const mutaciones = new MutationObserver(actualizar)
     mutaciones.observe(el, { childList: true, subtree: true })
     return () => {
+      window.cancelAnimationFrame(frame)
       observador.disconnect()
       mutaciones.disconnect()
     }

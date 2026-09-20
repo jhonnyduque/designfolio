@@ -1,6 +1,6 @@
 FUENTE DE VERDAD DEL ROADMAP
 
-Estado actual: ✅ **F0 — Línea base y paridad**. F1 permanece ⬜ NO INICIADA; no hay otra fase habilitada.
+Estado actual: 🔄 **F1.5 — Corrección de previsualización de vídeo vertical**. F2 permanece ⬜ NO INICIADA; no hay otra fase habilitada.
 
 Antes de trabajar, lee el plan ubicado en:
 

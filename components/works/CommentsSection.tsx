@@ -19,6 +19,12 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
   const [captchaA, setCaptchaA] = useState(0)
   const [captchaB, setCaptchaB] = useState(0)
   const [captchaInput, setCaptchaInput] = useState("")
+  const [currentTime, setCurrentTime] = useState<number | null>(null)
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setCurrentTime(Date.now()))
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
 
   const contentLen = content.length
   const isCaptchaValid =
@@ -36,11 +42,10 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
     setCaptchaB(b)
   }, [])
 
-  useEffect(() => {
-    if (showForm && !isAuthenticated) {
-      refreshCaptcha()
-    }
-  }, [showForm, isAuthenticated, refreshCaptcha])
+  const openForm = useCallback(() => {
+    setShowForm(true)
+    if (!isAuthenticated) refreshCaptcha()
+  }, [isAuthenticated, refreshCaptcha])
 
   const toggleCategory = useCallback((cat: string) => {
     setCategories((prev) =>
@@ -61,7 +66,8 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
   }
 
   function getTimeAgo(dateStr: string): string {
-    const diff = Date.now() - new Date(dateStr).getTime()
+    if (currentTime === null) return "Ahora"
+    const diff = currentTime - new Date(dateStr).getTime()
     const mins = Math.floor(diff / 60000)
     if (mins < 1) return "Ahora"
     if (mins < 60) return `${mins}min`
@@ -82,7 +88,7 @@ export function CommentsSection({ workId, initialCount }: CommentsSectionProps) 
         </h3>
         {!showForm && (
           <button
-            onClick={() => setShowForm(true)}
+            onClick={openForm}
             className="px-3.5 py-1.5 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 transition-colors"
           >
             Comentar

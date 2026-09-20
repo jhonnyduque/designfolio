@@ -1,6 +1,6 @@
 "use server"
 
-import { eq, and, isNull } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { getDb } from "@/lib/db/client"
 import { taxonomy } from "@/lib/db/schema"
 import { normalizeSlug } from "@/lib/slug"
@@ -8,6 +8,9 @@ import type { TagAdmin, TagRpcResult, MergeTagsResult, Tag } from "@/types/tag"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import crypto from "crypto"
+
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : "No se pudo completar la operación de taxonomía."
 
 // Helper for auth check
 async function requireAdmin() {
@@ -71,8 +74,8 @@ export async function createTagAction(name: string): Promise<TagRpcResult> {
     })
     
     return { success: true }
-  } catch (err: any) {
-    return { success: false, error: err.message }
+  } catch (error) {
+    return { success: false, error: getErrorMessage(error) }
   }
 }
 
@@ -87,8 +90,8 @@ export async function renameTagAction(tagId: string, newName: string): Promise<T
       .where(eq(taxonomy.id, tagId))
     
     return { success: true }
-  } catch (err: any) {
-    return { success: false, error: err.message }
+  } catch (error) {
+    return { success: false, error: getErrorMessage(error) }
   }
 }
 
@@ -102,8 +105,8 @@ export async function toggleTagAction(tagId: string, isActive: boolean): Promise
       .where(eq(taxonomy.id, tagId))
     
     return { success: true }
-  } catch (err: any) {
-    return { success: false, error: err.message }
+  } catch (error) {
+    return { success: false, error: getErrorMessage(error) }
   }
 }
 
@@ -117,8 +120,8 @@ export async function archiveTagAction(tagId: string): Promise<TagRpcResult> {
       .where(eq(taxonomy.id, tagId))
     
     return { success: true }
-  } catch (err: any) {
-    return { success: false, error: err.message }
+  } catch (error) {
+    return { success: false, error: getErrorMessage(error) }
   }
 }
 
@@ -132,12 +135,15 @@ export async function restoreTagAction(tagId: string): Promise<TagRpcResult> {
       .where(eq(taxonomy.id, tagId))
     
     return { success: true }
-  } catch (err: any) {
-    return { success: false, error: err.message }
+  } catch (error) {
+    return { success: false, error: getErrorMessage(error) }
   }
 }
 
 export async function mergeTagsAction(sourceId: string, targetId: string): Promise<MergeTagsResult> {
+  if (sourceId === targetId) {
+    return { success: false, error: "El tag de origen y destino deben ser distintos." }
+  }
   try {
     await requireAdmin()
     const db = getDb()
@@ -147,8 +153,8 @@ export async function mergeTagsAction(sourceId: string, targetId: string): Promi
       .where(eq(taxonomy.id, sourceId))
       
     return { success: true, moved: 0, duplicates_removed: 0, source_name: "Source", target_name: "Target" }
-  } catch (err: any) {
-    return { success: false, error: err.message }
+  } catch (error) {
+    return { success: false, error: getErrorMessage(error) }
   }
 }
 

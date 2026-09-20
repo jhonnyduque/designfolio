@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { getPublicWork } from "@/lib/works/public"
+import { toLegacyWorkDetailData } from "@/lib/works/detail-adapter"
 import { WorkDetail } from "@/components/works/WorkDetail"
 
 interface PageProps {
@@ -24,46 +25,24 @@ export default async function PublicWorkPage({ params }: PageProps) {
   const { id: slugOrId } = await params
   const result = await getPublicWork(slugOrId)
   if (!result) notFound()
-  const { work, author, likesCount, commentsCount, previous, next } = result
 
-  if (work.slug && slugOrId !== work.slug) {
-    redirect(`/proyectos/${work.slug}`)
+  if (slugOrId !== result.project.slug) {
+    redirect(`/proyectos/${result.project.slug}`)
   }
 
   const session = await auth.api.getSession({ headers: await headers() })
+  const detailData = toLegacyWorkDetailData(result)
 
   return (
     <div className="public-container py-6 md:py-8">
       <WorkDetail
-        work={{
-          id: work.id,
-          slug: work.slug ?? null,
-          title: work.title,
-          description: work.description,
-          category: work.category,
-          tags: work.tags ?? [],
-          images: work.images,
-          likes_count: likesCount,
-          comments_count: commentsCount,
-          views_count: work.viewsCount,
-          shares_count: work.sharesCount,
-          published_at: (work.publishedAt ?? work.createdAt).toISOString(),
-        }}
-        author={{
-          id: author.id,
-          username: author.username,
-          full_name: author.fullName,
-          avatar_url: author.avatarUrl,
-          reputation_level: author.reputationLevel,
-          bio: author.bio,
-          school: author.school,
-        }}
+        {...detailData}
         currentUserId={session?.user.id ?? null}
         backHref="/"
         profileHref={null}
         siteHref="https://jhonnyduque.com/proyectos/"
-        prevHref={previous ? `/proyectos/${previous.slug ?? previous.id}` : null}
-        nextHref={next ? `/proyectos/${next.slug ?? next.id}` : null}
+        prevHref={result.navigation.previous ? `/proyectos/${result.navigation.previous.slug}` : null}
+        nextHref={result.navigation.next ? `/proyectos/${result.navigation.next.slug}` : null}
         trackView
       />
     </div>

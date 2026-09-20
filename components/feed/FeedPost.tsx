@@ -8,6 +8,7 @@ import { LikeButton } from "@/components/works/LikeButton"
 import { ShareButton } from "@/components/works/ShareButton"
 import { trackView } from "@/lib/client/track-view"
 import { ZoomableMedia } from "@/components/feed/ZoomableMedia"
+import { mediaAspectRatio } from "@/lib/media-aspect"
 
 /**
  * Una publicación del feed vertical, para el móvil.
@@ -33,6 +34,10 @@ export function FeedPost({ item }: { item: FeedItem }) {
   const articleRef = useRef<HTMLElement | null>(null)
   const varios = medios.length > 1
   const actual = medios[indice] ?? null
+  const isCurrentVideo = esVideo(actual)
+  const mainMediaStyle = isCurrentVideo
+    ? { aspectRatio: mediaAspectRatio(actual?.width, actual?.height) }
+    : undefined
   const destino = `/proyectos/${item.slug ?? item.id}`
   const detailsId = `feed-post-details-${item.id}`
   const fechaPublicacion = new Date(item.published_at).toLocaleDateString("es-ES", {
@@ -98,11 +103,9 @@ export function FeedPost({ item }: { item: FeedItem }) {
         </Link>
       </header>
 
-      <div
-        className="relative aspect-[4/5] bg-gray-200"
-      >
+      <div className={`relative bg-gray-200 ${isCurrentVideo ? "" : "aspect-[4/5]"}`} style={mainMediaStyle}>
         {actual && (
-          esVideo(actual) ? (
+          isCurrentVideo ? (
             <Link href={destino} className="block h-full w-full">
               <video src={actual.url} controls playsInline preload="metadata" className="h-full w-full bg-gray-900 object-contain" />
             </Link>

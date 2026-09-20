@@ -1,8 +1,8 @@
 # Designfolio — Plan maestro de migración SINGLE → FEED
 
-**Versión:** 1.0
-**Fecha:** 19 de septiembre de 2026
-**Estado:** ✅ F0 FINALIZADA — baseline `5200a42`; F1 ⬜ NO INICIADA
+**Versión:** 1.1
+**Fecha:** 20 de septiembre de 2026
+**Estado:** ✅ F0 FINALIZADA — baseline `5200a42`; F1 ✅ FINALIZADA; F1.5 🔄 EN PROCESO; F2 ⬜ NO INICIADA
 **Repositorio de referencia:** `designfolio-new`
 **Objetivo:** convertir el **feed** en la experiencia pública principal de Designfolio y retirar progresivamente el **single visual público** sin perder URLs, funcionalidades, SEO, comentarios, acciones sociales ni flujos protegidos del propietario.
 
@@ -128,7 +128,7 @@ Al abrir un proyecto:
 │   ┌───────────────────────┐     Autor                       │
 │   │                       │     Título                      │
 │   │   Imagen / vídeo      │     Descripción                 │
-│   │   / carrusel          │     Categoría / tags / fecha    │
+│   │   / carrusel          │     Categoría / fecha           │
 │   │                       │     Acciones                    │
 │   │                       │                                │
 │   │                       │     Comentarios                 │
@@ -203,7 +203,7 @@ Desde este documento se elimina cualquier nomenclatura anterior paralela.
 El único plan vigente es:
 
 ```text
-F0 → F1 → F2 → F3 → F4 → F5 → F6 → F7 → F8 → F9
+F0 → F1 → F1.5 → F2 → F3 → F4 → F5 → F6 → F7 → F8 → F9
 ```
 
 ## 4.2 Regla de avance
@@ -220,7 +220,7 @@ Una fase no se considera terminada porque “el código esté escrito”. Debe c
 ## 4.3 Bloqueos duros
 
 ```text
-F0 → F1 → F2 → F3
+F0 → F1 → F1.5 → F2 → F3
 ```
 
 Estas fases deben ejecutarse en orden estricto.
@@ -345,7 +345,7 @@ Separar claramente tres contratos:
 ```text
 FeedItem
 PublicProjectDetail
-OwnerProjectDetail
+DashboardProjectDetail
 ```
 
 ## Razón
@@ -388,7 +388,7 @@ Debe poder cargar bajo demanda:
 - métricas;
 - información no presente en FeedItem.
 
-## OwnerProjectDetail
+## DashboardProjectDetail
 
 Debe conservar:
 
@@ -398,6 +398,10 @@ Debe conservar:
 - eliminación;
 - permisos de propietario;
 - información necesaria para dashboard.
+
+El nombre describe el alcance real del contrato: el dashboard permite al propietario
+ver cualquier estado propio y a otro usuario autenticado ver una obra aprobada no
+archivada. Las capacidades de edición siguen siendo exclusivas del propietario.
 
 ## Estrategia
 
@@ -425,7 +429,61 @@ El detalle público debe poder obtenerse sin depender de `WorkDetail`.
 
 ---
 
-# 7. Fase F2 — Extraer piezas reutilizables
+# 7. Fase F1.5 — Corregir previsualización de vídeo vertical
+
+## Objetivo
+
+Corregir la presentación de vídeos verticales, especialmente 1080×1920 (9:16),
+sin alterar subida, formatos admitidos, reproducción, rutas ni datos.
+
+## Problema confirmado
+
+La previsualización de creación fuerza `aspect-video` (16:9) y `object-cover`.
+Un vídeo 1080×1920 se recorta. En el post móvil el contenedor genérico 4:5
+también impide que el vídeo principal se presente con su proporción nativa.
+
+## Contrato visual de media
+
+- La vista principal de un vídeo usa las dimensiones ya guardadas en `WorkImage`
+  para respetar su proporción intrínseca; un 1080×1920 se ve 9:16 completo.
+- El vídeo principal no usa `object-cover`; los controles nativos permanecen
+  visibles y utilizables.
+- La previsualización antes de publicar sigue la misma regla y no recorta el
+  primer vídeo vertical.
+- La cuadrícula desktop conserva sus celdas 4:5 como superficie de descubrimiento;
+  ahí un recorte centrado puede ser intencionado, pero no se confunde con la
+  vista principal del proyecto.
+- Imágenes y carruseles no cambian de comportamiento por esta corrección.
+
+## Superficies incluidas
+
+- vista previa de publicación (`CreateWorkForm`);
+- post móvil (`FeedPost`);
+- regresión del single heredado y de miniaturas de carrusel;
+- comprobación de la celda de mosaico para conservar su recorte deliberado.
+
+## Verificación
+
+- vídeo 1080×1920 en vista previa y post móvil: completo, 9:16 y sin recorte;
+- vídeo vertical, horizontal y 4:5: sin saltos de layout al cargar metadata;
+- controles, reproducción inline, carrusel y compartir: sin regresión;
+- móvil Chrome Android y Safari iOS, además de desktop;
+- TypeScript, ESLint, tests, build y `git diff --check`.
+
+## No tocar
+
+- transcodificación o almacenamiento de vídeos;
+- API, DB, ratios de imágenes, pinch zoom, fullscreen, rutas o dashboard;
+- layout de mosaico desktop salvo una corrección indispensable de regresión.
+
+## Gate F1.5 → F2
+
+La media principal debe disponer de una proporción confiable y comprobada antes
+de extraer `ProjectMedia`; F2 no debe volver a resolver este fallo.
+
+---
+
+# 8. Fase F2 — Extraer piezas reutilizables
 
 ## Objetivo
 
@@ -439,8 +497,6 @@ Desacoplar las piezas visuales que hoy están atrapadas dentro de `WorkDetail`.
 - `ProjectDescription`
 - `ProjectMetadata`
 - `ProjectActions`
-- `CommentList`
-- `CommentComposer`
 
 Los nombres son orientativos. Deben adaptarse al código real.
 
@@ -452,6 +508,18 @@ Los nombres son orientativos. Deben adaptarse al código real.
 - APIs existentes;
 - reglas de permisos;
 - `ZoomableMedia` solo después de revisar su contrato.
+
+## Frontera con F3 y con las superficies contextuales
+
+`CommentList`, `CommentComposer`, CAPTCHA y el hook de comentarios pertenecen a
+F3: F2 no los extrae ni los reescribe. F2 puede dejar un punto de inserción de
+comentarios, pero no montar ni solicitar comentarios.
+
+Las piezas interactivas que F2 extraiga deben exponer callbacks de intención
+(`onOpenComments`, `onOpenProject`) en lugar de decidir navegación o historial.
+Así F4 y F5 comparten la misma interfaz y F6 conecta URL/historial una sola vez.
+El enlace al permalink sigue siendo el fallback semántico mientras no se active
+una superficie contextual.
 
 ## No extraer
 
@@ -472,11 +540,13 @@ El single actual y el dashboard deben seguir viéndose y funcionando igual despu
 
 ## Gate F2 → F3
 
-Comentarios, media, metadata y acciones deben poder renderizarse fuera de `WorkDetail`.
+Media, cabecera, descripción, metadata y acciones deben poder renderizarse fuera
+de `WorkDetail`; la frontera de comentarios queda lista, pero su implementación
+permanece exclusivamente en F3.
 
 ---
 
-# 8. Fase F3 — Modularizar comentarios
+# 9. Fase F3 — Modularizar comentarios
 
 ## Objetivo
 
@@ -536,13 +606,17 @@ Los comentarios se cargan **solo cuando el usuario solicita comentarios**.
 
 Nunca cargar comentarios completos para todos los posts del feed/grid.
 
+`useComments` debe poder permanecer inactivo hasta la apertura explícita y
+cancelar una solicitud pendiente al cerrar la superficie. F3 define también los
+estados vacíos, error y reintento de una sola fuente; F4 y F5 no los duplican.
+
 ## Gate F3 → F4/F5
 
 Debe ser posible montar `CommentList + CommentComposer` dentro de una superficie contextual independiente.
 
 ---
 
-# 9. Fase F4 — Bottom sheet móvil
+# 10. Fase F4 — Bottom sheet móvil
 
 ## Objetivo
 
@@ -571,6 +645,10 @@ Sin dependencia externa inicialmente.
 - safe areas;
 - retorno de foco;
 - restauración exacta del scroll.
+
+El disparador de comentarios usa el callback definido en F2. No intercepta los
+gestos de pinch, swipe ni los controles nativos del vídeo; el permalink continúa
+siendo un enlace utilizable cuando JavaScript no está disponible.
 
 ## Altura
 
@@ -649,7 +727,7 @@ sin navegar al single.
 
 ---
 
-# 10. Fase F5 — Modal de detalle desktop
+# 11. Fase F5 — Modal de detalle desktop
 
 ## Objetivo
 
@@ -706,7 +784,7 @@ Debe contener:
 - título;
 - descripción;
 - categoría;
-- tags;
+- etiquetas solo si el producto las reactiva;
 - fecha;
 - métricas;
 - acciones;
@@ -748,7 +826,7 @@ El usuario desktop debe poder completar la interacción pública principal sin v
 
 ---
 
-# 11. Fase F6 — Estado URL + historial
+# 12. Fase F6 — Estado URL + historial
 
 ## Objetivo
 
@@ -789,6 +867,11 @@ El feed debe permanecer montado y conservar:
 - infinite scroll;
 - estado de posts.
 
+La implementación debe conservar los parámetros existentes de búsqueda y orden,
+usar una única entrada de historial por apertura/cierre y evitar navegación que
+remonte o recargue el feed. El valor `project` se valida como slug antes de pedir
+el detalle; un slug inválido o inexistente cierra/omite el contexto sin bucles.
+
 ## Advertencia
 
 No depender exclusivamente de Intercepting Routes.
@@ -801,7 +884,7 @@ Back/Forward debe funcionar sin perder contexto.
 
 ---
 
-# 12. Fase F7 — Permalink, deep links y SEO
+# 13. Fase F7 — Permalink, deep links y SEO
 
 ## Objetivo
 
@@ -843,7 +926,9 @@ consulta puntual por slug
 
 ## Acceso sin JavaScript
 
-Debe definirse una estrategia de fallback compatible con SEO y accesibilidad.
+La ruta `/proyectos/[slug]` debe renderizar contenido legible y semántico en el
+servidor. La presentación contextual es una mejora tras hidratar; no puede ser la
+única forma de leer un permalink ni depender de que el proyecto esté ya en el feed.
 
 ## Compartir
 
@@ -865,7 +950,7 @@ Un enlace compartido debe abrir correctamente un proyecto aunque no esté cargad
 
 ---
 
-# 13. Fase F8 — Retirar navegación pública normal al single
+# 14. Fase F8 — Retirar navegación pública normal al single
 
 ## Objetivo
 
@@ -900,6 +985,9 @@ Dejar de enviar usuarios públicos al single tradicional.
 - cerrar → grid;
 - permalink continúa siendo compartible.
 
+La interceptación contextual debe ser progresiva: si el cliente no está listo o
+JavaScript falla, los enlaces públicos conservan su destino `/proyectos/[slug]`.
+
 ## Condición
 
 No ejecutar F8 hasta que:
@@ -915,7 +1003,7 @@ Mientras F8 no esté validada, conservar temporalmente acceso de emergencia al s
 
 ---
 
-# 14. Fase F9 — Retirar single visual público
+# 15. Fase F9 — Retirar single visual público
 
 ## Objetivo
 
@@ -967,9 +1055,13 @@ WorkDetail completo → borrar
 
 Si el dashboard todavía depende de él, se conserva o se refactoriza en un proyecto posterior.
 
+Antes de retirar cualquier archivo, comprobar con una búsqueda de importaciones
+que ninguna ruta pública ni protegida sigue dependiendo de `WorkDetail`; el
+dashboard no se modifica por una retirada del single público.
+
 ---
 
-# 15. Checklist final de paridad
+# 16. Checklist final de paridad
 
 ## Navegación
 
@@ -1061,7 +1153,7 @@ Si el dashboard todavía depende de él, se conserva o se refactoriza en un proy
 
 ---
 
-# 16. Estrategia de datos y rendimiento
+# 17. Estrategia de datos y rendimiento
 
 ## Siempre en FeedItem
 
@@ -1103,7 +1195,7 @@ Si el dashboard todavía depende de él, se conserva o se refactoriza en un proy
 
 ---
 
-# 17. Estrategia de caché y estado
+# 18. Estrategia de caché y estado
 
 El proyecto actualmente utiliza:
 
@@ -1133,7 +1225,7 @@ Debe:
 
 ---
 
-# 18. Riesgos priorizados
+# 19. Riesgos priorizados
 
 ## Alto
 
@@ -1161,7 +1253,7 @@ Debe:
 
 ---
 
-# 19. Backlog técnico que NO bloquea esta migración
+# 20. Backlog técnico que NO bloquea esta migración
 
 ## Paginación del feed
 
@@ -1193,7 +1285,7 @@ No resolver dentro de F0–F9 salvo que aparezca un bloqueo real.
 
 ---
 
-# 20. Reglas para Codex / Claude Code / cualquier agente
+# 21. Reglas para Codex / Claude Code / cualquier agente
 
 Toda instrucción de implementación debe comenzar con:
 
@@ -1235,13 +1327,14 @@ El agente no debe:
 
 ---
 
-# 21. Matriz rápida de dependencias
+# 22. Matriz rápida de dependencias
 
 | Fase | Depende de | Bloquea a | Puede ejecutarse en paralelo |
 |---|---|---|---|
 | F0 | — | F1 | No |
-| F1 | F0 | F2 | No |
-| F2 | F1 | F3 | No |
+| F1 | F0 | F1.5 | No |
+| F1.5 | F1 | F2 | No |
+| F2 | F1.5 | F3 | No |
 | F3 | F2 | F4/F5 | No |
 | F4 | F3 | F6 | Sí, técnicamente con F5 |
 | F5 | F3 | F6 | Sí, técnicamente con F4 |
@@ -1252,13 +1345,14 @@ El agente no debe:
 
 ---
 
-# 22. Estado de progreso
+# 23. Estado de progreso
 
 Utilizar esta sección como control dentro del repositorio.
 
 ```text
 [x] F0 — Línea base y paridad
-[ ] F1 — Separar contratos de datos
+[x] F1 — Separar contratos de datos
+[~] F1.5 — Corregir previsualización de vídeo vertical
 [ ] F2 — Extraer piezas reutilizables
 [ ] F3 — Modularizar comentarios
 [ ] F4 — Bottom sheet móvil
@@ -1273,7 +1367,7 @@ Actualizar solo después de aprobar cada gate.
 
 ---
 
-# 23. Resultado final esperado
+# 24. Resultado final esperado
 
 Cuando F9 termine, la experiencia pública deberá comportarse así:
 
@@ -1319,7 +1413,7 @@ feed
 
 ---
 
-# 24. Criterio final de éxito
+# 25. Criterio final de éxito
 
 La migración se considera completa solo cuando:
 
@@ -1327,7 +1421,7 @@ La migración se considera completa solo cuando:
 
 ---
 
-# 25. Decisiones congeladas de este roadmap
+# 26. Decisiones congeladas de este roadmap
 
 - El feed es la experiencia pública principal.
 - El single visual público se retirará progresivamente.
@@ -1344,7 +1438,7 @@ La migración se considera completa solo cuando:
 
 ---
 
-# 26. Nota de mantenimiento
+# 27. Nota de mantenimiento
 
 Este archivo debe tratarse como la fuente de verdad del proyecto **SINGLE → FEED**.
 

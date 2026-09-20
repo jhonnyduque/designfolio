@@ -30,7 +30,10 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Se ejecuta solo en el cliente tras la hidratación, asignando un color aleatorio real
-    setBgColor(PANEL_COLORS[Math.floor(Math.random() * PANEL_COLORS.length)])
+    const frame = window.requestAnimationFrame(() => {
+      setBgColor(PANEL_COLORS[Math.floor(Math.random() * PANEL_COLORS.length)])
+    })
+    return () => window.cancelAnimationFrame(frame)
   }, [])
 
   return (

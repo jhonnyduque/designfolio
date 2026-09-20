@@ -28,7 +28,10 @@ export function DemoData() {
   }, [])
 
   useEffect(() => {
-    cargarEstado()
+    const frame = window.requestAnimationFrame(() => {
+      void cargarEstado()
+    })
+    return () => window.cancelAnimationFrame(frame)
   }, [cargarEstado])
 
   const ejecutar = useCallback(

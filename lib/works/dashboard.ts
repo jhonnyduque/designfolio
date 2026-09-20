@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm"
 import { comments, likes, profiles, works } from "@/lib/db/schema"
 import { getDb } from "@/lib/db/client"
+import type { DashboardProjectDetail } from "@/types/project"
 
 export type DashboardWork = {
   id: string
@@ -55,9 +56,24 @@ const visible = and(eq(works.moderationStatus, "approved"), sql`${works.archived
  * — "Mis proyectos" enlaza a todos. Cualquier otra persona con sesión solo ve los
  * aprobados y sin archivar.
  */
-export async function getDashboardWork(id: string, viewerId: string) {
+export async function getDashboardWork(id: string, viewerId: string): Promise<DashboardProjectDetail | null> {
   const db = getDb()
-  const [work] = await db.select().from(works).where(eq(works.id, id)).limit(1)
+  const [work] = await db.select({
+    id: works.id,
+    slug: works.slug,
+    authorId: works.authorId,
+    title: works.title,
+    description: works.description,
+    category: works.category,
+    tags: works.tags,
+    images: works.images,
+    moderationStatus: works.moderationStatus,
+    viewsCount: works.viewsCount,
+    sharesCount: works.sharesCount,
+    createdAt: works.createdAt,
+    publishedAt: works.publishedAt,
+    archivedAt: works.archivedAt,
+  }).from(works).where(eq(works.id, id)).limit(1)
   if (!work) return null
 
   const isOwner = work.authorId === viewerId
@@ -76,9 +92,9 @@ export async function getDashboardWork(id: string, viewerId: string) {
     }).from(profiles).where(eq(profiles.id, work.authorId)).limit(1),
     db.select({ count: sql<number>`count(*)` }).from(likes).where(eq(likes.workId, work.id)),
     db.select({ count: sql<number>`count(*)` }).from(comments).where(eq(comments.workId, work.id)),
-    db.select({ id: works.id }).from(works)
+    db.select({ id: works.id, slug: works.slug }).from(works)
       .where(and(visible, gt(works.publishedAt, publishedAt))).orderBy(asc(works.publishedAt)).limit(1),
-    db.select({ id: works.id }).from(works)
+    db.select({ id: works.id, slug: works.slug }).from(works)
       .where(and(visible, lt(works.publishedAt, publishedAt))).orderBy(desc(works.publishedAt)).limit(1),
   ])
 
@@ -86,13 +102,45 @@ export async function getDashboardWork(id: string, viewerId: string) {
   if (!author) return null
 
   return {
-    work,
-    author,
-    isOwner,
-    likesCount: Number(likeTotals[0]?.count ?? 0),
-    commentsCount: Number(commentTotals[0]?.count ?? 0),
-    previous: previous[0] ?? null,
-    next: next[0] ?? null,
+    project: {
+      id: work.id,
+      slug: work.slug,
+      title: work.title,
+      description: work.description,
+      category: work.category,
+      tags: work.tags ?? [],
+      media: work.images ?? [],
+      createdAt: work.createdAt.toISOString(),
+      publishedAt: publishedAt.toISOString(),
+      moderationStatus: work.moderationStatus,
+      archivedAt: work.archivedAt?.toISOString() ?? null,
+    },
+    author: {
+      id: author.id,
+      username: author.username,
+      fullName: author.fullName,
+      avatarUrl: author.avatarUrl,
+      reputationLevel: author.reputationLevel,
+      bio: author.bio,
+      school: author.school,
+    },
+    metrics: {
+      likesCount: Number(likeTotals[0]?.count ?? 0),
+      commentsCount: Number(commentTotals[0]?.count ?? 0),
+      viewsCount: work.viewsCount,
+      sharesCount: work.sharesCount,
+    },
+    navigation: {
+      previous: previous[0] ?? null,
+      next: next[0] ?? null,
+    },
+    viewer: {
+      id: viewerId,
+      isOwner,
+      canEdit: isOwner,
+      canArchive: isOwner,
+      canDelete: isOwner,
+    },
   }
 }
 

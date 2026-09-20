@@ -9,8 +9,38 @@ import { useCreateWorkMySql } from "@/hooks/useCreateWorkMySql"
 import { useTaxonomy } from "@/hooks/useTaxonomy"
 import { WORK_LIMITS } from "@/types/work"
 import { normalizeSlug, slugifyProjectTitle } from "@/lib/slug"
+import { mediaAspectRatio } from "@/lib/media-aspect"
 
 type Step = "images" | "details" | "preview"
+type PreviewItem = { file: File; url: string }
+
+function PublishPreviewMedia({ item }: { item: PreviewItem }) {
+  const isVideo = item.file.type.startsWith("video/")
+  const [videoAspectRatio, setVideoAspectRatio] = useState("9 / 16")
+
+  if (!isVideo) {
+    return (
+      <div className="aspect-video bg-gray-100 overflow-hidden">
+        <img src={item.url} alt="Vista previa" className="h-full w-full object-cover" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-gray-900 overflow-hidden" style={{ aspectRatio: videoAspectRatio }}>
+      <video
+        src={item.url}
+        className="block h-full w-full object-contain"
+        controls
+        playsInline
+        preload="metadata"
+        onLoadedMetadata={(event) => {
+          setVideoAspectRatio(mediaAspectRatio(event.currentTarget.videoWidth, event.currentTarget.videoHeight))
+        }}
+      />
+    </div>
+  )
+}
 
 export function CreateWorkForm() {
   const [files, setFiles] = useState<File[]>([])
@@ -68,25 +98,16 @@ export function CreateWorkForm() {
   }, [previewUrls])
 
   useEffect(() => {
-    if (!slugTouched) {
-      setSlug(normalizeSlug(title))
-    }
-  }, [title, slugTouched])
-
-  useEffect(() => {
     let isCancelled = false
     const candidate = normalizedSlug || slugifyProjectTitle(title)
 
     if (!candidate) {
-      setSlugStatus("idle")
-      setSlugCheckMessage("")
       return
     }
 
-    setSlugStatus("checking")
-    setSlugCheckMessage("Comprobando disponibilidad del slug...")
-
     const timeout = setTimeout(async () => {
+      setSlugStatus("checking")
+      setSlugCheckMessage("Comprobando disponibilidad del slug...")
       try {
         const response = await fetch(`/api/works/slug?value=${encodeURIComponent(candidate)}`)
         const data = await response.json() as { available?: boolean; error?: string }
@@ -195,7 +216,11 @@ export function CreateWorkForm() {
           {/* Title */}
           <div>
             <label className="block text-label text-gray-700">Título</label>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={WORK_LIMITS.TITLE_MAX}
+            <input type="text" value={title} onChange={(e) => {
+              const nextTitle = e.target.value
+              setTitle(nextTitle)
+              if (!slugTouched) setSlug(normalizeSlug(nextTitle))
+            }} maxLength={WORK_LIMITS.TITLE_MAX}
               className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-colors"
               placeholder="Dale un nombre a tu proyecto" />
             <p className="mt-1 text-meta text-gray-400 text-right">{title.length}/{WORK_LIMITS.TITLE_MAX}</p>
@@ -284,18 +309,7 @@ export function CreateWorkForm() {
         <div>
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             {previewUrls[0] && (
-              <div className="aspect-video bg-gray-100 overflow-hidden">
-                {previewUrls[0].file.type.startsWith("video/") ? (
-                  <video
-                    src={previewUrls[0].url}
-                    className="w-full h-full object-cover"
-                    controls
-                    playsInline
-                  />
-                ) : (
-                  <img src={previewUrls[0].url} alt="Preview" className="w-full h-full object-cover" />
-                )}
-              </div>
+              <PublishPreviewMedia key={previewUrls[0].url} item={previewUrls[0]} />
             )}
             {previewUrls.length > 1 && (
               <div className="flex gap-1 p-1">
