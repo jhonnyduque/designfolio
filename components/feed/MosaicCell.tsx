@@ -34,7 +34,7 @@ export function MosaicCell({ item }: { item: FeedItem }) {
     <div className="group relative block aspect-[1080/1350] overflow-hidden bg-gray-200">
       {portada ? (
         esVideo(portada) ? (
-          <FeedVideo src={portada.url} className="h-full w-full object-cover" />
+          <FeedVideo src={portada.url} poster={portada.posterUrl} className="h-full w-full object-cover" />
         ) : (
           <ZoomableMedia src={portada.url} alt="" className="h-full w-full object-cover" />
         )

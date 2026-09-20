@@ -1,27 +1,37 @@
 // components/works/LikeButton.tsx
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useLike } from "@/hooks/useLike"
 
 interface LikeButtonProps {
   workId: string
   initialCount: number
   size?: "sm" | "md"
-  forceLike?: number
+  likeToggleRequest?: number
 }
 
 export function LikeButton({
   workId,
   initialCount,
   size = "md",
-  forceLike = 0,
+  likeToggleRequest = 0,
 }: LikeButtonProps) {
-  const { liked, count, toggle, ensureLiked, loading, error } = useLike(workId, initialCount)
+  const { liked, count, toggle, loading, error } = useLike(workId, initialCount)
+  const processedToggleRequest = useRef(0)
+  const pendingToggleRequests = useRef(0)
 
   useEffect(() => {
-    if (forceLike > 0) void ensureLiked()
-  }, [ensureLiked, forceLike])
+    if (likeToggleRequest === 0 || processedToggleRequest.current === likeToggleRequest) return
+    pendingToggleRequests.current += likeToggleRequest - processedToggleRequest.current
+    processedToggleRequest.current = likeToggleRequest
+  }, [likeToggleRequest])
+
+  useEffect(() => {
+    if (loading || pendingToggleRequests.current === 0) return
+    pendingToggleRequests.current -= 1
+    void toggle()
+  }, [loading, toggle])
 
   const isMd = size === "md"
 
@@ -31,7 +41,7 @@ export function LikeButton({
         onClick={(e) => {
           e.preventDefault() // Prevent Link navigation if inside a card
           e.stopPropagation()
-          toggle()
+          void toggle()
         }}
         disabled={loading}
         className={`inline-flex items-center gap-1.5 transition-all ${

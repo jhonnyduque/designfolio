@@ -26,6 +26,7 @@ function isWorkImage(value: unknown): value is WorkImage {
   const image = value as WorkImage
   return (
     typeof image.url === "string" &&
+    (image.posterUrl === undefined || typeof image.posterUrl === "string") &&
     typeof image.width === "number" &&
     Number.isFinite(image.width) &&
     typeof image.height === "number" &&
@@ -78,12 +79,13 @@ export async function POST(request: NextRequest) {
   if (!allowedCategories.includes(category)) return invalid("Selecciona una categoría válida.")
   if (tags.length > WORK_LIMITS.TAGS_MAX || tags.some((tag) => typeof tag !== "string" || tag.length > 80)) return invalid(`Puedes añadir hasta ${WORK_LIMITS.TAGS_MAX} etiquetas válidas.`)
   if (images.length < WORK_LIMITS.IMAGES_MIN || images.length > WORK_LIMITS.IMAGES_MAX || !images.every(isWorkImage)) return invalid(`Debes incluir entre ${WORK_LIMITS.IMAGES_MIN} y ${WORK_LIMITS.IMAGES_MAX} medios válidos.`)
+  if (images.some((image) => image.posterUrl && !image.type.startsWith("video/"))) return invalid("Solo los vídeos pueden tener una portada.")
 
   // Se valida SIEMPRE, también en producción. Antes la condición llevaba
   // `NODE_ENV !== "production"`, así que en el entorno que importa se aceptaba
   // cualquier URL en images[].url sin comprobar de quién era.
   const uploadPrefix = `${MEDIA_URL_PREFIX}/${session.user.id}/${id}/`
-  if (images.some((image, index) => !image.url.startsWith(uploadPrefix) || image.order !== index || image.width < 1 || image.height < 1)) {
+  if (images.some((image, index) => !image.url.startsWith(uploadPrefix) || (image.posterUrl && !image.posterUrl.startsWith(uploadPrefix)) || image.order !== index || image.width < 1 || image.height < 1)) {
     return invalid("Uno o más medios no pertenecen a esta publicación. Vuelve a subirlos antes de publicar.")
   }
 

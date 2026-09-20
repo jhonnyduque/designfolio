@@ -2,6 +2,7 @@
 "use client"
 
 import { type ReactNode, useEffect, useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
@@ -59,9 +60,9 @@ export function DashboardShell({
   /**
    * Con el cajón abierto, el fondo deja de desplazarse.
    *
-   * El cajón no tiene scroll propio, así que arrastrar el dedo sobre él movía
-   * la página de detrás. El cajón nunca se movía —es `fixed`—, pero al
-   * deslizarse todo lo demás daba la impresión contraria.
+   * El cajón tiene su propio scroll, pero al llegar a sus extremos el gesto no
+   * debe trasladarse a la página de detrás. El fondo se inmoviliza mientras el
+   * panel está abierto para que la navegación no parezca moverse.
    */
   useEffect(() => {
     if (!cajonAbierto) return
@@ -120,21 +121,9 @@ export function DashboardShell({
 
   const contenidoLateral = (
     <>
-      <Link href="/dashboard" className="flex items-baseline gap-2 px-2.5 pb-5 pt-1">
-        <span className="text-subsection font-bold tracking-tight text-gray-900">
-          Design<span className="text-gray-400">folio</span>
-        </span>
-        <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
-          Beta
-        </span>
-      </Link>
-
-      <Link
-        href="/dashboard/new"
-        className="mb-4 flex items-center justify-center gap-1.5 rounded-lg bg-gray-900 px-3 py-2 text-action text-white transition-colors hover:bg-gray-800"
-      >
-        {icono(ICONOS.nuevo)} Nuevo proyecto
-      </Link>
+      <p className="px-2.5 pb-5 pt-1 text-meta font-medium uppercase tracking-[0.08em] text-gray-400">
+        Menú
+      </p>
 
       {isFounder && (
         <p className="px-2.5 pb-1.5 pt-1 text-meta uppercase tracking-[0.06em] text-gray-400">
@@ -166,24 +155,44 @@ export function DashboardShell({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Cabecera solo en móvil, donde la lateral no cabe */}
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 lg:hidden">
-        <button
-          onClick={abrirCajon}
-          aria-label="Abrir menú"
-          className="-ml-2 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
-        >
-          {icono(ICONOS.menu)}
-        </button>
-        <Link href="/dashboard" className="text-subsection font-bold tracking-tight text-gray-900">
-          Design<span className="text-gray-400">folio</span>
+      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-gray-200 bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-9">
+        <Link href="/dashboard" aria-label="Ir al inicio de Designfolio" className="flex items-center">
+          <Image
+            src="/brand/simbolo-logo.webp"
+            alt="Designfolio"
+            width={42}
+            height={42}
+            className="h-9 w-9 object-contain"
+            priority
+          />
         </Link>
-        <NotificationBell />
+
+        <div className="flex items-center gap-1">
+          <Link
+            href="/dashboard/new"
+            aria-label="Crear proyecto"
+            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </Link>
+          <NotificationBell />
+          <button
+            onClick={abrirCajon}
+            aria-label="Abrir menú"
+            aria-expanded={cajonAbierto}
+            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+          >
+            {icono(ICONOS.menu)}
+          </button>
+        </div>
       </header>
 
-      {/* Cajón lateral en móvil */}
+      {/* El mismo cajón sirve en móvil y escritorio: la navegación no ocupa
+          espacio fijo y el encabezado conserva siempre el mismo lenguaje. */}
       {cajonAbierto && (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        <div className="fixed inset-0 z-40">
           <div
             className="absolute inset-0 bg-gray-900/20"
             onClick={cerrarCajon}
@@ -196,11 +205,11 @@ export function DashboardShell({
               El `overflow-y-auto` es para cuando el menú crezca; el
               `overscroll-contain` evita que al llegar a su final el gesto pase
               a la página de detrás. */}
-          <aside className="absolute left-0 top-0 flex h-[100dvh] w-[252px] flex-col overflow-y-auto overscroll-contain border-r border-gray-200 bg-white p-3">
+          <aside className="absolute right-0 top-0 flex h-[100dvh] w-[min(252px,calc(100vw-2rem))] flex-col overflow-y-auto overscroll-contain border-l border-gray-200 bg-white p-3 shadow-xl">
             <button
               onClick={cerrarCajon}
               aria-label="Cerrar menú"
-              className="absolute right-3 top-3 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900"
+              className="absolute left-3 top-3 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900"
             >
               {icono(ICONOS.cerrar)}
             </button>
@@ -209,22 +218,9 @@ export function DashboardShell({
         </div>
       )}
 
-      <div className="flex">
-        {/* Lateral fija en escritorio */}
-        <aside className="sticky top-0 hidden h-screen w-[228px] shrink-0 flex-col border-r border-gray-200 bg-white p-3 lg:flex">
-          {contenidoLateral}
-        </aside>
-
-        <div className="min-w-0 flex-1">
-          {/* La campana vive arriba a la derecha solo en escritorio */}
-          <div className="hidden justify-end px-9 pt-6 lg:flex">
-            <NotificationBell />
-          </div>
-          <main className="mx-auto max-w-[1180px] px-4 pb-20 pt-6 sm:px-6 lg:px-9 lg:pt-2">
-            {children}
-          </main>
-        </div>
-      </div>
+      <main className="mx-auto max-w-[1180px] px-4 pb-20 pt-6 sm:px-6 lg:px-9">
+        {children}
+      </main>
     </div>
   )
 }

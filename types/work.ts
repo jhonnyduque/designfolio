@@ -2,6 +2,8 @@
 
 export interface WorkImage {
   url: string
+  /** Fotograma JPEG elegido para los vídeos; opcional para publicaciones anteriores. */
+  posterUrl?: string
   width: number
   height: number
   type: string

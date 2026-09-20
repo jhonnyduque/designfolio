@@ -452,8 +452,8 @@ llevaban al single heredado.
   alcanzar 30% de visibilidad, permanece silenciado y pausa al salir por completo.
 - El control de sonido es un botón pequeño, gris y accesible; no hay play gigante
   ni barra de controles del navegador. Solo un vídeo puede reproducirse a la vez.
-- Pinch amplía temporalmente el vídeo y el doble tap asegura un like, sin poder
-  retirar uno que ya exista.
+- Pinch amplía temporalmente el vídeo y el doble tap comparte la alternancia
+  del corazón: agrega o retira el like según su estado actual.
 - La selección inicial usa `object-contain`: conserva completos los 9:16, 4:5 y
   16:9 dentro de una miniatura estable.
 - La cuadrícula desktop conserva sus celdas 4:5 como superficie de descubrimiento;
@@ -469,7 +469,7 @@ llevaban al single heredado.
 - selector de archivos y vista previa de publicación (`ImageUploader`, `CreateWorkForm`);
 - post móvil (`FeedPost`);
 - mosaico desktop (`MosaicCell`);
-- cabecera pública, acciones sociales y API de like idempotente.
+- cabecera pública y acciones sociales del feed.
 
 ## Verificación
 

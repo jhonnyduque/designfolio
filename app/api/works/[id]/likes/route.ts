@@ -64,34 +64,3 @@ export async function POST(request: NextRequest, { params }: Context) {
   const [total] = await db.select({ count: sql<number>`count(*)` }).from(likes).where(eq(likes.workId, id))
   return attachVisitorCookie(NextResponse.json({ liked, count: Number(total?.count ?? 0) }), actor.newVisitorId)
 }
-
-/** Añade un like sin alternarlo: es seguro para el gesto de doble toque (API PUT). */
-export async function PUT(request: NextRequest, { params }: Context) {
-  const limit = checkRateLimit(clientKey(request, "like"), LIMITS.like.limit, LIMITS.like.window)
-  if (!limit.allowed) return tooManyRequests(limit.retryAfter, "Demasiadas acciones seguidas. Espera un momento.")
-
-  const { id } = await params
-  const work = await getApprovedWork(id)
-  if (!work) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 })
-  const actor = await getActor(request)
-  const db = getDb()
-  const where = actor.userId ? eq(likes.userId, actor.userId) : eq(likes.visitorId, actor.visitorId!)
-  const [own] = await db.select({ id: likes.id }).from(likes).where(and(eq(likes.workId, id), where)).limit(1)
-  let inserted = false
-  if (!own) {
-    try {
-      await db.insert(likes).values({ id: crypto.randomUUID(), workId: id, userId: actor.userId, visitorId: actor.visitorId })
-      inserted = true
-    } catch (error) {
-      if ((error as { cause?: { code?: string } }).cause?.code !== "ER_DUP_ENTRY") throw error
-    }
-  }
-  if (inserted && actor.userId !== work.authorId) {
-    await db.insert(notifications).values({
-      id: crypto.randomUUID(), userId: work.authorId, type: "like", targetId: id,
-      payload: { actor: actor.userId ? "usuario" : "Visitante" },
-    })
-  }
-  const [total] = await db.select({ count: sql<number>`count(*)` }).from(likes).where(eq(likes.workId, id))
-  return attachVisitorCookie(NextResponse.json({ liked: true, count: Number(total?.count ?? 0) }), actor.newVisitorId)
-}

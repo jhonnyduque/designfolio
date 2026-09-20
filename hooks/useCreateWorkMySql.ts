@@ -8,7 +8,7 @@ import { WORK_LIMITS, type CreateWorkPayload, type WorkImage } from "@/types/wor
 type PublishStep = "idle" | "uploading" | "saving" | "done" | "error"
 
 interface UseCreateWorkReturn {
-  publish: (files: File[], payload: Omit<CreateWorkPayload, "images">) => Promise<string | null>
+  publish: (files: File[], payload: Omit<CreateWorkPayload, "images">, posters?: Map<File, File>) => Promise<string | null>
   step: PublishStep
   progress: string
   error: string | null
@@ -63,7 +63,7 @@ export function useCreateWorkMySql(): UseCreateWorkReturn {
     setWasAutoApproved(false)
   }, [])
 
-  const publish = useCallback(async (files: File[], payload: Omit<CreateWorkPayload, "images">) => {
+  const publish = useCallback(async (files: File[], payload: Omit<CreateWorkPayload, "images">, posters = new Map<File, File>()) => {
     setError(null)
     try {
       if (files.length < WORK_LIMITS.IMAGES_MIN || files.length > WORK_LIMITS.IMAGES_MAX) throw new Error(`Debes subir entre ${WORK_LIMITS.IMAGES_MIN} y ${WORK_LIMITS.IMAGES_MAX} medios.`)
@@ -87,7 +87,19 @@ export function useCreateWorkMySql(): UseCreateWorkReturn {
         if (!upload.ok) throw new Error(await responseError(upload))
         const { url } = await upload.json() as { url: string }
         const dimensions = await getMediaDimensions(file)
-        images.push({ url, ...dimensions, type: file.type, order })
+        const poster = posters.get(file)
+        let posterUrl: string | undefined
+        if (poster) {
+          const posterData = new FormData()
+          posterData.set("file", poster)
+          posterData.set("workId", workId)
+          posterData.set("order", String(order))
+          posterData.set("role", "poster")
+          const posterUpload = await fetch("/api/works/upload", { method: "POST", body: posterData })
+          if (!posterUpload.ok) throw new Error(await responseError(posterUpload))
+          posterUrl = (await posterUpload.json() as { url: string }).url
+        }
+        images.push({ url, posterUrl, ...dimensions, type: file.type, order })
       }
 
       setStep("saving")

@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { ImageUploader } from "./ImageUploader"
+import { VideoPosterPicker } from "./VideoPosterPicker"
 import { TaxonomySelector } from "./TaxonomySelector"
 import { useCreateWorkMySql } from "@/hooks/useCreateWorkMySql"
 import { useTaxonomy } from "@/hooks/useTaxonomy"
@@ -11,8 +12,7 @@ import { WORK_LIMITS } from "@/types/work"
 import { normalizeSlug, slugifyProjectTitle } from "@/lib/slug"
 import { mediaAspectRatio } from "@/lib/media-aspect"
 
-type Step = "images" | "details" | "preview"
-type PreviewItem = { file: File; url: string }
+type PreviewItem = { file: File; url: string; posterUrl?: string }
 
 function PublishPreviewMedia({ item }: { item: PreviewItem }) {
   const isVideo = item.file.type.startsWith("video/")
@@ -30,6 +30,7 @@ function PublishPreviewMedia({ item }: { item: PreviewItem }) {
     <div className="bg-gray-900 overflow-hidden" style={{ aspectRatio: videoAspectRatio }}>
       <video
         src={item.url}
+        poster={item.posterUrl}
         className="block h-full w-full object-contain"
         controls
         playsInline
@@ -44,13 +45,13 @@ function PublishPreviewMedia({ item }: { item: PreviewItem }) {
 
 export function CreateWorkForm() {
   const [files, setFiles] = useState<File[]>([])
+  const [posterFiles, setPosterFiles] = useState<Map<File, File>>(new Map())
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
   const [slugTouched, setSlugTouched] = useState(false)
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle")
   const [slugCheckMessage, setSlugCheckMessage] = useState("")
   const [description, setDescription] = useState("")
-  const [step, setStep] = useState<Step>("images")
 
   const {
     categories,
@@ -65,8 +66,10 @@ export function CreateWorkForm() {
   const descriptionLen = description.length
   const normalizedSlug = normalizeSlug(slug)
   const finalSlugPreview = normalizedSlug || slugifyProjectTitle(title)
-  const canGoToDetails = files.length >= WORK_LIMITS.IMAGES_MIN
-  const canGoToPreview =
+  const allVideoPostersReady = files.filter((file) => file.type.startsWith("video/")).every((file) => posterFiles.has(file))
+  const canPublish =
+    files.length >= WORK_LIMITS.IMAGES_MIN &&
+    allVideoPostersReady &&
     title.trim().length >= WORK_LIMITS.TITLE_MIN &&
     title.trim().length <= WORK_LIMITS.TITLE_MAX &&
     descriptionLen >= WORK_LIMITS.DESCRIPTION_MIN &&
@@ -75,7 +78,7 @@ export function CreateWorkForm() {
   const isPublishing = publishStep !== "idle" && publishStep !== "error"
 
   async function handlePublish() {
-    if (!canGoToPreview || isPublishing) return
+    if (!canPublish || isPublishing) return
 
     await publish(files, {
       title: title.trim(),
@@ -83,17 +86,27 @@ export function CreateWorkForm() {
       description: description.trim(),
       category: selectedCategory,
       tags: [],
-    })
+    }, posterFiles)
   }
 
   const previewUrls = useMemo(
-    () => files.map((file) => ({ file, url: URL.createObjectURL(file) })),
-    [files]
+    () => files.map((file) => {
+      const poster = posterFiles.get(file)
+      return {
+        file,
+        url: URL.createObjectURL(file),
+        posterUrl: poster ? URL.createObjectURL(poster) : undefined,
+      }
+    }),
+    [files, posterFiles]
   )
 
   useEffect(() => {
     return () => {
-      previewUrls.forEach((item) => URL.revokeObjectURL(item.url))
+      previewUrls.forEach((item) => {
+        URL.revokeObjectURL(item.url)
+        if (item.posterUrl) URL.revokeObjectURL(item.posterUrl)
+      })
     }
   }, [previewUrls])
 
@@ -169,26 +182,6 @@ export function CreateWorkForm() {
         <p className="mt-1 text-body-sm text-gray-500">Comparte tu proyecto con la comunidad.</p>
       </div>
 
-      {/* Steps */}
-      <div className="flex gap-2 mb-8">
-        {(["images", "details", "preview"] as Step[]).map((s, i) => {
-          const labels = ["Medios", "Detalles", "Vista previa"]
-          const isCurrent = step === s
-          const isPast =
-            (s === "images" && (step === "details" || step === "preview")) ||
-            (s === "details" && step === "preview")
-          return (
-            <button key={s} type="button" onClick={() => isPast && setStep(s)} disabled={!isPast && !isCurrent}
-              className={`flex items-center gap-1.5 text-action transition-colors ${isCurrent ? "text-gray-900" : isPast ? "text-gray-500 hover:text-gray-700 cursor-pointer" : "text-gray-300 cursor-default"}`}>
-              <span className={`w-6 h-6 rounded-full text-meta flex items-center justify-center font-bold ${isCurrent ? "bg-gray-900 text-white" : isPast ? "bg-gray-200 text-gray-600" : "bg-gray-100 text-gray-300"}`}>
-                {isPast ? "✓" : i + 1}
-              </span>
-              <span className="hidden sm:inline">{labels[i]}</span>
-            </button>
-          )
-        })}
-      </div>
-
       {/* Error */}
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
@@ -197,21 +190,25 @@ export function CreateWorkForm() {
         </div>
       )}
 
-      {/* STEP 1: Images */}
-      {step === "images" && (
+      <div className="space-y-8">
         <div>
-          <ImageUploader files={files} onChange={setFiles} />
-          <div className="mt-8 flex justify-end">
-            <button type="button" onClick={() => setStep("details")} disabled={!canGoToDetails}
-              className="px-5 py-2.5 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-              Siguiente: Detalles
-            </button>
-          </div>
+          <ImageUploader files={files} onChange={(nextFiles) => {
+            setFiles(nextFiles)
+            setPosterFiles((current) => new Map([...current].filter(([file]) => nextFiles.includes(file))))
+          }} />
+          {files.filter((file) => file.type.startsWith("video/")).length > 0 && (
+            <div className="mt-5 space-y-3">
+              {files.filter((file) => file.type.startsWith("video/")).map((file) => (
+                <VideoPosterPicker
+                  key={`${file.name}-${file.size}-${file.lastModified}`}
+                  file={file}
+                  selected={posterFiles.get(file)}
+                  onSelect={(poster) => setPosterFiles((current) => new Map(current).set(file, poster))}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      )}
-
-      {/* STEP 2: Details */}
-      {step === "details" && (
         <div className="space-y-5">
           {/* Title */}
           <div>
@@ -291,21 +288,8 @@ export function CreateWorkForm() {
             </p>
           )}
 
-          {/* Nav */}
-          <div className="flex justify-between pt-4">
-            <button type="button" onClick={() => setStep("images")} className="px-4 py-2.5 text-action text-gray-600 hover:text-gray-900 transition-colors">
-              ← Medios
-            </button>
-            <button type="button" onClick={() => setStep("preview")} disabled={!canGoToPreview}
-              className="px-5 py-2.5 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-              Vista previa
-            </button>
-          </div>
         </div>
-      )}
 
-      {/* STEP 3: Preview */}
-      {step === "preview" && (
         <div>
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             {previewUrls[0] && (
@@ -318,6 +302,7 @@ export function CreateWorkForm() {
                     {item.file.type.startsWith("video/") ? (
                       <video
                         src={item.url}
+                        poster={item.posterUrl}
                         className="w-full h-full object-cover"
                         muted
                         playsInline
@@ -353,18 +338,14 @@ export function CreateWorkForm() {
             </div>
           )}
 
-          <div className="flex justify-between pt-6">
-            <button type="button" onClick={() => setStep("details")} disabled={isPublishing}
-              className="px-4 py-2.5 text-action text-gray-600 hover:text-gray-900 disabled:opacity-40 transition-colors">
-              ← Editar
-            </button>
-            <button type="button" onClick={handlePublish} disabled={isPublishing}
+          <div className="flex justify-end pt-6">
+            <button type="button" onClick={handlePublish} disabled={isPublishing || !canPublish}
               className="px-6 py-2.5 bg-gray-900 text-white text-action rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               {isPublishing ? "Publicando..." : "Publicar proyecto"}
             </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

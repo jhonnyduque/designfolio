@@ -1,12 +1,13 @@
 "use client"
 
 import { useEffect, useRef, useState, type PointerEvent } from "react"
-import { pinchDistance, type PinchPoint } from "@/lib/pinch-zoom"
+import { pinchDistance, pinchMidpoint, pinchTransform, type PinchPoint } from "@/lib/pinch-zoom"
 
 let activeVideo: HTMLVideoElement | null = null
 
 type Props = {
   src: string
+  poster?: string
   className?: string
   onDoubleTap?: () => void
   onSwipe?: (direction: "next" | "previous") => void
@@ -19,17 +20,20 @@ const SWIPE_THRESHOLD = 35
  * Vídeo autocontenido para el feed. No usa los controles nativos porque su
  * botón gigante y su barra no pertenecen a la interfaz editorial del feed.
  */
-export function FeedVideo({ src, className = "", onDoubleTap, onSwipe }: Props) {
+export function FeedVideo({ src, poster, className = "", onDoubleTap, onSwipe }: Props) {
   const frameRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const pointersRef = useRef(new Map<number, PinchPoint>())
   const startXRef = useRef<number | null>(null)
   const initialDistanceRef = useRef(0)
+  const initialMidpointRef = useRef<PinchPoint | null>(null)
+  const rectRef = useRef<DOMRect | null>(null)
+  const isPinchingRef = useRef(false)
+  const restoreTimerRef = useRef<number | null>(null)
   const lastTapRef = useRef(0)
+  const lastPointerTypeRef = useRef<string | null>(null)
   const suppressTapRef = useRef(false)
   const [muted, setMuted] = useState(true)
-  const [playing, setPlaying] = useState(false)
-  const [scale, setScale] = useState(1)
   const [pinching, setPinching] = useState(false)
 
   useEffect(() => {
@@ -78,7 +82,21 @@ export function FeedVideo({ src, className = "", onDoubleTap, onSwipe }: Props) 
     }
   }
 
+  function togglePlayback() {
+    const video = videoRef.current
+    if (!video) return
+    if (!video.paused && !video.ended) {
+      video.pause()
+      if (activeVideo === video) activeVideo = null
+      return
+    }
+    if (activeVideo && activeVideo !== video) activeVideo.pause()
+    video.muted = muted
+    void video.play().then(() => { activeVideo = video }).catch(() => undefined)
+  }
+
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
+    lastPointerTypeRef.current = event.pointerType
     if (event.pointerType !== "touch") return
     pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
     if (pointersRef.current.size === 1) startXRef.current = event.clientX
@@ -86,9 +104,17 @@ export function FeedVideo({ src, className = "", onDoubleTap, onSwipe }: Props) 
       const [first, second] = [...pointersRef.current.values()]
       initialDistanceRef.current = pinchDistance(first, second)
       if (initialDistanceRef.current > 0) {
+        const video = videoRef.current
+        if (!video) return
+        if (restoreTimerRef.current) window.clearTimeout(restoreTimerRef.current)
+        initialMidpointRef.current = pinchMidpoint(first, second)
+        rectRef.current = video.getBoundingClientRect()
+        isPinchingRef.current = true
         suppressTapRef.current = true
         setPinching(true)
-        event.currentTarget.setPointerCapture(event.pointerId)
+        for (const pointerId of pointersRef.current.keys()) {
+          event.currentTarget.setPointerCapture(pointerId)
+        }
       }
     }
   }
@@ -96,21 +122,43 @@ export function FeedVideo({ src, className = "", onDoubleTap, onSwipe }: Props) 
   function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
     if (event.pointerType !== "touch") return
     pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
-    if (!pinching || pointersRef.current.size < 2) return
+    if (!isPinchingRef.current || pointersRef.current.size < 2) return
     const [first, second] = [...pointersRef.current.values()]
+    const midpoint = initialMidpointRef.current
+    const rect = rectRef.current
+    const video = videoRef.current
+    if (!midpoint || !rect || !video) return
     event.preventDefault()
-    setScale(Math.min(3, Math.max(1, pinchDistance(first, second) / initialDistanceRef.current)))
+    const visual = pinchTransform(
+      rect,
+      midpoint,
+      pinchMidpoint(first, second),
+      initialDistanceRef.current,
+      pinchDistance(first, second),
+    )
+    video.style.transform = `translate3d(${visual.x}px, ${visual.y}px, 0) scale(${visual.scale})`
   }
 
   function endPointer(event: PointerEvent<HTMLDivElement>) {
     pointersRef.current.delete(event.pointerId)
-    if (pinching && pointersRef.current.size < 2) {
-      setScale(1)
+    if (isPinchingRef.current && pointersRef.current.size < 2) {
+      const video = videoRef.current
+      isPinchingRef.current = false
+      initialDistanceRef.current = 0
+      initialMidpointRef.current = null
+      rectRef.current = null
+      if (video) {
+        video.style.transition = "transform 200ms ease"
+        video.style.transform = "translate3d(0, 0, 0) scale(1)"
+      }
       setPinching(false)
-      window.setTimeout(() => { suppressTapRef.current = false }, 220)
+      restoreTimerRef.current = window.setTimeout(() => {
+        if (video) video.style.transition = ""
+        suppressTapRef.current = false
+      }, 220)
       return
     }
-    if (!pinching && startXRef.current !== null) {
+    if (!isPinchingRef.current && startXRef.current !== null) {
       const delta = startXRef.current - event.clientX
       if (Math.abs(delta) > SWIPE_THRESHOLD) {
         suppressTapRef.current = true
@@ -121,8 +169,16 @@ export function FeedVideo({ src, className = "", onDoubleTap, onSwipe }: Props) 
     startXRef.current = null
   }
 
+  useEffect(() => () => {
+    if (restoreTimerRef.current) window.clearTimeout(restoreTimerRef.current)
+  }, [])
+
   function handleClick() {
     if (suppressTapRef.current) return
+    if (lastPointerTypeRef.current === "mouse") {
+      togglePlayback()
+      return
+    }
     const now = Date.now()
     if (now - lastTapRef.current <= DOUBLE_TAP_MS) {
       lastTapRef.current = 0
@@ -146,14 +202,13 @@ export function FeedVideo({ src, className = "", onDoubleTap, onSwipe }: Props) 
       <video
         ref={videoRef}
         src={src}
+        poster={poster}
         muted={muted}
         loop
         playsInline
         preload="metadata"
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        className={`${className} transition-transform duration-200 ${pinching ? "will-change-transform" : ""}`}
-        style={{ transform: `scale(${scale})` }}
+        className={`${className} ${pinching ? "will-change-transform" : ""}`}
+        style={{ transform: "translate3d(0, 0, 0) scale(1)", transformOrigin: "0 0" }}
       />
 
       <button
@@ -162,22 +217,10 @@ export function FeedVideo({ src, className = "", onDoubleTap, onSwipe }: Props) 
         aria-pressed={!muted}
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => { event.stopPropagation(); toggleAudio() }}
-        className="absolute bottom-1.5 right-1.5 grid h-8 w-8 place-items-center rounded-full bg-black/20 text-gray-300 transition-colors hover:bg-black/45 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        className="absolute bottom-1.5 right-1.5 z-10 grid h-8 w-8 place-items-center rounded-full bg-black/20 text-gray-300 transition-colors hover:bg-black/45 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
         <SoundIcon muted={muted} />
       </button>
-
-      {!playing && (
-        <button
-          type="button"
-          aria-label="Reproducir vídeo"
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => { event.stopPropagation(); void videoRef.current?.play() }}
-          className="absolute bottom-1.5 left-1.5 grid h-8 w-8 place-items-center rounded-full bg-black/20 text-white transition-colors hover:bg-black/45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-        </button>
-      )}
     </div>
   )
 }

@@ -32,7 +32,7 @@ export function FeedPost({ item }: { item: FeedItem }) {
   const [indice, setIndice] = useState(0)
   const [expanded, setExpanded] = useState(false)
   const [viewsCount, setViewsCount] = useState(item.views_count)
-  const [forceLike, setForceLike] = useState(0)
+  const [likeToggleRequest, setLikeToggleRequest] = useState(0)
   const articleRef = useRef<HTMLElement | null>(null)
   const varios = medios.length > 1
   const actual = medios[indice] ?? null
@@ -107,13 +107,13 @@ export function FeedPost({ item }: { item: FeedItem }) {
       <div className={`relative bg-gray-200 ${isCurrentVideo ? "" : "aspect-[4/5]"}`} style={mainMediaStyle}>
         {actual && (
           isCurrentVideo ? (
-            <FeedVideo src={actual.url} className="h-full w-full object-contain" onSwipe={cambiarImagen} onDoubleTap={() => setForceLike((value) => value + 1)} />
+            <FeedVideo src={actual.url} poster={actual.posterUrl} className="h-full w-full object-contain" onSwipe={cambiarImagen} onDoubleTap={() => setLikeToggleRequest((value) => value + 1)} />
           ) : (
             <ZoomableMedia
               src={actual.url}
               alt={item.title}
               onSwipe={cambiarImagen}
-              onDoubleTap={() => setForceLike((value) => value + 1)}
+              onDoubleTap={() => setLikeToggleRequest((value) => value + 1)}
               enablePinch
               className="h-full w-full object-cover"
             />
@@ -133,7 +133,7 @@ export function FeedPost({ item }: { item: FeedItem }) {
       </div>
 
       <div className="flex items-center gap-3.5 px-3 pb-1 pt-2.5">
-        <LikeButton workId={item.id} initialCount={item.likes_count} forceLike={forceLike} />
+        <LikeButton workId={item.id} initialCount={item.likes_count} likeToggleRequest={likeToggleRequest} />
         <span className="inline-flex items-center gap-1.5 text-gray-900">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
             <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 20.5l1.6-4.9A8.3 8.3 0 0 1 3.6 11.5a8.4 8.4 0 0 1 8.9-8.4 8.4 8.4 0 0 1 8.5 8.4z" />

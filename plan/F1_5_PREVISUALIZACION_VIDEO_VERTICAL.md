@@ -23,7 +23,8 @@ en pantalla. También quedaban enlaces de feed que abrían el single heredado.
   pausa al salir, está silenciado, permite activar sonido con un icono discreto,
   pinch temporal y doble tap para asegurar un like.
 - `MosaicCell` reutiliza ese reproductor manteniendo su recorte editorial 4:5.
-- El like de doble tap usa `PUT` idempotente: jamás quita un like existente.
+- El doble tap comparte la alternancia del corazón: agrega like y un segundo
+  doble tap lo retira.
 - Media, título y comentarios del feed dejan de abrir el single; compartir usa
   el ancla del post en el feed. El `+` de cabecera solo aparece con sesión activa.
 

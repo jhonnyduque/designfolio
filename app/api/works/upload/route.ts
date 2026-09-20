@@ -22,8 +22,15 @@ export async function POST(request: NextRequest) {
   const file = formData.get("file")
   const workId = formData.get("workId")
   const order = Number(formData.get("order"))
+  const role = formData.get("role")
   if (!(file instanceof File) || typeof workId !== "string" || !/^[0-9a-f-]{36}$/i.test(workId) || !Number.isInteger(order) || order < 0 || order > 5) {
     return NextResponse.json({ error: "Solicitud de carga inválida." }, { status: 400 })
+  }
+  if (role !== null && role !== "poster") {
+    return NextResponse.json({ error: "El tipo de recurso no es válido." }, { status: 400 })
+  }
+  if (role === "poster" && file.type !== "image/jpeg") {
+    return NextResponse.json({ error: "La portada del vídeo debe ser una imagen JPG." }, { status: 400 })
   }
   const validationError = validateMediaFile(file)
   if (validationError) return NextResponse.json({ error: validationError }, { status: 400 })
@@ -39,7 +46,7 @@ export async function POST(request: NextRequest) {
   // El directorio se deriva del id de sesión, nunca de datos enviados por el
   // cliente, así que nadie puede escribir bajo el prefijo de otra persona.
   const directory = workMediaDirectory(session.user.id, workId)
-  const filename = `${order}-${crypto.randomUUID()}.${extension}`
+  const filename = role === "poster" ? `poster-${order}-${crypto.randomUUID()}.${extension}` : `${order}-${crypto.randomUUID()}.${extension}`
 
   try {
     await mkdir(directory, { recursive: true })
