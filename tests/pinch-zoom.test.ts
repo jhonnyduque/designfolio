@@ -1,11 +1,10 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import {
-  pinchBackdropOpacity,
   pinchDistance,
   pinchMidpoint,
   pinchScale,
-  pinchTranslation,
+  pinchTransform,
 } from "../lib/pinch-zoom"
 
 test("calcula la geometría del pinch", () => {
@@ -13,12 +12,19 @@ test("calcula la geometría del pinch", () => {
   assert.deepEqual(pinchMidpoint({ x: 10, y: 4 }, { x: 14, y: 8 }), { x: 12, y: 6 })
   assert.equal(pinchScale(50, 75), 1.5)
   assert.equal(pinchScale(0, 75), 1)
-  assert.deepEqual(pinchTranslation({ x: 12, y: 6 }, { x: 17, y: 2 }), { x: 5, y: -4 })
+  assert.equal(pinchScale(50, 25), 1)
 })
 
-test("interpela el backdrop sólo después de un aumento perceptible", () => {
-  assert.equal(pinchBackdropOpacity(1), 0)
-  assert.equal(pinchBackdropOpacity(1.2), 0)
-  assert.equal(pinchBackdropOpacity(3), 0.6)
-  assert.equal(pinchBackdropOpacity(4), 0.6)
+test("mantiene el rectángulo original hasta que existe zoom efectivo", () => {
+  const rect = { left: 20, top: 40 }
+  const start = { x: 70, y: 90 }
+  assert.deepEqual(pinchTransform(rect, start, start, 100, 100), { scale: 1, x: 0, y: 0 })
+  assert.deepEqual(pinchTransform(rect, start, { x: 120, y: 140 }, 100, 50), { scale: 1, x: 0, y: 0 })
+})
+
+test("mantiene el punto focal bajo el midpoint al ampliar", () => {
+  assert.deepEqual(
+    pinchTransform({ left: 20, top: 40 }, { x: 70, y: 90 }, { x: 90, y: 110 }, 100, 200),
+    { scale: 2, x: -30, y: -30 },
+  )
 })

@@ -2,13 +2,19 @@
 
 import Link from "next/link"
 import { createPortal } from "react-dom"
-import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from "react"
-import { pinchBackdropOpacity, pinchDistance, pinchMidpoint, pinchScale, pinchTranslation, type PinchPoint } from "@/lib/pinch-zoom"
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react"
+import { pinchDistance, pinchMidpoint, pinchTransform, type PinchPoint } from "@/lib/pinch-zoom"
 
 const SWIPE_THRESHOLD = 35
 const SNAP_BACK_MS = 200
 
-type Overlay = { src: string; rect: DOMRect; origin: PinchPoint }
+type Overlay = {
+  src: string
+  rect: DOMRect
+  objectFit: CSSProperties["objectFit"]
+  objectPosition: CSSProperties["objectPosition"]
+  borderRadius: CSSProperties["borderRadius"]
+}
 
 type Props = {
   href: string
@@ -25,12 +31,13 @@ function pointFrom(event: PointerEvent<HTMLDivElement>): PinchPoint {
 
 export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enablePinch = false }: Props) {
   const [overlay, setOverlay] = useState<Overlay | null>(null)
+  const [overlayReady, setOverlayReady] = useState(false)
   const surfaceRef = useRef<HTMLDivElement | null>(null)
   const imageRef = useRef<HTMLImageElement | null>(null)
   const overlayImageRef = useRef<HTMLImageElement | null>(null)
-  const backdropRef = useRef<HTMLDivElement | null>(null)
   const pointersRef = useRef(new Map<number, PinchPoint>())
   const pinchPointerIdsRef = useRef<[number, number] | null>(null)
+  const rectRef = useRef<DOMRect | null>(null)
   const initialDistanceRef = useRef(0)
   const initialMidpointRef = useRef<PinchPoint | null>(null)
   const visualRef = useRef({ scale: 1, x: 0, y: 0 })
@@ -48,11 +55,11 @@ export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enableP
   }).current
 
   useLayoutEffect(() => {
-    if (!overlay) return
+    if (!overlay || !overlayReady) return
     const original = imageRef.current
     if (original) original.style.opacity = "0"
     return () => { if (original) original.style.opacity = "" }
-  }, [overlay])
+  }, [overlay, overlayReady])
 
   function removeTemporaryListeners() {
     document.removeEventListener("visibilitychange", visibilityListener)
@@ -78,11 +85,9 @@ export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enableP
   function applyVisual() {
     rafRef.current = null
     const image = overlayImageRef.current
-    const backdrop = backdropRef.current
-    if (!image || !backdrop) return
+    if (!image) return
     const { scale, x, y } = visualRef.current
     image.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`
-    backdrop.style.opacity = String(pinchBackdropOpacity(scale))
   }
 
   function queueVisualUpdate() {
@@ -97,13 +102,17 @@ export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enableP
     removeTemporaryListeners()
     pointersRef.current.clear()
     pinchPointerIdsRef.current = null
+    rectRef.current = null
     initialDistanceRef.current = 0
     initialMidpointRef.current = null
     startXRef.current = null
     visualRef.current = { scale: 1, x: 0, y: 0 }
     isPinchingRef.current = false
     isRestoringRef.current = false
-    if (immediately) setOverlay(null)
+    if (immediately) {
+      setOverlayReady(false)
+      setOverlay(null)
+    }
   }
 
   useEffect(() => {
@@ -131,18 +140,15 @@ export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enableP
     pinchPointerIdsRef.current = null
 
     const image = overlayImageRef.current
-    const backdrop = backdropRef.current
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    if (!image || !backdrop || reducedMotion) {
+    if (!image || !overlayReady || reducedMotion) {
       finishRestore(target)
       return
     }
 
     image.style.transition = `transform ${SNAP_BACK_MS}ms ease`
-    backdrop.style.transition = `opacity ${SNAP_BACK_MS}ms ease`
     visualRef.current = { scale: 1, x: 0, y: 0 }
     image.style.transform = "translate3d(0, 0, 0) scale(1)"
-    backdrop.style.opacity = "0"
     restoreTimerRef.current = setTimeout(() => finishRestore(target), SNAP_BACK_MS)
   }
 
@@ -157,10 +163,12 @@ export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enableP
     if (initialDistance === 0) return
 
     const rect = original.getBoundingClientRect()
+    const appearance = window.getComputedStyle(original)
     const midpoint = pinchMidpoint(first, second)
     initialDistanceRef.current = initialDistance
     initialMidpointRef.current = midpoint
     pinchPointerIdsRef.current = pointerIds
+    rectRef.current = rect
     visualRef.current = { scale: 1, x: 0, y: 0 }
     isPinchingRef.current = true
     didPinchRef.current = true
@@ -171,8 +179,15 @@ export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enableP
     }
     document.addEventListener("visibilitychange", visibilityListener)
 
-    // El portal evita escalar el post y permite que la foto salga de su contenedor sin reflow.
-    setOverlay({ src: original.currentSrc || src, rect, origin: { x: midpoint.x - rect.left, y: midpoint.y - rect.top } })
+    // El portal mantiene el layout del feed y parte del rectángulo CSS visible.
+    setOverlayReady(false)
+    setOverlay({
+      src: original.currentSrc || src,
+      rect,
+      objectFit: appearance.objectFit as CSSProperties["objectFit"],
+      objectPosition: appearance.objectPosition as CSSProperties["objectPosition"],
+      borderRadius: appearance.borderRadius as CSSProperties["borderRadius"],
+    })
   }
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
@@ -191,19 +206,21 @@ export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enableP
     if (!isPinchingRef.current) return
     const pointerIds = pinchPointerIdsRef.current
     const initialMidpoint = initialMidpointRef.current
-    if (!pointerIds || !initialMidpoint) return
+    const rect = rectRef.current
+    if (!pointerIds || !initialMidpoint || !rect) return
     const first = pointersRef.current.get(pointerIds[0])
     const second = pointersRef.current.get(pointerIds[1])
     if (!first || !second) return
 
     event.preventDefault()
     const midpoint = pinchMidpoint(first, second)
-    const translation = pinchTranslation(initialMidpoint, midpoint)
-    visualRef.current = {
-      scale: pinchScale(initialDistanceRef.current, pinchDistance(first, second)),
-      x: translation.x,
-      y: translation.y,
-    }
+    visualRef.current = pinchTransform(
+      rect,
+      initialMidpoint,
+      midpoint,
+      initialDistanceRef.current,
+      pinchDistance(first, second),
+    )
     queueVisualUpdate()
   }
 
@@ -244,6 +261,10 @@ export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enableP
     if (clickResetTimerRef.current) clearTimeout(clickResetTimerRef.current)
   }, [])
 
+  useEffect(() => {
+    clearGestureRef.current(null, true)
+  }, [src])
+
   return (
     <>
       <Link href={href} onClickCapture={handleClickCapture} className="block h-full w-full overflow-hidden">
@@ -263,21 +284,29 @@ export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enableP
 
       {overlay && typeof document !== "undefined" && createPortal(
         <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[80]">
-          <div ref={backdropRef} className="absolute inset-0 bg-black" />
           <img
             ref={overlayImageRef}
             src={overlay.src}
             alt=""
             draggable={false}
             className={`pointer-events-none fixed z-[81] ${className}`}
+            onLoad={() => {
+              setOverlayReady(true)
+              applyVisual()
+            }}
+            onError={() => clearGesture(null, true)}
             style={{
               left: overlay.rect.left,
               top: overlay.rect.top,
               width: overlay.rect.width,
               height: overlay.rect.height,
               transform: "translate3d(0, 0, 0) scale(1)",
-              transformOrigin: `${overlay.origin.x}px ${overlay.origin.y}px`,
+              transformOrigin: "0 0",
               willChange: "transform",
+              opacity: overlayReady ? 1 : 0,
+              objectFit: overlay.objectFit,
+              objectPosition: overlay.objectPosition,
+              borderRadius: overlay.borderRadius,
             }}
           />
         </div>,
