@@ -8,6 +8,7 @@ import { LikeButton } from "@/components/works/LikeButton"
 import { ShareButton } from "@/components/works/ShareButton"
 import { trackView } from "@/lib/client/track-view"
 import { ZoomableMedia } from "@/components/feed/ZoomableMedia"
+import { FeedVideo } from "@/components/feed/FeedVideo"
 import { mediaAspectRatio } from "@/lib/media-aspect"
 
 /**
@@ -31,6 +32,7 @@ export function FeedPost({ item }: { item: FeedItem }) {
   const [indice, setIndice] = useState(0)
   const [expanded, setExpanded] = useState(false)
   const [viewsCount, setViewsCount] = useState(item.views_count)
+  const [forceLike, setForceLike] = useState(0)
   const articleRef = useRef<HTMLElement | null>(null)
   const varios = medios.length > 1
   const actual = medios[indice] ?? null
@@ -38,7 +40,6 @@ export function FeedPost({ item }: { item: FeedItem }) {
   const mainMediaStyle = isCurrentVideo
     ? { aspectRatio: mediaAspectRatio(actual?.width, actual?.height) }
     : undefined
-  const destino = `/proyectos/${item.slug ?? item.id}`
   const detailsId = `feed-post-details-${item.id}`
   const fechaPublicacion = new Date(item.published_at).toLocaleDateString("es-ES", {
     day: "numeric",
@@ -86,7 +87,7 @@ export function FeedPost({ item }: { item: FeedItem }) {
   }, [])
 
   return (
-    <article ref={articleRef}>
+    <article id={`post-${item.id}`} ref={articleRef}>
       <header className="flex items-center gap-2.5 px-3 py-2.5">
         {item.author_avatar_url ? (
           <img src={item.author_avatar_url} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
@@ -106,15 +107,13 @@ export function FeedPost({ item }: { item: FeedItem }) {
       <div className={`relative bg-gray-200 ${isCurrentVideo ? "" : "aspect-[4/5]"}`} style={mainMediaStyle}>
         {actual && (
           isCurrentVideo ? (
-            <Link href={destino} className="block h-full w-full">
-              <video src={actual.url} controls playsInline preload="metadata" className="h-full w-full bg-gray-900 object-contain" />
-            </Link>
+            <FeedVideo src={actual.url} className="h-full w-full object-contain" onSwipe={cambiarImagen} onDoubleTap={() => setForceLike((value) => value + 1)} />
           ) : (
             <ZoomableMedia
-              href={destino}
               src={actual.url}
               alt={item.title}
               onSwipe={cambiarImagen}
+              onDoubleTap={() => setForceLike((value) => value + 1)}
               enablePinch
               className="h-full w-full object-cover"
             />
@@ -134,14 +133,14 @@ export function FeedPost({ item }: { item: FeedItem }) {
       </div>
 
       <div className="flex items-center gap-3.5 px-3 pb-1 pt-2.5">
-        <LikeButton workId={item.id} initialCount={item.likes_count} />
-        <Link href={destino} className="inline-flex items-center gap-1.5 text-gray-900">
+        <LikeButton workId={item.id} initialCount={item.likes_count} forceLike={forceLike} />
+        <span className="inline-flex items-center gap-1.5 text-gray-900">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
             <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 20.5l1.6-4.9A8.3 8.3 0 0 1 3.6 11.5a8.4 8.4 0 0 1 8.9-8.4 8.4 8.4 0 0 1 8.5 8.4z" />
           </svg>
           <span className="text-body-sm font-semibold tabular-nums">{cifra(item.comments_count)}</span>
-        </Link>
-        <ShareButton workId={item.id} pathOverride={destino} iconOnly initialCount={item.shares_count} showCount />
+        </span>
+        <ShareButton workId={item.id} pathOverride={`/#post-${item.id}`} iconOnly initialCount={item.shares_count} showCount />
         {viewsCount > 0 && (
           <span className="ml-auto text-meta text-gray-500 tabular-nums">{cifra(viewsCount)} vistas</span>
         )}
@@ -149,10 +148,10 @@ export function FeedPost({ item }: { item: FeedItem }) {
 
       <div className="px-3 pb-4 pt-0.5 text-body-sm">
         <div>
-          <Link href={destino} className="inline">
+          <span className="inline">
             <span className="mr-1.5 font-semibold text-gray-900">{item.author_full_name}</span>
             <span className="text-gray-900">{item.title}</span>
-          </Link>{!expanded && " "}
+          </span>{!expanded && " "}
           {!expanded && (
           <button
             type="button"

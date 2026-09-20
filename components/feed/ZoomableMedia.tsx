@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { createPortal } from "react-dom"
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react"
 import { pinchDistance, pinchMidpoint, pinchTransform, type PinchPoint } from "@/lib/pinch-zoom"
@@ -17,11 +16,11 @@ type Overlay = {
 }
 
 type Props = {
-  href: string
   src: string
   alt: string
   className?: string
   onSwipe?: (direction: "next" | "previous") => void
+  onDoubleTap?: () => void
   enablePinch?: boolean
 }
 
@@ -29,7 +28,7 @@ function pointFrom(event: PointerEvent<HTMLDivElement>): PinchPoint {
   return { x: event.clientX, y: event.clientY }
 }
 
-export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enablePinch = false }: Props) {
+export function ZoomableMedia({ src, alt, className = "", onSwipe, onDoubleTap, enablePinch = false }: Props) {
   const [overlay, setOverlay] = useState<Overlay | null>(null)
   const [overlayReady, setOverlayReady] = useState(false)
   const surfaceRef = useRef<HTMLDivElement | null>(null)
@@ -48,6 +47,7 @@ export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enableP
   const rafRef = useRef<number | null>(null)
   const restoreTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const clickResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastTapRef = useRef(0)
   const capturedPointersRef = useRef(new Set<number>())
   const clearGestureRef = useRef<(target: HTMLDivElement | null, immediately?: boolean) => void>(() => {})
   const visibilityListener = useRef(() => {
@@ -248,12 +248,23 @@ export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enableP
     if (isPinchingRef.current && !isRestoringRef.current) clearGesture(event.currentTarget, true)
   }
 
-  function handleClickCapture(event: React.MouseEvent<HTMLAnchorElement>) {
-    if (!didPinchRef.current) return
-    event.preventDefault()
-    event.stopPropagation()
-    didPinchRef.current = false
-    if (clickResetTimerRef.current) clearTimeout(clickResetTimerRef.current)
+  function handleClickCapture(event: React.MouseEvent<HTMLDivElement>) {
+    if (didPinchRef.current) {
+      event.preventDefault()
+      event.stopPropagation()
+      didPinchRef.current = false
+      if (clickResetTimerRef.current) clearTimeout(clickResetTimerRef.current)
+      return
+    }
+    const now = Date.now()
+    if (now - lastTapRef.current <= 280) {
+      lastTapRef.current = 0
+      onDoubleTap?.()
+      event.preventDefault()
+      event.stopPropagation()
+      return
+    }
+    lastTapRef.current = now
   }
 
   useEffect(() => () => {
@@ -267,7 +278,7 @@ export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enableP
 
   return (
     <>
-      <Link href={href} onClickCapture={handleClickCapture} className="block h-full w-full overflow-hidden">
+      <div onClickCapture={handleClickCapture} className="block h-full w-full overflow-hidden">
         <div
           ref={surfaceRef}
           className="h-full w-full touch-pan-y"
@@ -280,7 +291,7 @@ export function ZoomableMedia({ href, src, alt, className = "", onSwipe, enableP
         >
           <img ref={imageRef} src={src} alt={alt} loading="lazy" draggable={false} className={className} />
         </div>
-      </Link>
+      </div>
 
       {overlay && typeof document !== "undefined" && createPortal(
         <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[80]">

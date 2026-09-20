@@ -1,20 +1,27 @@
 // components/works/LikeButton.tsx
 "use client"
 
+import { useEffect } from "react"
 import { useLike } from "@/hooks/useLike"
 
 interface LikeButtonProps {
   workId: string
   initialCount: number
   size?: "sm" | "md"
+  forceLike?: number
 }
 
 export function LikeButton({
   workId,
   initialCount,
   size = "md",
+  forceLike = 0,
 }: LikeButtonProps) {
-  const { liked, count, toggle, loading, error } = useLike(workId, initialCount)
+  const { liked, count, toggle, ensureLiked, loading, error } = useLike(workId, initialCount)
+
+  useEffect(() => {
+    if (forceLike > 0) void ensureLiked()
+  }, [ensureLiked, forceLike])
 
   const isMd = size === "md"
 

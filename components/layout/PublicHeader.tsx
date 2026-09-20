@@ -29,7 +29,20 @@ export function PublicHeader({ sesion }: { sesion: SesionPublica }) {
           />
         </Link>
 
-        <PublicMenu sesion={sesion} />
+        <div className="flex items-center gap-1">
+          {sesion && (
+            <Link
+              href="/dashboard/new"
+              aria-label="Publicar un proyecto"
+              className="grid h-9 w-9 place-items-center rounded-lg text-[#1e1e1e] transition-colors hover:bg-black/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900"
+            >
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </Link>
+          )}
+          <PublicMenu sesion={sesion} />
+        </div>
       </div>
     </header>
   )

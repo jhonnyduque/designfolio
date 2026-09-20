@@ -429,57 +429,68 @@ El detalle público debe poder obtenerse sin depender de `WorkDetail`.
 
 ---
 
-# 7. Fase F1.5 — Corregir previsualización de vídeo vertical
+# 7. Fase F1.5 — Media en feed: proporción, reproducción e interacción
 
 ## Objetivo
 
-Corregir la presentación de vídeos verticales, especialmente 1080×1920 (9:16),
-sin alterar subida, formatos admitidos, reproducción, rutas ni datos.
+Resolver la presentación real de vídeo en carga y feed, especialmente 1080×1920
+(9:16), y retirar las entradas públicas al single sin modificar el formato ni el
+almacenamiento de los medios.
 
 ## Problema confirmado
 
-La previsualización de creación fuerza `aspect-video` (16:9) y `object-cover`.
-Un vídeo 1080×1920 se recorta. En el post móvil el contenedor genérico 4:5
-también impide que el vídeo principal se presente con su proporción nativa.
+La miniatura inicial de carga fuerza 4:3 con `object-cover`, los controles
+nativos introducen un play gigante en móvil y el mosaico desktop no reproduce
+vídeos al entrar en pantalla. Además, los enlaces de medio, título y comentarios
+llevaban al single heredado.
 
 ## Contrato visual de media
 
 - La vista principal de un vídeo usa las dimensiones ya guardadas en `WorkImage`
   para respetar su proporción intrínseca; un 1080×1920 se ve 9:16 completo.
-- El vídeo principal no usa `object-cover`; los controles nativos permanecen
-  visibles y utilizables.
-- La previsualización antes de publicar sigue la misma regla y no recorta el
-  primer vídeo vertical.
+- El vídeo principal no usa `object-cover` en móvil; se reproduce inline al
+  alcanzar 30% de visibilidad, permanece silenciado y pausa al salir por completo.
+- El control de sonido es un botón pequeño, gris y accesible; no hay play gigante
+  ni barra de controles del navegador. Solo un vídeo puede reproducirse a la vez.
+- Pinch amplía temporalmente el vídeo y el doble tap asegura un like, sin poder
+  retirar uno que ya exista.
+- La selección inicial usa `object-contain`: conserva completos los 9:16, 4:5 y
+  16:9 dentro de una miniatura estable.
 - La cuadrícula desktop conserva sus celdas 4:5 como superficie de descubrimiento;
   ahí un recorte centrado puede ser intencionado, pero no se confunde con la
   vista principal del proyecto.
-- Imágenes y carruseles no cambian de comportamiento por esta corrección.
+- Las acciones y superficies del feed no abren el single; compartir enlaza al
+  ancla del post dentro del feed.
+- El botón `+` de cabecera solo se muestra con sesión activa y lleva a crear una
+  publicación.
 
 ## Superficies incluidas
 
-- vista previa de publicación (`CreateWorkForm`);
+- selector de archivos y vista previa de publicación (`ImageUploader`, `CreateWorkForm`);
 - post móvil (`FeedPost`);
-- regresión del single heredado y de miniaturas de carrusel;
-- comprobación de la celda de mosaico para conservar su recorte deliberado.
+- mosaico desktop (`MosaicCell`);
+- cabecera pública, acciones sociales y API de like idempotente.
 
 ## Verificación
 
-- vídeo 1080×1920 en vista previa y post móvil: completo, 9:16 y sin recorte;
-- vídeo vertical, horizontal y 4:5: sin saltos de layout al cargar metadata;
-- controles, reproducción inline, carrusel y compartir: sin regresión;
+- vídeo 1080×1920, 1080×1350 y 1920×1080 en selector y post: completo y sin recorte accidental;
+- reproducción al 30% de visibilidad, pausa fuera de viewport, sonido apagado y control mínimo;
+- pinch y doble tap no disparan navegación ni compiten con carrusel/sonido;
+- el `+` no aparece sin sesión activa;
 - móvil Chrome Android y Safari iOS, además de desktop;
 - TypeScript, ESLint, tests, build y `git diff --check`.
 
 ## No tocar
 
-- transcodificación o almacenamiento de vídeos;
-- API, DB, ratios de imágenes, pinch zoom, fullscreen, rutas o dashboard;
-- layout de mosaico desktop salvo una corrección indispensable de regresión.
+- transcodificación, almacenamiento o esquema de vídeos;
+- layout 4:5 deliberado del mosaico desktop;
+- dashboard, autenticación, API de feed, vistas, comentarios o formatos admitidos.
 
 ## Gate F1.5 → F2
 
-La media principal debe disponer de una proporción confiable y comprobada antes
-de extraer `ProjectMedia`; F2 no debe volver a resolver este fallo.
+La media debe disponer de proporción confiable, reproducción comprobada y ningún
+camino visual al single antes de extraer `ProjectMedia`; F2 no debe reabrir estas
+decisiones.
 
 ---
 

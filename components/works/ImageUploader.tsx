@@ -157,12 +157,12 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
               <img
                 src={item.url}
                 alt={`Preview ${i + 1}`}
-                className={`w-full h-full ${item.file.type.startsWith("video/") ? "hidden" : "object-cover"}`}
+                className={`w-full h-full ${item.file.type.startsWith("video/") ? "hidden" : "object-contain"}`}
               />
               {item.file.type.startsWith("video/") && (
                 <video
                   src={item.url}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                   muted
                   playsInline
                   preload="metadata"

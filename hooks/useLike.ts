@@ -37,5 +37,20 @@ export function useLike(workId: string, initialCount: number) {
     } finally { setLoading(false) }
   }, [loading, workId])
 
-  return { liked, count, toggle, loading, error }
+  const ensureLiked = useCallback(async () => {
+    if (loading || liked) return
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/works/${encodeURIComponent(workId)}/likes`, { method: "PUT" })
+      const data = await response.json() as LikeResponse
+      if (!response.ok) throw new Error(data.error ?? "No se pudo guardar tu like.")
+      setLiked(data.liked)
+      setCount(data.count)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Error de conexión")
+    } finally { setLoading(false) }
+  }, [liked, loading, workId])
+
+  return { liked, count, toggle, ensureLiked, loading, error }
 }

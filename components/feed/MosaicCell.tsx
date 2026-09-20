@@ -1,6 +1,9 @@
 // components/feed/MosaicCell.tsx
+"use client"
+
 import type { FeedItem } from "@/types/feed"
 import { ZoomableMedia } from "@/components/feed/ZoomableMedia"
+import { FeedVideo } from "@/components/feed/FeedVideo"
 
 /**
  * Una celda de la rejilla, para ordenador y tablet.
@@ -26,15 +29,14 @@ export function MosaicCell({ item }: { item: FeedItem }) {
   // etiqueta <img> apuntando a un .mp4 deja un recuadro vacío.
   const portada = medios.find((m) => !esVideo(m)) ?? medios[0] ?? null
   const tieneVideo = medios.some(esVideo)
-  const destino = `/proyectos/${item.slug ?? item.id}`
 
   return (
     <div className="group relative block aspect-[1080/1350] overflow-hidden bg-gray-200">
       {portada ? (
         esVideo(portada) ? (
-          <video src={portada.url} muted playsInline preload="metadata" className="h-full w-full object-cover" />
+          <FeedVideo src={portada.url} className="h-full w-full object-cover" />
         ) : (
-          <ZoomableMedia href={destino} src={portada.url} alt="" className="h-full w-full object-cover" />
+          <ZoomableMedia src={portada.url} alt="" className="h-full w-full object-cover" />
         )
       ) : null}
 
