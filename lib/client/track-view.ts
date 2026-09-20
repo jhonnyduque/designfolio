@@ -1,7 +1,11 @@
 import type { ViewOrigin } from "@/lib/views"
 import { viewSessionKey } from "@/lib/views"
 
-type ViewResult = { counted: boolean; viewsCount: number; reason?: string }
+export type ViewResult = {
+  counted: boolean
+  viewsCount: number
+  reason?: "already_counted" | "consent_required" | "own_work"
+}
 
 const pending = new Set<string>()
 
@@ -19,7 +23,9 @@ export async function trackView(workId: string, origin: ViewOrigin): Promise<Vie
     })
     if (!response.ok) return null
     const result = await response.json() as ViewResult
-    sessionStorage.setItem(key, "1")
+    if (result.counted || result.reason === "already_counted" || result.reason === "own_work") {
+      sessionStorage.setItem(key, "1")
+    }
     return result
   } catch {
     return null

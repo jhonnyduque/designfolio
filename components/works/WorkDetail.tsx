@@ -85,13 +85,23 @@ export function WorkDetail({
   const hasMultipleImages = work.images.length > 1
 
   useEffect(() => {
-    if (!shouldTrackView || document.visibilityState !== "visible") return
-    const timer = window.setTimeout(() => {
-      void trackView(work.id, "detail_page").then((result) => {
-        if (result) setViewsCount(result.viewsCount)
-      })
-    }, DETAIL_VIEW_DELAY_MS)
-    return () => window.clearTimeout(timer)
+    if (!shouldTrackView) return
+    let timer: number | null = null
+    const scheduleView = () => {
+      if (timer) window.clearTimeout(timer)
+      if (document.visibilityState !== "visible") return
+      timer = window.setTimeout(() => {
+        void trackView(work.id, "detail_page").then((result) => {
+          if (result) setViewsCount(result.viewsCount)
+        })
+      }, DETAIL_VIEW_DELAY_MS)
+    }
+    scheduleView()
+    document.addEventListener("visibilitychange", scheduleView)
+    return () => {
+      if (timer) window.clearTimeout(timer)
+      document.removeEventListener("visibilitychange", scheduleView)
+    }
   }, [shouldTrackView, work.id])
 
   const publishedDate = new Date(work.published_at).toLocaleDateString(
@@ -448,7 +458,7 @@ export function WorkDetail({
                 {work.comments_count}{" "}
                 {work.comments_count === 1 ? "comentario" : "comentarios"}
               </span>
-              {work.views_count > 0 && (
+              {viewsCount > 0 && (
                 <span className="flex items-center gap-1.5 text-body-sm text-gray-500">
                   <svg
                     className="w-4 h-4"
@@ -462,7 +472,7 @@ export function WorkDetail({
                       clipRule="evenodd"
                     />
                   </svg>
-                  {work.views_count} vistas
+                  {viewsCount} vistas
                 </span>
               )}
               <ShareButton

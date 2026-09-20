@@ -18,7 +18,10 @@ export function CookieConsentBanner({ initialConsent }: { initialConsent: Cookie
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ analytics }),
       })
-      if (response.ok) setConsent(analytics ? "accepted" : "rejected")
+      if (response.ok) {
+        setConsent(analytics ? "accepted" : "rejected")
+        if (analytics) window.dispatchEvent(new Event("designfolio:analytics-consent"))
+      }
     } finally {
       setSaving(false)
     }

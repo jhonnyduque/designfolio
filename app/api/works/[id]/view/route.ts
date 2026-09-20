@@ -55,7 +55,9 @@ export async function POST(request: NextRequest, { params }: Context) {
       .limit(1).for("update")
     const now = new Date()
     const cutoff = new Date(now.getTime() - VIEW_DEDUPLICATION_MS)
-    if (receipt && receipt.lastCountedAt >= cutoff) return { counted: false, viewsCount: work.viewsCount }
+    if (receipt && receipt.lastCountedAt >= cutoff) {
+      return { counted: false, viewsCount: work.viewsCount, reason: "already_counted" as const }
+    }
 
     if (receipt) {
       await tx.update(workViewReceipts).set({ lastCountedAt: now, lastOrigin: origin }).where(eq(workViewReceipts.id, receipt.id))
@@ -64,7 +66,7 @@ export async function POST(request: NextRequest, { params }: Context) {
         await tx.insert(workViewReceipts).values({ id: crypto.randomUUID(), workId: id, viewerKey, lastOrigin: origin, lastCountedAt: now })
       } catch (error) {
         if ((error as { cause?: { code?: string } }).cause?.code !== "ER_DUP_ENTRY") throw error
-        return { counted: false, viewsCount: work.viewsCount }
+        return { counted: false, viewsCount: work.viewsCount, reason: "already_counted" as const }
       }
     }
     await tx.update(works).set({ viewsCount: sql`${works.viewsCount} + 1` }).where(eq(works.id, id))

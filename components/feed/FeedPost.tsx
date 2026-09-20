@@ -1,7 +1,7 @@
 // components/feed/FeedPost.tsx
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import type { FeedItem } from "@/types/feed"
 import { LikeButton } from "@/components/works/LikeButton"
@@ -30,6 +30,7 @@ export function FeedPost({ item }: { item: FeedItem }) {
   const [indice, setIndice] = useState(0)
   const [expanded, setExpanded] = useState(false)
   const [viewsCount, setViewsCount] = useState(item.views_count)
+  const articleRef = useRef<HTMLElement | null>(null)
   const varios = medios.length > 1
   const actual = medios[indice] ?? null
   const destino = `/proyectos/${item.slug ?? item.id}`
@@ -46,19 +47,41 @@ export function FeedPost({ item }: { item: FeedItem }) {
     if (direction === "previous") setIndice((p) => (p === 0 ? medios.length - 1 : p - 1))
   }, [varios, medios.length])
 
-  const toggleDetails = useCallback(() => {
-    setExpanded((wasExpanded) => {
-      if (!wasExpanded) {
-        void trackView(item.id, "feed_expand").then((result) => {
-          if (result) setViewsCount(result.viewsCount)
-        })
-      }
-      return !wasExpanded
-    })
+  const recordView = useCallback(async () => {
+    const result = await trackView(item.id, "feed_expand")
+    if (result) setViewsCount(result.viewsCount)
+    return result
   }, [item.id])
 
+  useEffect(() => {
+    const post = articleRef.current
+    if (!post) return
+
+    let observer: IntersectionObserver | null = null
+    const attemptView = () => {
+      void recordView().then((result) => {
+        if (result && result.reason !== "consent_required") observer?.unobserve(post)
+      })
+    }
+    const handleAnalyticsConsent = () => attemptView()
+
+    observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting && entry.intersectionRatio >= 0.5)) attemptView()
+    }, { threshold: 0.5 })
+    observer.observe(post)
+    window.addEventListener("designfolio:analytics-consent", handleAnalyticsConsent)
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener("designfolio:analytics-consent", handleAnalyticsConsent)
+    }
+  }, [recordView])
+
+  const toggleDetails = useCallback(() => {
+    setExpanded((wasExpanded) => !wasExpanded)
+  }, [])
+
   return (
-    <article>
+    <article ref={articleRef}>
       <header className="flex items-center gap-2.5 px-3 py-2.5">
         {item.author_avatar_url ? (
           <img src={item.author_avatar_url} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
