@@ -49,21 +49,34 @@ export function FeedVideo({ src, poster, className = "", onDoubleTap, onSwipe }:
       if (document.visibilityState !== "visible") return
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
       if (activeVideo && activeVideo !== video) activeVideo.pause()
+      activeVideo = video
       video.muted = muted
-      void video.play().then(() => { activeVideo = video }).catch(() => undefined)
+      void video.play().catch(() => {
+        if (activeVideo === video) activeVideo = null
+      })
+    }
+    const desktopQuery = window.matchMedia("(min-width: 768px)")
+    let isVisibleEnough = false
+    const syncPlayback = () => {
+      // El mosaico de ordenador presenta portadas quietas; la persona elige
+      // qué vídeo ver con un clic. En móvil sí se conserva el autoplay al 30%.
+      if (!desktopQuery.matches && isVisibleEnough) play()
+      else pause()
     }
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.intersectionRatio >= 0.3) play()
-      else if (!entry.isIntersecting || entry.intersectionRatio === 0) pause()
+      isVisibleEnough = entry.intersectionRatio >= 0.3
+      syncPlayback()
     }, { threshold: [0, 0.3] })
     const onVisibilityChange = () => {
       if (document.visibilityState !== "visible") pause()
     }
 
     observer.observe(frame)
+    desktopQuery.addEventListener("change", syncPlayback)
     document.addEventListener("visibilitychange", onVisibilityChange)
     return () => {
       observer.disconnect()
+      desktopQuery.removeEventListener("change", syncPlayback)
       document.removeEventListener("visibilitychange", onVisibilityChange)
       pause()
     }
@@ -91,8 +104,11 @@ export function FeedVideo({ src, poster, className = "", onDoubleTap, onSwipe }:
       return
     }
     if (activeVideo && activeVideo !== video) activeVideo.pause()
+    activeVideo = video
     video.muted = muted
-    void video.play().then(() => { activeVideo = video }).catch(() => undefined)
+    void video.play().catch(() => {
+      if (activeVideo === video) activeVideo = null
+    })
   }
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
