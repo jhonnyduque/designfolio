@@ -1,7 +1,7 @@
 // components/onboarding/OnboardingForm.tsx
 "use client"
 
-import { useState, useCallback, useRef, useMemo } from "react"
+import { useState, useCallback, useRef } from "react"
 import { useOnboarding } from "@/hooks/useOnboarding"
 import { useAuth } from "@/hooks/useAuth"
 import {

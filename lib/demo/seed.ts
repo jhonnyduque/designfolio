@@ -246,7 +246,12 @@ export async function crearDemo() {
       [a.id, a.fullName, a.correo, 1, a.createdAt, a.createdAt],
     )
   }
-  await db.insert(profiles).values(autores.map(({ correo, ...p }) => p))
+  await db.insert(profiles).values(
+    autores.map(({ correo, ...p }) => {
+      void correo
+      return p
+    }),
+  )
   console.log(`Perfiles creados: ${autores.length}`)
 
   // --- Publicaciones
