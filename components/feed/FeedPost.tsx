@@ -148,7 +148,7 @@ export function FeedPost({ item, commentsCount = item.comments_count, onOpenComm
           </svg>
           <span className="text-body-sm font-semibold tabular-nums">{cifra(commentsCount)}</span>
         </button>
-        <ShareButton workId={item.id} pathOverride={`/#post-${item.id}`} iconOnly initialCount={item.shares_count} showCount />
+        <ShareButton workId={item.id} iconOnly initialCount={item.shares_count} showCount />
         {viewsCount > 0 && (
           <span className="ml-auto text-meta text-gray-500 tabular-nums">{cifra(viewsCount)} vistas</span>
         )}

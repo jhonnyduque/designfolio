@@ -1,50 +1,48 @@
 import { notFound, redirect } from "next/navigation"
-import { headers } from "next/headers"
-import { auth } from "@/lib/auth"
 import { getPublicWork } from "@/lib/works/public"
-import { toLegacyWorkDetailData } from "@/lib/works/detail-adapter"
-import { WorkDetail } from "@/components/works/WorkDetail"
+import { PublicPost } from "@/components/feed/PublicPost"
+import type { FeedItem } from "@/types/feed"
 
 interface PageProps {
   params: Promise<{ id: string }>
 }
 
 /**
- * Una obra, vista desde fuera.
+ * Publicación individual compartible.
  *
- * Esta pantalla tenía su propia cabecera, con otro logotipo y sin menú: era la
- * herencia de cuando se servía como una pieza suelta enlazada desde
- * jhonnyduque.com. Ahora entra en el mismo armazón público que el resto, así
- * que quien llega aquí tiene la misma navegación que en el feed.
- *
- * El enlace de vuelta al sitio del autor no se ha perdido: viaja como
- * `siteHref` y sale en la misma línea que el enlace de volver al feed, dentro
- * del contenido, sin montar una segunda cabecera.
+ * Conserva una URL canónica propia, pero visualmente se presenta como un
+ * mini-feed de una sola publicación. El dashboard mantiene su WorkDetail
+ * independiente, con edición y acciones de propietario.
  */
 export default async function PublicWorkPage({ params }: PageProps) {
   const { id: slugOrId } = await params
   const result = await getPublicWork(slugOrId)
   if (!result) notFound()
 
-  if (slugOrId !== result.project.slug) {
-    redirect(`/proyectos/${result.project.slug}`)
+  const canonicalId = result.project.slug ?? result.project.id
+  if (slugOrId !== canonicalId) {
+    redirect(`/proyectos/${canonicalId}`)
   }
 
-  const session = await auth.api.getSession({ headers: await headers() })
-  const detailData = toLegacyWorkDetailData(result)
+  const item: FeedItem = {
+    id: result.project.id,
+    slug: result.project.slug,
+    author_id: result.author.id,
+    title: result.project.title,
+    description: result.project.description,
+    category: result.project.category,
+    images: result.project.media,
+    likes_count: result.metrics.likesCount,
+    comments_count: result.metrics.commentsCount,
+    views_count: result.metrics.viewsCount,
+    shares_count: result.metrics.sharesCount,
+    created_at: result.project.createdAt,
+    published_at: result.project.publishedAt,
+    author_username: result.author.username,
+    author_full_name: result.author.fullName,
+    author_avatar_url: result.author.avatarUrl,
+    author_reputation_level: result.author.reputationLevel,
+  }
 
-  return (
-    <div className="public-container py-6 md:py-8">
-      <WorkDetail
-        {...detailData}
-        currentUserId={session?.user.id ?? null}
-        backHref="/"
-        profileHref={null}
-        siteHref="https://jhonnyduque.com/proyectos/"
-        prevHref={result.navigation.previous ? `/proyectos/${result.navigation.previous.slug}` : null}
-        nextHref={result.navigation.next ? `/proyectos/${result.navigation.next.slug}` : null}
-        trackView
-      />
-    </div>
-  )
+  return <PublicPost item={item} />
 }

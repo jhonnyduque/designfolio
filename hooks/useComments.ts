@@ -51,14 +51,14 @@ export function useComments(workId: string, enabled: boolean) {
     return () => window.clearTimeout(timer)
   }, [cooldownSeconds])
 
-  const post = useCallback(async (content: string, categories: string[]) => {
+  const post = useCallback(async (content: string) => {
     setPosting(true)
     setPostError(null)
     try {
       const response = await fetch(`/api/works/${encodeURIComponent(workId)}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, categories }),
+        body: JSON.stringify({ content }),
       })
       const data = await response.json() as { error?: string }
       if (!response.ok) {
