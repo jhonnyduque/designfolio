@@ -31,7 +31,7 @@ export function LikeButton({
     if (loading || pendingToggleRequests.current === 0) return
     pendingToggleRequests.current -= 1
     void toggle()
-  }, [loading, toggle])
+  }, [likeToggleRequest, loading, toggle])
 
   const isMd = size === "md"
 

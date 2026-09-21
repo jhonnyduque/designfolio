@@ -31,7 +31,7 @@ export function CookieConsentBanner({ initialConsent }: { initialConsent: Cookie
     <aside aria-label="Preferencias de cookies" className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-lg border border-black/10 bg-white p-4 shadow-xl sm:p-5">
       <p className="text-body-sm font-semibold text-[#1e1e1e]">Cookies analíticas</p>
       <p className="mt-1 text-meta leading-relaxed text-[#5f6068]">
-        Con tu permiso medimos vistas válidas de proyectos para ofrecer estadísticas a sus autores. Puedes cambiar tu elección desde la
+        Con tu permiso medimos compartidos de proyectos para ofrecer estadísticas a sus autores. Puedes cambiar tu elección desde la
         {" "}<Link href="/cookies" className="text-[#3f4047] underline">Política de cookies</Link>.
       </p>
       <div className="mt-4 flex flex-wrap justify-end gap-2">

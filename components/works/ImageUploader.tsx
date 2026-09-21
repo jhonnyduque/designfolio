@@ -9,49 +9,51 @@ interface ImageUploaderProps {
   onChange: (files: File[]) => void
 }
 
+const ACCEPTED_MEDIA_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+]
+
+function shortFileName(name: string) {
+  if (name.length <= 25) return name
+  const extension = name.includes(".") ? name.slice(name.lastIndexOf(".")) : ""
+  return `${name.slice(0, 20)}...${extension}`
+}
+
+function getFileValidationError(file: File) {
+  const name = shortFileName(file.name)
+  if (!ACCEPTED_MEDIA_TYPES.includes(file.type)) {
+    return `"${name}" no tiene un formato válido.`
+  }
+  const isVideo = file.type.startsWith("video/")
+  const maxSize = isVideo ? WORK_LIMITS.VIDEO_MAX_SIZE_BYTES : WORK_LIMITS.IMAGE_MAX_SIZE_BYTES
+  if (file.size > maxSize) {
+    const maxMB = isVideo ? WORK_LIMITS.VIDEO_MAX_SIZE_MB : WORK_LIMITS.IMAGE_MAX_SIZE_MB
+    return `"${name}" es muy pesado (máximo ${maxMB}MB).`
+  }
+  return null
+}
+
 export function ImageUploader({ files, onChange }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const replacementInputRef = useRef<HTMLInputElement>(null)
+  const replacementIndexRef = useRef<number | null>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
 
   const handleFiles = useCallback(
     (newFiles: FileList | null) => {
       if (!newFiles) return
-      const validTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-        "image/gif",
-        "video/mp4",
-        "video/webm",
-        "video/quicktime",
-      ]
       const errors: string[] = []
-      
-      const truncate = (name: string) => {
-        if (name.length <= 25) return name
-        const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')) : ''
-        return name.slice(0, 20) + '...' + ext
-      }
-
       const accepted = Array.from(newFiles).filter((f) => {
-          const shortName = truncate(f.name)
-          if (!validTypes.includes(f.type)) {
-            errors.push(`"${shortName}" no tiene un formato válido.`)
-            return false
-          }
-          const isVideo = f.type.startsWith("video/")
-          const maxSize = isVideo
-            ? WORK_LIMITS.VIDEO_MAX_SIZE_BYTES
-            : WORK_LIMITS.IMAGE_MAX_SIZE_BYTES
-          if (f.size > maxSize) {
-            const maxMB = isVideo ? WORK_LIMITS.VIDEO_MAX_SIZE_MB : WORK_LIMITS.IMAGE_MAX_SIZE_MB
-            errors.push(
-              `"${shortName}" es muy pesado (máximo ${maxMB}MB).`
-            )
-            return false
-          }
-          return true
-        })
+        const error = getFileValidationError(f)
+        if (error) errors.push(error)
+        return !error
+      })
 
       if (files.length + accepted.length > WORK_LIMITS.IMAGES_MAX) {
         errors.push(`Solo puedes mostrar hasta ${WORK_LIMITS.IMAGES_MAX} archivos.`)
@@ -85,6 +87,32 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
       const updated = [...files]
       const [moved] = updated.splice(from, 1)
       updated.splice(to, 0, moved)
+      onChange(updated)
+    },
+    [files, onChange]
+  )
+
+  const openReplacement = useCallback((index: number) => {
+    replacementIndexRef.current = index
+    replacementInputRef.current?.click()
+  }, [])
+
+  const replaceFile = useCallback(
+    (newFiles: FileList | null) => {
+      const index = replacementIndexRef.current
+      replacementIndexRef.current = null
+      if (index === null || !newFiles?.[0]) return
+
+      const replacement = newFiles[0]
+      const error = getFileValidationError(replacement)
+      if (error) {
+        setValidationErrors([error])
+        return
+      }
+
+      const updated = [...files]
+      updated[index] = replacement
+      setValidationErrors([])
       onChange(updated)
     },
     [files, onChange]
@@ -146,6 +174,17 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
         </div>
       )}
 
+      <input
+        ref={replacementInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
+        onChange={(event) => {
+          replaceFile(event.target.files)
+          event.currentTarget.value = ""
+        }}
+        className="hidden"
+      />
+
       {/* Preview grid */}
       {files.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -169,14 +208,16 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
                 />
               )}
 
-              {/* Overlay con controles */}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+              {/* En móvil no existe hover: los controles permanecen visibles y
+                  en escritorio aparecen al pasar el cursor para no tapar la portada. */}
+              <div className="absolute inset-x-1 bottom-1 flex items-center justify-center gap-1.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                 {/* Mover izquierda */}
                 {i > 0 && (
                   <button
                     type="button"
                     onClick={() => moveFile(i, i - 1)}
-                    className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white"
+                    aria-label="Mover antes"
+                    className="grid h-8 w-8 place-items-center rounded-full bg-white/95 text-gray-700 shadow-sm transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700"
                     title="Mover antes"
                   >
                     ←
@@ -187,20 +228,35 @@ export function ImageUploader({ files, onChange }: ImageUploaderProps) {
                   <button
                     type="button"
                     onClick={() => moveFile(i, i + 1)}
-                    className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white"
+                    aria-label="Mover después"
+                    className="grid h-8 w-8 place-items-center rounded-full bg-white/95 text-gray-700 shadow-sm transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700"
                     title="Mover después"
                   >
                     →
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={() => openReplacement(i)}
+                  aria-label={`Reemplazar archivo ${i + 1}`}
+                  className="grid h-8 w-8 place-items-center rounded-full bg-white/95 text-gray-700 shadow-sm transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-700"
+                  title="Reemplazar"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M20 11a8 8 0 0 0-14.8-4M4 7V3m0 4h4M4 13a8 8 0 0 0 14.8 4M20 17v4m0-4h-4" />
+                  </svg>
+                </button>
                 {/* Eliminar */}
                 <button
                   type="button"
                   onClick={() => removeFile(i)}
-                  className="w-8 h-8 bg-red-500/90 rounded-full flex items-center justify-center text-white hover:bg-red-500"
+                  aria-label={`Eliminar archivo ${i + 1}`}
+                  className="grid h-8 w-8 place-items-center rounded-full bg-red-500/90 text-white shadow-sm transition-colors hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                   title="Eliminar"
                 >
-                  ×
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M4 7h16M10 11v6m4-6v6M9 7l1-3h4l1 3m-9 0 1 13h10l1-13" />
+                  </svg>
                 </button>
               </div>
 

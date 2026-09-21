@@ -4,7 +4,7 @@ import { viewSessionKey } from "@/lib/views"
 export type ViewResult = {
   counted: boolean
   viewsCount: number
-  reason?: "already_counted" | "consent_required" | "own_work"
+  reason?: "already_counted" | "own_work"
 }
 
 const pending = new Set<string>()

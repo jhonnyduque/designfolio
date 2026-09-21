@@ -155,37 +155,39 @@ export function DashboardShell({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-gray-200 bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-9">
-        <Link href="/dashboard" aria-label="Ir al inicio de Designfolio" className="flex items-center">
-          <Image
-            src="/brand/simbolo-logo.webp"
-            alt="Designfolio"
-            width={42}
-            height={42}
-            className="h-9 w-9 object-contain"
-            priority
-          />
-        </Link>
-
-        <div className="flex items-center gap-1">
-          <Link
-            href="/dashboard/new"
-            aria-label="Crear proyecto"
-            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
+      <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/95 backdrop-blur">
+        <div className="public-container flex h-14 items-center justify-between">
+          <Link href="/" aria-label="Ir al feed de Designfolio" className="flex items-center">
+            <Image
+              src="/brand/simbolo-logo.webp"
+              alt="Designfolio"
+              width={42}
+              height={42}
+              className="h-9 w-9 object-contain"
+              priority
+            />
           </Link>
-          <NotificationBell />
-          <button
-            onClick={abrirCajon}
-            aria-label="Abrir menú"
-            aria-expanded={cajonAbierto}
-            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
-          >
-            {icono(ICONOS.menu)}
-          </button>
+
+          <div className="flex items-center gap-1">
+            <Link
+              href="/dashboard/new"
+              aria-label="Crear proyecto"
+              className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </Link>
+            <NotificationBell />
+            <button
+              onClick={abrirCajon}
+              aria-label="Abrir menú"
+              aria-expanded={cajonAbierto}
+              className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+            >
+              {icono(ICONOS.menu)}
+            </button>
+          </div>
         </div>
       </header>
 

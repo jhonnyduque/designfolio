@@ -60,7 +60,7 @@ function getNotificationContent(n: Notification): {
 }
 
 export function NotificationBell() {
-  const { notifications, unreadCount, loading, markAsRead, markAllRead } =
+  const { notifications, unreadCount, loading, markAllRead } =
     useNotifications()
   const [open, setOpen] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -76,20 +76,13 @@ export function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
-  // Mark visible unread notifications as read when panel opens
+  // Abrir la bandeja equivale a leerla. Así el distintivo no exige una acción
+  // adicional y las notificaciones antiguas no quedan pendientes para siempre.
   useEffect(() => {
     if (open && unreadCount > 0) {
-      const unreadIds = notifications
-        .filter((n) => !n.read_at)
-        .slice(0, 20)
-        .map((n) => n.id)
-      if (unreadIds.length > 0) {
-        // Small delay so user sees unread state briefly
-        const timer = setTimeout(() => markAsRead(unreadIds), 2000)
-        return () => clearTimeout(timer)
-      }
+      void markAllRead()
     }
-  }, [open, unreadCount, notifications, markAsRead])
+  }, [open, unreadCount, markAllRead])
 
   return (
     <div className="relative" ref={panelRef}>
@@ -127,14 +120,6 @@ export function NotificationBell() {
             <h3 className="text-subsection text-gray-900">
               Notificaciones
             </h3>
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllRead}
-                className="text-action text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                Marcar todo leído
-              </button>
-            )}
           </div>
 
           {/* List */}

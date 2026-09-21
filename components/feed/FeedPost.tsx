@@ -66,19 +66,16 @@ export function FeedPost({ item }: { item: FeedItem }) {
     let observer: IntersectionObserver | null = null
     const attemptView = () => {
       void recordView().then((result) => {
-        if (result && result.reason !== "consent_required") observer?.unobserve(post)
+        if (result) observer?.unobserve(post)
       })
     }
-    const handleAnalyticsConsent = () => attemptView()
 
     observer = new IntersectionObserver((entries) => {
       if (entries.some((entry) => entry.isIntersecting && entry.intersectionRatio >= 0.5)) attemptView()
     }, { threshold: 0.5 })
     observer.observe(post)
-    window.addEventListener("designfolio:analytics-consent", handleAnalyticsConsent)
     return () => {
       observer?.disconnect()
-      window.removeEventListener("designfolio:analytics-consent", handleAnalyticsConsent)
     }
   }, [recordView])
 

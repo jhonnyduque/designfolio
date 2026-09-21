@@ -191,7 +191,7 @@ export function FeedVideo({ src, poster, className = "", onDoubleTap, onSwipe }:
   return (
     <div
       ref={frameRef}
-      className="relative h-full w-full overflow-hidden bg-gray-900 touch-pan-y"
+      className="relative h-full w-full overflow-hidden bg-gray-200 touch-pan-y"
       style={{ touchAction: "pan-y" }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
