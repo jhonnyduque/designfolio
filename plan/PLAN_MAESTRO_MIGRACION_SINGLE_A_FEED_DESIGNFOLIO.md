@@ -1398,7 +1398,7 @@ Utilizar esta sección como control dentro del repositorio.
 [~] F1.5 — Corregir previsualización de vídeo vertical
 [x] F2 — Extraer piezas reutilizables
 [x] F3 — Modularizar comentarios
-[ ] F4 — Bottom sheet móvil
+[~] F4 — Bottom sheet móvil (en curso: apertura desde el contador del feed y carga bajo demanda implementadas; pendiente validación visual y gate completo)
 [ ] F5 — Modal desktop
 [ ] F6 — Estado URL + historial
 [ ] F7 — Permalink, deep links y SEO

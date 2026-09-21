@@ -1,6 +1,6 @@
 FUENTE DE VERDAD DEL ROADMAP
 
-Estado actual: ✅ **F3 — Modularizar comentarios, finalizada**. F4/F5 quedan ⬜ NO INICIADAS; no hay otra fase habilitada.
+Estado actual: 🔄 **F4 — Bottom sheet móvil, en curso**. F3 está finalizada; F5 sigue ⬜ NO INICIADA.
 
 Antes de trabajar, lee el plan ubicado en:
 

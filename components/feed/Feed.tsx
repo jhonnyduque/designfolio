@@ -1,11 +1,13 @@
 // components/feed/Feed.tsx
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useCallback, useState, useRef, useEffect } from "react"
 import { useFeed } from "@/hooks/useFeed"
+import type { FeedItem } from "@/types/feed"
 import { SortSelector } from "./SortSelector"
 import { MosaicCell } from "./MosaicCell"
 import { FeedPost } from "./FeedPost"
+import { FeedCommentsSheet } from "./FeedCommentsSheet"
 
 /**
  * El feed tiene dos formas, y las decide el ancho de la pantalla:
@@ -41,6 +43,8 @@ export function Feed() {
   const centinela = useRef<HTMLDivElement>(null)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchInput, setSearchInput] = useState("")
+  const [commentsItem, setCommentsItem] = useState<FeedItem | null>(null)
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({})
   const searchRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -83,6 +87,11 @@ export function Feed() {
     setSearch("")
     setSearchOpen(false)
   }
+
+  const handleCommentCountChange = useCallback((count: number) => {
+    if (!commentsItem) return
+    setCommentCounts((current) => current[commentsItem.id] === count ? current : { ...current, [commentsItem.id]: count })
+  }, [commentsItem])
 
   return (
     <section>
@@ -195,7 +204,12 @@ export function Feed() {
           {/* Ordenador y tablet: rejilla de tres, encajonada en 935px */}
           <div className="hidden w-full grid-cols-3 gap-1 md:grid">
             {items.map((item) => (
-              <MosaicCell key={item.id} item={item} />
+              <MosaicCell
+                key={item.id}
+                item={item}
+                commentsCount={commentCounts[item.id] ?? item.comments_count}
+                onOpenComments={setCommentsItem}
+              />
             ))}
           </div>
 
@@ -203,7 +217,12 @@ export function Feed() {
               padding lateral de la página para que la foto llegue al borde. */}
           <div className="-mx-6 flex flex-col gap-5 md:hidden">
             {items.map((item) => (
-              <FeedPost key={item.id} item={item} />
+              <FeedPost
+                key={item.id}
+                item={item}
+                commentsCount={commentCounts[item.id] ?? item.comments_count}
+                onOpenComments={setCommentsItem}
+              />
             ))}
           </div>
         </>
@@ -241,6 +260,15 @@ export function Feed() {
             <span className="sr-only">{loadingMore ? "Cargando más proyectos" : ""}</span>
           </div>
         </>
+      )}
+
+      {commentsItem && (
+        <FeedCommentsSheet
+          item={commentsItem}
+          initialCount={commentCounts[commentsItem.id] ?? commentsItem.comments_count}
+          onClose={() => setCommentsItem(null)}
+          onCountChange={handleCommentCountChange}
+        />
       )}
 
     </section>

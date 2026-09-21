@@ -23,7 +23,13 @@ const esVideo = (medio: { type?: string | null } | undefined) =>
 
 const cifra = (n: number) => n.toLocaleString("es-ES")
 
-export function MosaicCell({ item }: { item: FeedItem }) {
+type Props = {
+  item: FeedItem
+  commentsCount?: number
+  onOpenComments?: (item: FeedItem) => void
+}
+
+export function MosaicCell({ item, commentsCount = item.comments_count, onOpenComments }: Props) {
   const medios = item.images ?? []
   // La portada es la primera imagen real: si el proyecto abre con vídeo, una
   // etiqueta <img> apuntando a un .mp4 deja un recuadro vacío.
@@ -68,16 +74,16 @@ export function MosaicCell({ item }: { item: FeedItem }) {
         </span>
       )}
 
-      <span className="absolute inset-0 flex items-center justify-center gap-6 bg-black/40 text-body font-bold text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
+      <div className="absolute inset-0 flex items-center justify-center gap-6 bg-black/40 text-body font-bold text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
         <span className="inline-flex items-center gap-1.5">
           <Corazon />
           {cifra(item.likes_count)}
         </span>
-        <span className="inline-flex items-center gap-1.5">
+        <button type="button" onClick={() => onOpenComments?.(item)} className="inline-flex items-center gap-1.5 rounded px-1 py-0.5 transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white" aria-label={`Abrir comentarios, ${cifra(commentsCount)} comentarios`}>
           <Bocadillo />
-          {cifra(item.comments_count)}
-        </span>
-      </span>
+          {cifra(commentsCount)}
+        </button>
+      </div>
     </div>
   )
 }

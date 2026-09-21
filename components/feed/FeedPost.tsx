@@ -27,7 +27,13 @@ const esVideo = (medio: { type?: string | null } | undefined) =>
 
 const cifra = (n: number) => n.toLocaleString("es-ES")
 
-export function FeedPost({ item }: { item: FeedItem }) {
+type Props = {
+  item: FeedItem
+  commentsCount?: number
+  onOpenComments?: (item: FeedItem) => void
+}
+
+export function FeedPost({ item, commentsCount = item.comments_count, onOpenComments }: Props) {
   const medios = item.images ?? []
   const [indice, setIndice] = useState(0)
   const [expanded, setExpanded] = useState(false)
@@ -131,12 +137,17 @@ export function FeedPost({ item }: { item: FeedItem }) {
 
       <div className="flex items-center gap-3.5 px-3 pb-1 pt-2.5">
         <LikeButton workId={item.id} initialCount={item.likes_count} likeToggleRequest={likeToggleRequest} />
-        <span className="inline-flex items-center gap-1.5 text-gray-900">
+        <button
+          type="button"
+          onClick={() => onOpenComments?.(item)}
+          className="inline-flex items-center gap-1.5 text-gray-900 transition-colors hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
+          aria-label={`Abrir comentarios, ${cifra(commentsCount)} comentarios`}
+        >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
             <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 20.5l1.6-4.9A8.3 8.3 0 0 1 3.6 11.5a8.4 8.4 0 0 1 8.9-8.4 8.4 8.4 0 0 1 8.5 8.4z" />
           </svg>
-          <span className="text-body-sm font-semibold tabular-nums">{cifra(item.comments_count)}</span>
-        </span>
+          <span className="text-body-sm font-semibold tabular-nums">{cifra(commentsCount)}</span>
+        </button>
         <ShareButton workId={item.id} pathOverride={`/#post-${item.id}`} iconOnly initialCount={item.shares_count} showCount />
         {viewsCount > 0 && (
           <span className="ml-auto text-meta text-gray-500 tabular-nums">{cifra(viewsCount)} vistas</span>
