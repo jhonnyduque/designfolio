@@ -1,6 +1,6 @@
 FUENTE DE VERDAD DEL ROADMAP
 
-Estado actual: 🔄 **F1.5 — Corrección de previsualización de vídeo vertical**. F2 permanece ⬜ NO INICIADA; no hay otra fase habilitada.
+Estado actual: ✅ **F3 — Modularizar comentarios, finalizada**. F4/F5 quedan ⬜ NO INICIADAS; no hay otra fase habilitada.
 
 Antes de trabajar, lee el plan ubicado en:
 

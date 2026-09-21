@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { getDb } from "@/lib/db/client"
 import { comments, notifications, profiles, works } from "@/lib/db/schema"
 import { attachVisitorCookie, getActor } from "@/lib/server/actor"
-import { verifyCaptcha } from "@/lib/captcha"
 import { LIMITS, checkRateLimit, clientKey, tooManyRequests } from "@/lib/rate-limit"
 import { COMMENT_CATEGORIES, COMMENT_MIN_LENGTH } from "@/types/comment"
 
@@ -64,13 +63,6 @@ export async function POST(request: NextRequest, { params }: Context) {
   let body: unknown
   try { body = await request.json() } catch { body = null }
   const input = body && typeof body === "object" ? body as Record<string, unknown> : {}
-
-  // Solo se exige a quien comenta sin cuenta: es el formulario abierto a
-  // cualquiera y por tanto el que reciben los robots.
-  if (!actor.userId) {
-    const captcha = await verifyCaptcha(input.captchaToken, request.headers.get("x-forwarded-for"))
-    if (!captcha.ok) return NextResponse.json({ error: captcha.error }, { status: 400 })
-  }
 
   const content = typeof input.content === "string" ? input.content.trim() : ""
   const categories = Array.isArray(input.categories) ? input.categories : []

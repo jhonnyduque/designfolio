@@ -2,7 +2,7 @@
 
 **Versión:** 1.1
 **Fecha:** 20 de septiembre de 2026
-**Estado:** ✅ F0 FINALIZADA — baseline `5200a42`; F1 ✅ FINALIZADA; F1.5 🔄 EN PROCESO; F2 ⬜ NO INICIADA
+**Estado:** ✅ F0 FINALIZADA — baseline `5200a42`; F1 ✅ FINALIZADA; F1.5 ✅ VALIDADA; F2 ✅ FINALIZADA; F3 ✅ FINALIZADA
 **Repositorio de referencia:** `designfolio-new`
 **Objetivo:** convertir el **feed** en la experiencia pública principal de Designfolio y retirar progresivamente el **single visual público** sin perder URLs, funcionalidades, SEO, comentarios, acciones sociales ni flujos protegidos del propietario.
 
@@ -555,6 +555,21 @@ Media, cabecera, descripción, metadata y acciones deben poder renderizarse fuer
 de `WorkDetail`; la frontera de comentarios queda lista, pero su implementación
 permanece exclusivamente en F3.
 
+### Cierre F2 — 21 de septiembre de 2026
+
+- `ProjectMedia` contiene imagen, vídeo, carrusel, flechas, swipe, miniaturas,
+  lightbox y pantalla completa, conservando los comportamientos existentes.
+- `ProjectActions` centraliza like, compartir y métricas; recibe `sharePath` y
+  expone `onOpenComments`, por lo que no decide rutas ni historial.
+- `WorkDetail` compone el single, conserva solo las acciones de propietario y
+  deja `CommentsSection` sin cambios para F3.
+- Verificaciones aprobadas: `npx tsc --noEmit`, `npm run lint`, `npm test`,
+  `npm run build` y `git diff --check`.
+- Revisión de paridad: las rutas del single público y del dashboard siguen
+  renderizando el mismo `WorkDetail`; la refactorización conserva los mismos
+  nodos, clases y handlers en cada superficie. El entorno local no tenía una
+  obra disponible para una captura autenticada del dashboard.
+
 ---
 
 # 9. Fase F3 — Modularizar comentarios
@@ -591,12 +606,17 @@ CommentExperience
 
 - publicación;
 - validaciones;
-- CAPTCHA;
 - cooldown;
 - errores;
 - sesión;
 - permisos;
 - orden.
+
+## Decisión de experiencia
+
+F3 no muestra CAPTCHA, Turnstile ni retos aritméticos. Publicar un comentario
+requiere únicamente el texto y al menos una categoría. El rate limit, cooldown,
+validaciones y permisos permanecen como protecciones técnicas no intrusivas.
 
 ## Evolución recomendada
 
@@ -624,6 +644,18 @@ estados vacíos, error y reintento de una sola fuente; F4 y F5 no los duplican.
 ## Gate F3 → F4/F5
 
 Debe ser posible montar `CommentList + CommentComposer` dentro de una superficie contextual independiente.
+
+### Cierre F3 — 21 de septiembre de 2026
+
+- `CommentExperience` compone `CommentList` y `CommentComposer` fuera de
+  `WorkDetail`; ambas piezas pueden montarse en una superficie contextual.
+- La carga comienza sólo al abrir comentarios. `useComments` aborta la petición
+  pendiente si esa superficie se cierra.
+- Se retiraron CAPTCHA, Turnstile y retos aritméticos tanto de la interfaz como
+  de `POST /api/works/[id]/comments`; se conservan rate limit, cooldown,
+  permisos y validación de contenido/categorías.
+- Verificaciones aprobadas: `npx tsc --noEmit`, `npm run lint`, `npm test`,
+  `npm run build` y `git diff --check`.
 
 ---
 
@@ -1364,8 +1396,8 @@ Utilizar esta sección como control dentro del repositorio.
 [x] F0 — Línea base y paridad
 [x] F1 — Separar contratos de datos
 [~] F1.5 — Corregir previsualización de vídeo vertical
-[ ] F2 — Extraer piezas reutilizables
-[ ] F3 — Modularizar comentarios
+[x] F2 — Extraer piezas reutilizables
+[x] F3 — Modularizar comentarios
 [ ] F4 — Bottom sheet móvil
 [ ] F5 — Modal desktop
 [ ] F6 — Estado URL + historial
