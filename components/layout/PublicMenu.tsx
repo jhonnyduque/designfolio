@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth"
  */
 
 export type SesionPublica = {
+  id?: string
   nombre: string
   username: string
   avatarUrl: string | null

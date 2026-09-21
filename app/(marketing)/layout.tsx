@@ -11,14 +11,9 @@ import { COOKIE_CONSENT_NAME, readCookieConsent } from "@/lib/cookie-consent"
 /**
  * El layout de todo lo público: feed, detalle de proyecto y legales.
  *
- * La sesión se lee aquí una sola vez, para el menú. Antes la leía cada página
- * por su cuenta, con la copia del mismo bloque de cabecera al lado; el detalle
- * de proyecto ni siquiera lo hacía, así que quien había entrado no tenía menú
- * en esa pantalla.
- *
- * Leer la sesión obliga a servir estas páginas bajo demanda en lugar de
- * prerenderizarlas. Cuesta poco: las obras ya se piden al cargar, así que lo
- * estático aquí era solo el armazón.
+ * La sesión se lee aquí una sola vez, para el menú y para identificar de forma
+ * contextual las publicaciones del propietario. La API sigue siendo la
+ * autoridad que valida cualquier acción protegida.
  */
 async function sesionActual(): Promise<SesionPublica> {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -31,7 +26,12 @@ async function sesionActual(): Promise<SesionPublica> {
     .limit(1)
 
   if (!perfil) return null
-  return { nombre: perfil.fullName, username: perfil.username, avatarUrl: perfil.avatarUrl }
+  return {
+    id: session.user.id,
+    nombre: perfil.fullName,
+    username: perfil.username,
+    avatarUrl: perfil.avatarUrl,
+  }
 }
 
 export default async function PublicLayout({
@@ -40,5 +40,12 @@ export default async function PublicLayout({
   children: React.ReactNode
 }) {
   const cookieStore = await cookies()
-  return <PublicShell sesion={await sesionActual()} cookieConsent={readCookieConsent(cookieStore.get(COOKIE_CONSENT_NAME)?.value)}>{children}</PublicShell>
+  return (
+    <PublicShell
+      sesion={await sesionActual()}
+      cookieConsent={readCookieConsent(cookieStore.get(COOKIE_CONSENT_NAME)?.value)}
+    >
+      {children}
+    </PublicShell>
+  )
 }

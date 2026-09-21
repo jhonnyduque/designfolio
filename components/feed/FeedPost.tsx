@@ -6,6 +6,8 @@ import Link from "next/link"
 import type { FeedItem } from "@/types/feed"
 import { LikeButton } from "@/components/works/LikeButton"
 import { ShareButton } from "@/components/works/ShareButton"
+import { OwnerPostMenu } from "@/components/feed/OwnerPostMenu"
+import { usePublicSession } from "@/components/layout/PublicSessionContext"
 import { trackView } from "@/lib/client/track-view"
 import { ZoomableMedia } from "@/components/feed/ZoomableMedia"
 import { FeedVideo } from "@/components/feed/FeedVideo"
@@ -35,14 +37,17 @@ type Props = {
 
 export function FeedPost({ item, commentsCount = item.comments_count, onOpenComments }: Props) {
   const medios = item.images ?? []
+  const sesion = usePublicSession()
   const [indice, setIndice] = useState(0)
   const [expanded, setExpanded] = useState(false)
   const [viewsCount, setViewsCount] = useState(item.views_count)
   const [likeToggleRequest, setLikeToggleRequest] = useState(0)
+  const [removed, setRemoved] = useState(false)
   const articleRef = useRef<HTMLElement | null>(null)
   const varios = medios.length > 1
   const actual = medios[indice] ?? null
   const isCurrentVideo = esVideo(actual)
+  const isOwner = Boolean(sesion?.id && sesion.id === item.author_id)
   const mainMediaStyle = isCurrentVideo
     ? { aspectRatio: mediaAspectRatio(actual?.width, actual?.height) }
     : undefined
@@ -89,6 +94,8 @@ export function FeedPost({ item, commentsCount = item.comments_count, onOpenComm
     setExpanded((wasExpanded) => !wasExpanded)
   }, [])
 
+  if (removed) return null
+
   return (
     <article id={`post-${item.id}`} ref={articleRef}>
       <header className="flex items-center gap-2.5 px-3 py-2.5">
@@ -105,6 +112,13 @@ export function FeedPost({ item, commentsCount = item.comments_count, onOpenComm
           </span>
           <span className="block truncate text-meta text-gray-500">{item.category}</span>
         </Link>
+
+        {isOwner && (
+          <OwnerPostMenu
+            workId={item.id}
+            onRemoved={() => setRemoved(true)}
+          />
+        )}
       </header>
 
       <div className={`relative bg-gray-200 ${isCurrentVideo ? "" : "aspect-[4/5]"}`} style={mainMediaStyle}>

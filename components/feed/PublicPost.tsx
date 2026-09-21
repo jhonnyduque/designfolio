@@ -3,10 +3,13 @@
 
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import type { FeedItem } from "@/types/feed"
 import { LikeButton } from "@/components/works/LikeButton"
 import { ShareButton } from "@/components/works/ShareButton"
 import { FeedCommentsSheet } from "@/components/feed/FeedCommentsSheet"
+import { OwnerPostMenu } from "@/components/feed/OwnerPostMenu"
+import { usePublicSession } from "@/components/layout/PublicSessionContext"
 import { ZoomableMedia } from "@/components/feed/ZoomableMedia"
 import { FeedVideo } from "@/components/feed/FeedVideo"
 import { mediaAspectRatio } from "@/lib/media-aspect"
@@ -29,6 +32,8 @@ type Props = {
  * Los comentarios se abren con el mismo sheet/modal usado por el feed general.
  */
 export function PublicPost({ item }: Props) {
+  const router = useRouter()
+  const sesion = usePublicSession()
   const medios = item.images ?? []
   const [indice, setIndice] = useState(0)
   const [expanded, setExpanded] = useState(false)
@@ -40,6 +45,7 @@ export function PublicPost({ item }: Props) {
   const varios = medios.length > 1
   const actual = medios[indice] ?? null
   const isCurrentVideo = esVideo(actual)
+  const isOwner = Boolean(sesion?.id && sesion.id === item.author_id)
   const mainMediaStyle = isCurrentVideo
     ? { aspectRatio: mediaAspectRatio(actual?.width, actual?.height) }
     : undefined
@@ -100,6 +106,13 @@ export function PublicPost({ item }: Props) {
             </span>
             <span className="block truncate text-meta text-gray-500">{item.category}</span>
           </Link>
+
+          {isOwner && (
+            <OwnerPostMenu
+              workId={item.id}
+              onRemoved={() => router.replace("/")}
+            />
+          )}
         </header>
 
         <div className={`relative bg-gray-200 ${isCurrentVideo ? "" : "aspect-[4/5]"}`} style={mainMediaStyle}>
@@ -149,7 +162,6 @@ export function PublicPost({ item }: Props) {
               </svg>
             </button>
           )}
-
         </div>
 
         {varios && (
