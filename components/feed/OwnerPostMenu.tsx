@@ -48,13 +48,15 @@ export function OwnerPostMenu({ workId, onRemoved }: Props) {
     setError(null)
 
     try {
-      const response = await fetch(`/api/works/${workId}`, action === "archive"
-        ? {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ archived: true }),
-          }
-        : { method: "DELETE" },
+      const response = await fetch(
+        `/api/works/${workId}`,
+        action === "archive"
+          ? {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ archived: true }),
+            }
+          : { method: "DELETE" },
       )
 
       if (!response.ok) {
@@ -126,7 +128,7 @@ export function OwnerPostMenu({ workId, onRemoved }: Props) {
         {open && (
           <div
             role="menu"
-            className="absolute right-0 top-9 z-30 w-52 overflow-hidden rounded-xl border border-black/10 bg-white py-1.5 shadow-lg"
+            className="absolute right-0 top-9 z-30 w-max min-w-[9.5rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-black/10 bg-white py-1.5 shadow-lg"
           >
             <Link
               href={`/dashboard/work/${workId}`}
@@ -134,7 +136,7 @@ export function OwnerPostMenu({ workId, onRemoved }: Props) {
               onClick={() => setOpen(false)}
               className="block px-4 py-2.5 text-body-sm text-gray-900 transition-colors hover:bg-black/[.04]"
             >
-              Editar publicación
+              Editar
             </Link>
 
             <button
@@ -143,10 +145,8 @@ export function OwnerPostMenu({ workId, onRemoved }: Props) {
               onClick={() => setConfirmAction("archive")}
               className="block w-full px-4 py-2.5 text-left text-body-sm text-gray-900 transition-colors hover:bg-black/[.04]"
             >
-              Archivar publicación
+              Archivar
             </button>
-
-            <span className="my-1 block border-t border-black/5" />
 
             <button
               type="button"
@@ -154,11 +154,11 @@ export function OwnerPostMenu({ workId, onRemoved }: Props) {
               onClick={() => setConfirmAction("delete")}
               className="block w-full px-4 py-2.5 text-left text-body-sm text-red-600 transition-colors hover:bg-red-50"
             >
-              Eliminar publicación
+              Eliminar
             </button>
 
             {error && (
-              <p role="alert" className="border-t border-black/5 px-4 py-2 text-meta text-red-600">
+              <p role="alert" className="mt-1 border-t border-black/5 px-4 py-2 text-meta text-red-600">
                 {error}
               </p>
             )}

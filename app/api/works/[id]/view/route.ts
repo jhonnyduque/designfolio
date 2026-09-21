@@ -9,8 +9,33 @@ import { isViewOrigin, VIEW_DEDUPLICATION_MS } from "@/lib/views"
 export const runtime = "nodejs"
 type Context = { params: Promise<{ id: string }> }
 
+/**
+ * Valida que un POST de vista venga del mismo sitio sin depender de
+ * request.nextUrl.origin, que detrás de un reverse proxy puede representar
+ * el origen interno del servidor y no el dominio público visto por el navegador.
+ */
+function isAllowedRequestOrigin(request: NextRequest) {
+  const fetchSite = request.headers.get("sec-fetch-site")
+  if (fetchSite === "cross-site") return false
+
+  const originHeader = request.headers.get("origin")
+  if (!originHeader) return true
+
+  const forwardedHost = request.headers.get("x-forwarded-host")
+    ?.split(",")[0]
+    ?.trim()
+  const requestHost = request.headers.get("host")?.trim()
+  const expectedHost = forwardedHost || requestHost || request.nextUrl.host
+
+  try {
+    return new URL(originHeader).host === expectedHost
+  } catch {
+    return false
+  }
+}
+
 export async function POST(request: NextRequest, { params }: Context) {
-  if (request.headers.get("origin") !== request.nextUrl.origin || request.headers.get("sec-fetch-site") === "cross-site") {
+  if (!isAllowedRequestOrigin(request)) {
     return NextResponse.json({ error: "Origen no permitido." }, { status: 403 })
   }
 
@@ -35,8 +60,12 @@ export async function POST(request: NextRequest, { params }: Context) {
   if (!initialWork) return NextResponse.json({ error: "Proyecto no encontrado." }, { status: 404 })
 
   if (actor.userId === initialWork.authorId) {
-    return NextResponse.json({ counted: false, viewsCount: initialWork.viewsCount, reason: "own_work" }, { headers: { "Cache-Control": "no-store" } })
+    return NextResponse.json(
+      { counted: false, viewsCount: initialWork.viewsCount, reason: "own_work" },
+      { headers: { "Cache-Control": "no-store" } },
+    )
   }
+
   const viewerKey = actor.userId ? `user:${actor.userId}` : `visitor:${actor.visitorId}`
   const result = await db.transaction(async (tx) => {
     const [work] = await tx.select({ id: works.id, viewsCount: works.viewsCount })
