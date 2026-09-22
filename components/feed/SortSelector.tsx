@@ -45,7 +45,7 @@ export function SortSelector({ current, onChange }: SortSelectorProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-max max-w-[calc(100vw-2rem)] rounded-lg border border-black/10 bg-white py-1 shadow-lg">
+        <div className="ui-menu-panel absolute right-0 z-20 mt-2 w-max max-w-[calc(100vw-2rem)] rounded-lg border border-black/10 bg-white shadow-lg">
           {sortKeys.map((key) => (
             <button
               key={key}
@@ -53,7 +53,7 @@ export function SortSelector({ current, onChange }: SortSelectorProps) {
                 onChange(key)
                 setOpen(false)
               }}
-              className={`block w-full whitespace-nowrap px-4 py-2 text-left text-nav transition-colors hover:bg-black/5 ${
+              className={`ui-menu-row w-full whitespace-nowrap px-4 text-left text-nav transition-colors hover:bg-black/5 ${
                 key === current ? "text-[#1e1e1e]" : "text-[#4f4f57]"
               }`}
             >

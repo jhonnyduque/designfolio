@@ -81,7 +81,7 @@ export function PublicMenu({ sesion }: { sesion: SesionPublica }) {
       {abierto && (
         <div
           role="menu"
-          className="absolute right-0 top-11 z-50 w-max max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-black/10 bg-white py-2 shadow-lg"
+          className="ui-menu-panel absolute right-0 top-11 z-50 w-max max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-black/10 bg-white shadow-lg"
         >
           {sesion && (
             <div className="flex items-center gap-2.5 border-b border-black/5 px-6 py-2.5">
@@ -105,7 +105,7 @@ export function PublicMenu({ sesion }: { sesion: SesionPublica }) {
               href={d.href}
               role="menuitem"
               onClick={() => setAbierto(false)}
-              className="block px-6 py-1.5 text-nav text-[#2a2a30] transition-colors hover:bg-black/[.04] hover:text-[#1e1e1e]"
+              className="ui-menu-row px-6 text-nav text-[#2a2a30] transition-colors hover:bg-black/[.04] hover:text-[#1e1e1e]"
             >
               {d.texto}
             </Link>
@@ -118,7 +118,7 @@ export function PublicMenu({ sesion }: { sesion: SesionPublica }) {
                 type="button"
                 role="menuitem"
                 onClick={() => { setAbierto(false); signOut() }}
-                className="block w-full px-6 py-1.5 text-left text-nav text-[#6b6b70] transition-colors hover:bg-black/[.04] hover:text-[#1e1e1e]"
+                className="ui-menu-row w-full px-6 text-left text-nav text-[#6b6b70] transition-colors hover:bg-black/[.04] hover:text-[#1e1e1e]"
               >
                 Cerrar sesión
               </button>
@@ -129,7 +129,7 @@ export function PublicMenu({ sesion }: { sesion: SesionPublica }) {
             href="/legal"
             role="menuitem"
             onClick={() => setAbierto(false)}
-            className="mt-1 block px-6 pb-1.5 pt-0.5 text-meta text-[#8c8c95] transition-colors hover:text-[#4f4f57]"
+            className="ui-menu-row mt-1 px-6 text-meta text-[#8c8c95] transition-colors hover:text-[#4f4f57]"
           >
             Información legal
           </Link>

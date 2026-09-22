@@ -128,13 +128,13 @@ export function OwnerPostMenu({ workId, onRemoved }: Props) {
         {open && (
           <div
             role="menu"
-            className="absolute right-0 top-9 z-30 w-max max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-black/10 bg-white py-1.5 shadow-lg"
+            className="ui-menu-panel absolute right-0 top-9 z-30 w-max max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-black/10 bg-white shadow-lg"
           >
             <Link
               href={`/dashboard/work/${workId}`}
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="block whitespace-nowrap px-4 py-2 text-body-sm text-gray-900 transition-colors hover:bg-black/[.04]"
+              className="ui-menu-row whitespace-nowrap px-4 text-nav text-gray-900 transition-colors hover:bg-black/[.04]"
             >
               Editar
             </Link>
@@ -143,7 +143,7 @@ export function OwnerPostMenu({ workId, onRemoved }: Props) {
               type="button"
               role="menuitem"
               onClick={() => setConfirmAction("archive")}
-              className="block w-full whitespace-nowrap px-4 py-2.5 text-left text-body-sm text-gray-900 transition-colors hover:bg-black/[.04]"
+              className="ui-menu-row w-full whitespace-nowrap px-4 text-left text-nav text-gray-900 transition-colors hover:bg-black/[.04]"
             >
               Archivar
             </button>
@@ -152,7 +152,7 @@ export function OwnerPostMenu({ workId, onRemoved }: Props) {
               type="button"
               role="menuitem"
               onClick={() => setConfirmAction("delete")}
-              className="block w-full whitespace-nowrap px-4 py-2.5 text-left text-body-sm text-red-600 transition-colors hover:bg-red-50"
+              className="ui-menu-row w-full whitespace-nowrap px-4 text-left text-nav text-red-600 transition-colors hover:bg-red-50"
             >
               Eliminar
             </button>
