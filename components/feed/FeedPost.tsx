@@ -60,8 +60,14 @@ export function FeedPost({ item, commentsCount = item.comments_count, onOpenComm
 
   const cambiarImagen = useCallback((direction: "next" | "previous") => {
     if (!varios) return
-    if (direction === "next") setIndice((p) => (p === medios.length - 1 ? 0 : p + 1))
-    if (direction === "previous") setIndice((p) => (p === 0 ? medios.length - 1 : p - 1))
+
+    setIndice((actualIndice) => {
+      if (direction === "next") {
+        return actualIndice < medios.length - 1 ? actualIndice + 1 : actualIndice
+      }
+
+      return actualIndice > 0 ? actualIndice - 1 : actualIndice
+    })
   }, [varios, medios.length])
 
   const recordView = useCallback(async () => {
@@ -135,6 +141,60 @@ export function FeedPost({ item, commentsCount = item.comments_count, onOpenComm
               className="h-full w-full object-cover"
             />
           )
+        )}
+
+        {varios && indice > 0 && (
+          <button
+            type="button"
+            aria-label="Imagen anterior"
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              cambiarImagen("previous")
+            }}
+            className="absolute left-2.5 top-1/2 z-20 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full border border-black/10 bg-white/85 text-black/60 transition-colors hover:bg-white hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/40"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+          </button>
+        )}
+
+        {varios && indice < medios.length - 1 && (
+          <button
+            type="button"
+            aria-label="Imagen siguiente"
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              cambiarImagen("next")
+            }}
+            className="absolute right-2.5 top-1/2 z-20 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full border border-black/10 bg-white/85 text-black/60 transition-colors hover:bg-white hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/40"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
         )}
 
         {varios && (
