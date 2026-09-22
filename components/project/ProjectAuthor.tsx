@@ -25,20 +25,12 @@ export function ProjectAuthor({ author, profileHref }: Props) {
             </div>
           )}
           <div>
-            <p className="text-subsection text-gray-900">{author.fullName}</p>
-            <p className="text-meta text-gray-500">@{author.username}</p>
+            <p className="text-subsection text-gray-900">@{author.username}</p>
+            <p className="text-meta text-gray-500">{author.fullName}</p>
           </div>
         </div>
 
         {author.bio && <p className="mt-3 text-body-sm text-gray-600">{author.bio}</p>}
-        {author.school && (
-          <p className="mt-2 flex items-center gap-1.5 text-meta text-gray-400">
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M4 17h16M7 17l1.5-6h7L17 17M10 11l1-4h2l1 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            {author.school}
-          </p>
-        )}
         {profileHref && (
           <Link href={profileHref} className="mt-4 block text-center text-action text-gray-500 transition-colors hover:text-gray-700">
             Ver perfil completo →

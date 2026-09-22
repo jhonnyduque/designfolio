@@ -108,9 +108,9 @@ export function FeedPost({ item, commentsCount = item.comments_count, onOpenComm
         )}
         <Link href={`/dashboard/profile/${item.author_username}`} className="min-w-0 leading-tight">
           <span className="block truncate text-body-sm font-semibold text-gray-900">
-            {item.author_full_name}
+            @{item.author_username}
           </span>
-          <span className="block truncate text-meta text-gray-500">{item.category}</span>
+          <span className="block truncate text-meta text-gray-500">{item.author_full_name}</span>
         </Link>
 
         {isOwner && (

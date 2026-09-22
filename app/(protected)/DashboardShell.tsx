@@ -8,14 +8,6 @@ import { usePathname } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
 import { NotificationBell } from "@/components/notifications/NotificationBell"
 
-/**
- * Barra lateral en lugar de pestañas horizontales.
- *
- * Había nueve destinos apretados en una cabecera, que en pantallas estrechas se
- * desbordaban. La lateral los ordena, deja sitio para contadores y separa lo de
- * administrar la plataforma de lo que es de la propia cuenta.
- */
-
 type Item = { href: string; label: string; icon: ReactNode; badge?: number; exact?: boolean }
 
 const icono = (d: string) => (
@@ -52,22 +44,27 @@ export function DashboardShell({
   const { signOut } = useAuth()
   const pathname = usePathname()
   const [rutaDelCajon, setRutaDelCajon] = useState<string | null>(null)
-  // Si cambia la ruta, el cajón deja de corresponder a la pantalla actual y se cierra sin un efecto extra.
   const cajonAbierto = rutaDelCajon === pathname
   const abrirCajon = () => setRutaDelCajon(pathname)
   const cerrarCajon = () => setRutaDelCajon(null)
 
   /**
-   * Con el cajón abierto, el fondo deja de desplazarse.
-   *
-   * El cajón tiene su propio scroll, pero al llegar a sus extremos el gesto no
-   * debe trasladarse a la página de detrás. El fondo se inmoviliza mientras el
-   * panel está abierto para que la navegación no parezca moverse.
+   * El dashboard nunca debe heredar un `overflow: hidden` de una superficie
+   * pública anterior. Cuando el cajón está cerrado, la página vuelve a ser
+   * desplazable. Al abrirlo, solo entonces se bloquea el fondo.
    */
   useEffect(() => {
-    if (!cajonAbierto) return
-    const anterior = document.body.style.overflow
+    if (!cajonAbierto) {
+      document.body.style.overflow = ""
+      document.documentElement.style.overflow = ""
+      return
+    }
+
+    const bodyOverflowAnterior = document.body.style.overflow
+    const htmlOverflowAnterior = document.documentElement.style.overflow
+
     document.body.style.overflow = "hidden"
+    document.documentElement.style.overflow = "hidden"
 
     const alPulsarEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") cerrarCajon()
@@ -75,7 +72,8 @@ export function DashboardShell({
     document.addEventListener("keydown", alPulsarEscape)
 
     return () => {
-      document.body.style.overflow = anterior
+      document.body.style.overflow = bodyOverflowAnterior
+      document.documentElement.style.overflow = htmlOverflowAnterior
       document.removeEventListener("keydown", alPulsarEscape)
     }
   }, [cajonAbierto])
@@ -191,8 +189,6 @@ export function DashboardShell({
         </div>
       </header>
 
-      {/* El mismo cajón sirve en móvil y escritorio: la navegación no ocupa
-          espacio fijo y el encabezado conserva siempre el mismo lenguaje. */}
       {cajonAbierto && (
         <div className="fixed inset-0 z-40">
           <div
@@ -200,13 +196,6 @@ export function DashboardShell({
             onClick={cerrarCajon}
             aria-hidden="true"
           />
-          {/* `dvh` y no `h-full`: dentro de un `fixed inset-0`, el 100% se mide
-              contra el viewport de diseño —el de la barra del navegador
-              escondida—, así que mientras esa barra está visible el borde de
-              abajo cae fuera de la pantalla. `dvh` sí la descuenta.
-              El `overflow-y-auto` es para cuando el menú crezca; el
-              `overscroll-contain` evita que al llegar a su final el gesto pase
-              a la página de detrás. */}
           <aside className="absolute right-0 top-0 flex h-[100dvh] w-[min(252px,calc(100vw-2rem))] flex-col overflow-y-auto overscroll-contain border-l border-gray-200 bg-white p-3 shadow-xl">
             <button
               onClick={cerrarCajon}

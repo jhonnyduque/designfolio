@@ -26,7 +26,6 @@ interface UserProfileProps {
     career_year: string | null
     categories: string[] | null
     reputation_level: number
-    /** Columna heredada del esquema anterior, inexistente en MySQL. Sin valor, el badge omite los puntos. */
     total_points?: number | null
     created_at: string
   }
@@ -48,71 +47,35 @@ export function UserProfile({ profile, works }: UserProfileProps) {
   })
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center gap-1 text-action text-gray-500 hover:text-gray-700 transition-colors mb-6"
-      >
+    <div className="mx-auto max-w-4xl">
+      <Link href="/dashboard" className="mb-6 inline-flex items-center gap-1 text-action text-gray-500 transition-colors hover:text-gray-700">
         ← Volver al feed
       </Link>
 
-      {/* Profile header */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
-        <div className="flex flex-col sm:flex-row gap-5 items-start">
-          {/* Avatar */}
+      <div className="rounded-xl border border-gray-200 bg-white p-6 sm:p-8">
+        <div className="flex flex-col items-start gap-5 sm:flex-row">
           {profile.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt=""
-              className="w-20 h-20 rounded-full object-cover ring-2 ring-gray-200"
-            />
+            <img src={profile.avatar_url} alt="" className="h-20 w-20 rounded-full object-cover ring-2 ring-gray-200" />
           ) : (
-            <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
-              <span className="text-page-title text-gray-500">
-                {profile.full_name.charAt(0)}
-              </span>
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-200">
+              <span className="text-page-title text-gray-500">{profile.full_name.charAt(0)}</span>
             </div>
           )}
 
           <div className="flex-1">
-            <h1 className="text-page-title text-gray-900">
-              {profile.full_name}
-            </h1>
-            <p className="text-meta text-gray-400 mt-0.5">
-              @{profile.username}
-            </p>
+            <h1 className="text-page-title text-gray-900">@{profile.username}</h1>
+            <p className="mt-0.5 text-body-sm text-gray-500">{profile.full_name}</p>
 
-            {/* Badges */}
             <div className="mt-3 flex flex-wrap gap-2">
-              <span
-                className={`text-meta px-2.5 py-1 rounded-full font-medium ${
-                  LEVEL_STYLES[profile.reputation_level] ?? LEVEL_STYLES[0]
-                }`}
-              >
+              <span className={`rounded-full px-2.5 py-1 text-meta font-medium ${LEVEL_STYLES[profile.reputation_level] ?? LEVEL_STYLES[0]}`}>
                 {LEVEL_LABELS[profile.reputation_level] ?? "Novato"}
                 {typeof profile.total_points === "number" && ` · ${profile.total_points} pts`}
               </span>
-              {profile.categories?.map((cat) => (
-                <span
-                  key={cat}
-                  className="text-meta bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full"
-                >
-                  {cat}
-                </span>
-              ))}
             </div>
 
-            {/* Bio */}
-            {profile.bio && (
-              <p className="mt-4 text-body-sm text-gray-600 max-w-lg">
-                {profile.bio}
-              </p>
-            )}
+            {profile.bio && <p className="mt-4 max-w-lg text-body-sm text-gray-600">{profile.bio}</p>}
 
-            {/* Meta */}
             <div className="mt-3 flex flex-wrap gap-4 text-meta text-gray-400">
-              {profile.school && <span>🎓 {profile.school}</span>}
-              {profile.career_year && <span>{profile.career_year}</span>}
               <span>Miembro desde {joinDate}</span>
               <span>{works.length} {works.length === 1 ? "obra" : "obras"}</span>
             </div>
@@ -120,88 +83,40 @@ export function UserProfile({ profile, works }: UserProfileProps) {
         </div>
       </div>
 
-      {/* Works grid */}
       <div className="mt-8">
-        <h2 className="text-section text-gray-900 mb-4">Obras</h2>
+        <h2 className="mb-4 text-section text-gray-900">Obras</h2>
 
         {works.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-            <p className="text-body-sm text-gray-400">
-              Este usuario aún no ha publicado obras.
-            </p>
+          <div className="rounded-xl border border-gray-200 bg-white py-12 text-center">
+            <p className="text-body-sm text-gray-400">Este usuario aún no ha publicado obras.</p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {works.map((work) => {
             const thumb = coverUrl(work.images)
             const esVideo = soloVideo(work.images)
             return (
-              <Link
-                key={work.id}
-                href={`/dashboard/work/${work.id}`}
-                className="block"
-              >
-                <article className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md hover:border-gray-300 transition-all duration-200">
-                  <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
+              <Link key={work.id} href={`/dashboard/work/${work.id}`} className="block">
+                <article className="group overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-200 hover:border-gray-300 hover:shadow-md">
+                  <div className="aspect-[4/3] overflow-hidden bg-gray-100">
                     {thumb ? (
-                      <img
-                        src={thumb}
-                        alt={work.title}
-                        className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
-                        loading="lazy"
-                      />
+                      <img src={thumb} alt={work.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" loading="lazy" />
                     ) : esVideo ? (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-900">
-                        <span className="text-meta uppercase tracking-wider text-gray-400">
-                          Video
-                        </span>
+                      <div className="flex h-full w-full items-center justify-center bg-gray-900">
+                        <span className="text-meta uppercase tracking-wider text-gray-400">Video</span>
                       </div>
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <svg
-                          className="w-10 h-10 text-gray-300"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
+                      <div className="flex h-full w-full items-center justify-center">
+                        <span className="text-meta text-gray-300">Sin portada</span>
                       </div>
                     )}
                   </div>
                   <div className="p-4">
-                    <span className="text-meta font-semibold uppercase tracking-wider text-gray-400">
-                      {work.category}
-                    </span>
-                    <h3 className="mt-1 text-subsection text-gray-900 line-clamp-2">
-                      {work.title}
-                    </h3>
+                    <h3 className="line-clamp-2 text-subsection text-gray-900">{work.title}</h3>
                     <div className="mt-3 flex items-center gap-3 text-meta text-gray-400">
-                      <LikeButton
-                        workId={work.id}
-                        initialCount={work.likes_count}
-                        size="sm"
-                      />
-                      <span className="flex items-center gap-1">
-                        <svg
-                          className="w-3.5 h-3.5"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        {work.comments_count}
-                      </span>
+                      <LikeButton workId={work.id} initialCount={work.likes_count} size="sm" />
+                      <span>{work.comments_count} comentarios</span>
                     </div>
                   </div>
                 </article>

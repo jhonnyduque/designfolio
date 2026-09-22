@@ -21,31 +21,23 @@ export function useOnboarding(): UseOnboardingReturn {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  /** Check if username is available (not taken by another user) */
-  const checkUsername = useCallback(
-    async (username: string): Promise<boolean> => {
-      const response = await fetch(`/api/profile/username?value=${encodeURIComponent(username)}`)
-      if (!response.ok) return false
-      const data = await response.json() as { available?: boolean }
-      return data.available === true
-    },
-    []
-  )
+  const checkUsername = useCallback(async (username: string): Promise<boolean> => {
+    const response = await fetch(`/api/profile/username?value=${encodeURIComponent(username)}`)
+    if (!response.ok) return false
+    const data = await response.json() as { available?: boolean }
+    return data.available === true
+  }, [])
 
   const save = useCallback(
     async (payload: OnboardingPayload, avatarFile: File | null) => {
       setError(null)
 
       try {
-        // 1. Check username
         setStep("checking")
         setProgress("Verificando nombre de usuario...")
         const available = await checkUsername(payload.username)
-        if (!available) {
-          throw new Error("Ese nombre de usuario ya está en uso")
-        }
+        if (!available) throw new Error("Ese nombre de usuario no está disponible")
 
-        // 2. Upload avatar if provided
         let avatarUrl = payload.avatar_url
         if (avatarFile) {
           setStep("uploading")
@@ -60,7 +52,6 @@ export function useOnboarding(): UseOnboardingReturn {
           avatarUrl = (await upload.json() as { url: string }).url
         }
 
-        // 3. Update profile
         setStep("saving")
         setProgress("Guardando perfil...")
 
@@ -72,9 +63,6 @@ export function useOnboarding(): UseOnboardingReturn {
             fullName: payload.full_name,
             avatarUrl,
             bio: payload.bio,
-            school: payload.school,
-            careerYear: payload.career_year,
-            categories: payload.categories,
           }),
         })
         if (!update.ok) {
@@ -94,7 +82,7 @@ export function useOnboarding(): UseOnboardingReturn {
         setError(err instanceof Error ? err.message : "Error al guardar")
       }
     },
-    [router, checkUsername]
+    [router, checkUsername],
   )
 
   return { save, checkUsername, step, progress, error }

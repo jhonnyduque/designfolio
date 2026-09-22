@@ -134,7 +134,7 @@ export function OwnerPostMenu({ workId, onRemoved }: Props) {
               href={`/dashboard/work/${workId}`}
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="block whitespace-nowrap px-4 py-2.5 text-body-sm text-gray-900 transition-colors hover:bg-black/[.04]"
+              className="block whitespace-nowrap px-4 py-2 text-body-sm text-gray-900 transition-colors hover:bg-black/[.04]"
             >
               Editar
             </Link>
