@@ -169,7 +169,7 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
               value={username}
               onChange={(e) => handleUsernameChange(e.target.value)}
               maxLength={PROFILE_LIMITS.USERNAME_MAX}
-              className="block w-full rounded-lg border border-gray-300 py-2.5 pl-7 pr-10 text-body-sm text-gray-900 outline-none transition-colors focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+              className="block w-full rounded-lg border border-gray-300 py-2.5 pl-7 pr-10 text-body-sm text-gray-900 outline-none transition-colors focus:border-gray-900"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2">
               {usernameStatus === "checking" && <span className="text-meta text-gray-400">…</span>}
@@ -190,7 +190,7 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 outline-none transition-colors focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 outline-none transition-colors focus:border-gray-900"
           />
         </div>
 
@@ -210,7 +210,7 @@ export function EditProfileForm({ profile }: EditProfileFormProps) {
               onChange={(event) => setBio(event.target.value)}
               rows={1}
               maxLength={PROFILE_LIMITS.BIO_MAX}
-              className="col-start-1 row-start-1 h-full min-h-[42px] max-h-[83px] w-full resize-none overflow-y-auto rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 outline-none transition-colors placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+              className="col-start-1 row-start-1 h-full min-h-[42px] max-h-[83px] w-full resize-none overflow-y-auto rounded-lg border border-gray-300 px-3 py-2.5 text-body-sm text-gray-900 outline-none transition-colors placeholder-gray-400 focus:border-gray-900"
               placeholder="Cuéntale a la comunidad quién eres..."
             />
           </div>
